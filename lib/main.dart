@@ -13,9 +13,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(title: Text('Halo Dunia')),
-        body: Center(
-          child: Text('Selamat datang di Flutter!'),
-        ),
+        body: Center(child: Text('Selamat datang di Flutter!')),
       ),
     );
   }

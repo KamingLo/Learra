@@ -31,14 +31,21 @@ dependencies:
   http: ^1.2.2
   flutter:
     sdk: flutter
+  flutter_svg: ^2.0.7
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  dotted_border: ^2.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.8
+  image_picker: ^1.1.1
+  permission_handler: ^11.0.1
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -52,6 +59,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/
+    - assets/IconApp/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -88,3 +98,26 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# ==========================================
+# SPLASH SCREEN CONFIGURATION (ROOT LEVEL)
+# ==========================================
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/IconApp/ico.png
+  android_gravity: center
+  ios_content_mode: scaleAspectFit
+  android: true
+  ios: true
+  branding: assets/IconApp/ico.png
+  branding_mode: bottom
+
+# ==========================================
+# APP ICON CONFIGURATION (ROOT LEVEL)
+# ==========================================
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/IconApp/ico.png"
