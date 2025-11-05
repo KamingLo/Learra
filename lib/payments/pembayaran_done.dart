@@ -1,0 +1,231 @@
+import 'package:flutter/material.dart';
+import 'package:dotted_border/dotted_border.dart';
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Lecarra - Pembayaran Berhasil',
+      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      home: const PembayaranBerhasilScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class PembayaranBerhasilScreen extends StatelessWidget {
+  const PembayaranBerhasilScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        leading: const BackButton(color: Colors.black),
+        title: const Text(
+          'Pembayaran',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Icon(Icons.help_outline, color: Colors.black),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // SCROLLABLE CONTENT (Ikon + Teks)
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              300,
+            ), // Ruang lebih untuk sticky
+            child: Column(
+              children: [
+                const SizedBox(height: 60),
+
+                // IKON CENTANG BESAR
+                Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 220,
+                        height: 220,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.green.withOpacity(0.1),
+                        ),
+                      ),
+                      Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.green.withOpacity(0.2),
+                        ),
+                      ),
+                      Container(
+                        width: 130,
+                        height: 130,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.green,
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 80,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // TEKS UTAMA
+                const Text(
+                  'Pembayaran Berhasil!',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Detail pembelian telah dikirim ke email anda',
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+
+          // DETAIL POLIS: STICKY DI BAWAH, DENGAN JARAK LEBIH BESAR
+          Positioned(
+            bottom: 124, // 56 (tombol) + 16+16 (padding) + 24 (jarak) = 124
+            left: 16,
+            right: 16,
+            child: DottedBorder(
+              color: const Color(0xFFDEDEDE),
+              strokeWidth: 1.5,
+              dashPattern: const [5, 3],
+              borderType: BorderType.RRect,
+              radius: const Radius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0x0CD9D9D9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    _infoRow('Nama Polis:', 'Asuransi Kendaraan A'),
+                    const SizedBox(height: 12),
+                    _infoRow('Nomor Polis:', '#PL-2025-001'),
+                    const SizedBox(height: 12),
+                    _infoRow('Nama Pemegang Polis:', 'Andi Wijaya'),
+                    const SizedBox(height: 12),
+                    _infoRow('Total Yang Harus Dibayar:', 'Rp 15.000.000'),
+                    const SizedBox(height: 12),
+                    _infoRow(
+                      'Status Pembayaran:',
+                      'BERHASIL',
+                      color: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // TOMBOL KEMBALI: STICKY PALING BAWAH
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Kembali ke halaman sebelumnya'),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Kembali',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value, {Color? color}) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 150,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
