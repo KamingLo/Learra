@@ -78,11 +78,11 @@ class _PaymentScreenState extends State<PaymentScreen>
           'Pembayaran',
           style: TextStyle(
             color: Colors.black,
-            fontWeight: FontWeight.bold, // <-- BOLD
+            fontWeight: FontWeight.bold,
             fontSize: 18.0,
           ),
         ),
-        centerTitle: true, // <-- TENGAH
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         actions: const [
@@ -94,13 +94,11 @@ class _PaymentScreenState extends State<PaymentScreen>
       ),
       body: Stack(
         children: [
-          // Konten utama (scrollable)
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 180.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner Full JPG
                 Container(
                   width: double.infinity,
                   height: 120,
@@ -115,14 +113,12 @@ class _PaymentScreenState extends State<PaymentScreen>
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
                 _buildTextField('Nama Polis:', 'Asuransi Kendaraan A'),
                 const SizedBox(height: 16.0),
                 _buildTextField('Nomor Polis:', '#PL-2025-001'),
                 const SizedBox(height: 16.0),
                 _buildTextField('Nama Pemegang Polis:', 'Andi Wijaya'),
                 const SizedBox(height: 24.0),
-
                 const Text(
                   'Total Yang Harus Dibayar:',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -133,15 +129,13 @@ class _PaymentScreenState extends State<PaymentScreen>
                   style: TextStyle(
                     fontSize: 24.0,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF06A900), // <-- WARNA #06A900
+                    color: Color(0xFF06A900),
                   ),
                 ),
                 const SizedBox(height: 32.0),
               ],
             ),
           ),
-
-          // Sticky Bottom: Checkbox + Tombol
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -185,7 +179,6 @@ class _PaymentScreenState extends State<PaymentScreen>
                     ],
                   ),
                   const SizedBox(height: 16.0),
-
                   GestureDetector(
                     onLongPressStart: (_) => _startHold(),
                     onLongPressEnd: (_) => _resetHold(),

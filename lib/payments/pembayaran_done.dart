@@ -5,6 +5,7 @@ void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -45,19 +46,11 @@ class PembayaranBerhasilScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // SCROLLABLE CONTENT (Ikon + Teks)
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              300,
-            ), // Ruang lebih untuk sticky
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 300),
             child: Column(
               children: [
                 const SizedBox(height: 60),
-
-                // IKON CENTANG BESAR
                 Center(
                   child: Stack(
                     alignment: Alignment.center,
@@ -95,8 +88,6 @@ class PembayaranBerhasilScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-
-                // TEKS UTAMA
                 const Text(
                   'Pembayaran Berhasil!',
                   style: TextStyle(
@@ -116,10 +107,8 @@ class PembayaranBerhasilScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // DETAIL POLIS: STICKY DI BAWAH, DENGAN JARAK LEBIH BESAR
           Positioned(
-            bottom: 124, // 56 (tombol) + 16+16 (padding) + 24 (jarak) = 124
+            bottom: 124,
             left: 16,
             right: 16,
             child: DottedBorder(
@@ -157,8 +146,6 @@ class PembayaranBerhasilScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // TOMBOL KEMBALI: STICKY PALING BAWAH
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

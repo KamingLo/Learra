@@ -23,7 +23,6 @@ class KlaimSayaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Data dummy untuk contoh
     final List<Map<String, dynamic>> claimHistory = [
       {
         'name': 'Asuransi Kendaraan A',
@@ -80,7 +79,6 @@ class KlaimSayaScreen extends StatelessWidget {
         children: [
           Column(
             children: [
-              // Search Bar
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
@@ -123,16 +121,9 @@ class KlaimSayaScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Claim History List
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(
-                    16,
-                    16,
-                    16,
-                    90,
-                  ), // Extra padding untuk floating button
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                   itemCount: claimHistory.length,
                   itemBuilder: (context, index) {
                     final item = claimHistory[index];
@@ -148,16 +139,14 @@ class KlaimSayaScreen extends StatelessWidget {
               ),
             ],
           ),
-
-          // Floating Action Button - Klaim Baru
           Positioned(
             right: 16,
             bottom: 16,
             child: FloatingActionButton.extended(
               onPressed: () {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Klaim Baru')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Klaim Baru'))
+                );
               },
               backgroundColor: Colors.green,
               icon: const Icon(Icons.add, color: Colors.white),
@@ -214,7 +203,6 @@ class ClaimCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name and Amount
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,10 +255,7 @@ class ClaimCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // Status Badge and Buttons
             _buildStatusAndButtons(),
           ],
         ),

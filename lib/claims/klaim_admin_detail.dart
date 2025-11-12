@@ -30,9 +30,9 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
   );
 
   void _handleTerima() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Klaim diterima')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Klaim diterima'))
+    );
   }
 
   void _handleTolak() {
@@ -42,14 +42,13 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Klaim ditolak')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Klaim ditolak'))
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Dummy data untuk foto yang sudah diupload
     final List<String?> uploadedPhotos = [
       'https://via.placeholder.com/150',
       'https://via.placeholder.com/150',
@@ -82,13 +81,11 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
       ),
       body: Stack(
         children: [
-          // Konten utama (scrollable)
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner Full JPG
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
@@ -126,8 +123,6 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Detail Polis dengan Dotted Border
                 DottedBorder(
                   color: const Color(0xFFDEDEDE),
                   strokeWidth: 1.5,
@@ -170,8 +165,6 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Alasan Pengajuan Klaim (readonly)
                 const Text(
                   'Alasan Pengajuan Klaim:',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -190,8 +183,6 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Foto Bukti (readonly)
                 const Text(
                   'Foto Bukti: (max 5)',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -227,8 +218,6 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
                   }),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Catatan oleh sistem (editable untuk admin)
                 const Text(
                   'Catatan oleh sistem: (jika ditolak atau diterima)',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -259,8 +248,6 @@ class _AdminDetailKlaimScreenState extends State<AdminDetailKlaimScreen> {
               ],
             ),
           ),
-
-          // Sticky Bottom Buttons (Terima & Tolak)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

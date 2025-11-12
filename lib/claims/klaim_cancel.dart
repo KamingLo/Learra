@@ -101,13 +101,11 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
       ),
       body: Stack(
         children: [
-          // Konten utama (scrollable)
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 180.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner Full JPG (dari pembayaran_pay.dart)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
@@ -145,7 +143,6 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
                 _buildTextField('Nama Polis:', _namaPolisController),
                 const SizedBox(height: 16.0),
                 _buildTextField('Nomor Polis:', _nomorPolisController),
@@ -161,8 +158,6 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
                   prefix: 'Rp ',
                 ),
                 const SizedBox(height: 16.0),
-
-                // Tanggal Klaim (readonly)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -189,11 +184,8 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
                   ],
                 ),
                 const SizedBox(height: 16.0),
-
                 _buildTextArea('Alasan Pengajuan Klaim:', _alasanController),
                 const SizedBox(height: 16.0),
-
-                // Upload Foto
                 const Text(
                   'Unggah Foto: (max 5)',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -231,8 +223,6 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
                   }),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Alasan Pembatalan Pengajuan Klaim
                 _buildTextArea(
                   'Alasan Pembatalan Pengajuan Klaim:',
                   _alasanPembatalanController,
@@ -241,8 +231,6 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
               ],
             ),
           ),
-
-          // Sticky Bottom: Checkbox + Tombol
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -285,7 +273,6 @@ class _PengajuanKlaimScreenState extends State<PengajuanKlaimScreen> {
                     ],
                   ),
                   const SizedBox(height: 16.0),
-
                   ElevatedButton(
                     onPressed: _submitClaim,
                     style: ElevatedButton.styleFrom(

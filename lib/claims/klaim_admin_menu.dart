@@ -23,7 +23,6 @@ class KlaimSayaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Data dummy untuk contoh
     final List<Map<String, dynamic>> claimHistory = [
       {
         'name': 'Asuransi Kendaraan A',
@@ -80,7 +79,6 @@ class KlaimSayaScreen extends StatelessWidget {
         children: [
           Column(
             children: [
-              // Search Bar
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
@@ -123,13 +121,9 @@ class KlaimSayaScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Claim History List
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(
-                    16,
-                  ), // Remove extra bottom padding
+                  padding: const EdgeInsets.all(16),
                   itemCount: claimHistory.length,
                   itemBuilder: (context, index) {
                     final item = claimHistory[index];
@@ -145,7 +139,6 @@ class KlaimSayaScreen extends StatelessWidget {
               ),
             ],
           ),
-          // Remove Floating Action Button here
         ],
       ),
     );
@@ -188,7 +181,6 @@ class ClaimCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name and Amount
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,10 +233,7 @@ class ClaimCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // Status Badge and Buttons
             _buildStatusAndButtons(),
           ],
         ),

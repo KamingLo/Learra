@@ -22,7 +22,6 @@ class DetailKlaimScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Dummy data untuk foto yang sudah diupload
     final List<String?> uploadedPhotos = [
       'https://via.placeholder.com/150',
       'https://via.placeholder.com/150',
@@ -54,13 +53,11 @@ class DetailKlaimScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Konten utama (scrollable)
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner Full JPG
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
@@ -98,8 +95,6 @@ class DetailKlaimScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Detail Polis dengan Dotted Border
                 DottedBorder(
                   color: const Color(0xFFDEDEDE),
                   strokeWidth: 1.5,
@@ -142,8 +137,6 @@ class DetailKlaimScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Alasan Pengajuan Klaim
                 const Text(
                   'Alasan Pengajuan Klaim:',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -162,8 +155,6 @@ class DetailKlaimScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Foto Bukti
                 const Text(
                   'Foto Bukti: (max 5)',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -199,8 +190,6 @@ class DetailKlaimScreen extends StatelessWidget {
                   }),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Catatan oleh sistem
                 const Text(
                   'Catatan oleh sistem: (jika ditolak)',
                   style: TextStyle(fontSize: 14.0, color: Colors.black54),
@@ -222,8 +211,6 @@ class DetailKlaimScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // Sticky Bottom Button
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

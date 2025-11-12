@@ -5,6 +5,7 @@ void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -50,7 +51,6 @@ class DetailPembayaranScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // BANNER FULL JPG
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
@@ -65,8 +65,6 @@ class DetailPembayaranScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // DETAIL POLIS: DENGAN GARIS PUTUS-PUTUS
                 Center(
                   child: DottedBorder(
                     color: const Color(0xFFDEDEDE),
@@ -108,8 +106,6 @@ class DetailPembayaranScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // CATATAN OLEH SISTEM (TIDAK BISA DIISI)
                 const Text(
                   'Catatan oleh sistem: (jika ditolak)',
                   style: TextStyle(
@@ -136,8 +132,6 @@ class DetailPembayaranScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // TOMBOL KEMBALI STICKY
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

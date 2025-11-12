@@ -23,7 +23,6 @@ class RiwayatPembayaranScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Data dummy untuk contoh
     final List<Map<String, dynamic>> paymentHistory = [
       {
         'name': 'Asuransi Kendaraan A',
@@ -78,7 +77,6 @@ class RiwayatPembayaranScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Search Bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16),
@@ -118,8 +116,6 @@ class RiwayatPembayaranScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // Payment History List
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -178,7 +174,6 @@ class PaymentCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name and Amount
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,10 +222,7 @@ class PaymentCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // Status Badge and Buttons
             _buildStatusAndButtons(),
           ],
         ),

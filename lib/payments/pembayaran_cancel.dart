@@ -4,6 +4,7 @@ void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -49,7 +50,6 @@ class BatalkanPembayaranScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // BANNER FULL JPG (GANTI BANNER HIJAU)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
@@ -64,25 +64,18 @@ class BatalkanPembayaranScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // FORM INPUT
                 _buildLabel('Nama Polis:'),
                 _buildTextField('Asuransi Kendaraan A'),
                 const SizedBox(height: 16),
-
                 _buildLabel('Nomor Polis:'),
                 _buildTextField('#PL-2025-001'),
                 const SizedBox(height: 16),
-
                 _buildLabel('Nama Pemegang Polis:'),
                 _buildTextField('Andi Wijaya'),
                 const SizedBox(height: 16),
-
                 _buildLabel('Alasan Membatalkan Pembayaran:'),
                 _buildTextArea('Almarhum Sudah Tiada'),
                 const SizedBox(height: 24),
-
-                // PERINGATAN
                 const Text(
                   'Dengan melanjutkan pembatalan, Tindakan ini bersifat final dan tidak dapat diubah kembali. Seluruh data transaksi yang terkait akan dinonaktifkan dari sistem pembayaran.',
                   style: TextStyle(fontSize: 13, color: Colors.black87),
@@ -91,8 +84,6 @@ class BatalkanPembayaranScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // TOMBOL MERAH STICKY
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -114,7 +105,7 @@ class BatalkanPembayaranScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF03A3D), // HEX MERAH
+                  backgroundColor: const Color(0xFFF03A3D),
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(

@@ -25,7 +25,7 @@ class PengajuanKlaimBerhasilScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: const SizedBox(), // Hapus back button
+        leading: const SizedBox(),
         title: const Text(
           'Pengajuan Klaim',
           style: TextStyle(
@@ -46,19 +46,11 @@ class PengajuanKlaimBerhasilScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // SCROLLABLE CONTENT (Ikon + Teks)
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
-              300,
-            ), // Ruang lebih untuk sticky
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 300),
             child: Column(
               children: [
                 const SizedBox(height: 60),
-
-                // IKON JAM BESAR
                 Center(
                   child: Stack(
                     alignment: Alignment.center,
@@ -96,8 +88,6 @@ class PengajuanKlaimBerhasilScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-
-                // TEKS UTAMA
                 const Text(
                   'Pengajuan Berhasil!',
                   style: TextStyle(
@@ -117,10 +107,8 @@ class PengajuanKlaimBerhasilScreen extends StatelessWidget {
               ],
             ),
           ),
-
-          // DETAIL POLIS: STICKY DI BAWAH, DENGAN JARAK LEBIH BESAR
           Positioned(
-            bottom: 124, // 56 (tombol) + 16+16 (padding) + 24 (jarak) = 124
+            bottom: 124,
             left: 16,
             right: 16,
             child: DottedBorder(
@@ -135,9 +123,7 @@ class PengajuanKlaimBerhasilScreen extends StatelessWidget {
                   horizontal: 20,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(
-                    0x0CD9D9D9,
-                  ), // Background sama seperti pembayaran_done.dart
+                  color: const Color(0x0CD9D9D9),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -160,8 +146,6 @@ class PengajuanKlaimBerhasilScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // TOMBOL KEMBALI: STICKY PALING BAWAH
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
