@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../config/menu_config.dart';
 import '../services/session_service.dart';
-import '../main.dart'; 
+import '../screens/auth/login_screen.dart'; // <-- Diperbarui
 
 class MainNavbar extends StatefulWidget {
   final String role;
@@ -24,6 +24,7 @@ class _MainNavbarState extends State<MainNavbar> {
 
   void _onItemTapped(int index) {
     if (widget.role == 'guest' && index == _menuItems.length - 1) {
+      // Navigasi ke LoginScreen saat mengklik menu 'Masuk'
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       return;
     }

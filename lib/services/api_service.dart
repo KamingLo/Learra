@@ -14,7 +14,7 @@ class ApiService {
     // 1. Ambil instance SharedPreferences
 
     final prefs = await SharedPreferences.getInstance();
-    debugPrint(_apiKey);
+
     // 2. Baca token (gunakan getString untuk SharedPrefs)
     String? token = prefs.getString('auth_token'); 
 

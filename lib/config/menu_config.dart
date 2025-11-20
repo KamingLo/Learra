@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/session_service.dart';
-import '../widgets/main_navbar.dart'; // Untuk navigasi ulang setelah logout
+import '../widgets/main_navbar.dart'; 
+// Impor screens dari lokasi baru
+import '../screens/auth/login_screen.dart'; 
+import '../screens/user/profile_screen.dart';
 
 // Model Menu
 class NavItem {
@@ -35,8 +38,8 @@ class MenuConfig {
     'pembayaran': NavItem(label: 'Bayar', icon: Icons.payment, screen: const PlaceholderScreen('Pembayaran', Colors.green)),
     
     // Profile (Isinya beda antara Guest vs User)
-    'profile': NavItem(label: 'Profil', icon: Icons.person, screen: const PlaceholderScreen('User Profile', Colors.grey)),
-    'login_nav': NavItem(label: 'Masuk', icon: Icons.login, screen: const PlaceholderScreen('Halaman Login', Colors.purple)), // Untuk Guest
+    'profile': NavItem(label: 'Profil', icon: Icons.person, screen: const ProfileScreen()), // <-- Diarahkan ke ProfileScreen
+    'login_nav': NavItem(label: 'Masuk', icon: Icons.login, screen: const LoginScreen()), // <-- Diarahkan ke LoginScreen
   };
 
   // LOGIC UTAMA: Menentukan List Menu berdasarkan Role
@@ -57,7 +60,6 @@ class MenuConfig {
       case 'guest':
       default:
         // Guest: Terbatas (Home, Produk, dan menu Login/Profile)
-        // Catatan: Guest biasanya menu terakhirnya mengarah ke LoginScreen
         keys = ['home', 'produk', 'login_nav']; 
         break;
     }
