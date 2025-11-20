@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart'; // Pastikan import ini ada
 import 'services/session_service.dart';
 import 'widgets/main_navbar.dart';
-import 'screens/auth/login_screen.dart'; // Import untuk rute opsional
+import 'screens/auth/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,13 +21,46 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Definisi Warna Modern
+    const Color modernGreen = Color(0xFF00C853);
+    const Color offWhite = Color(0xFFF4F7F6);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Learra',
+      
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        // 1. GUNAKAN OPEN SANS UNTUK TEXT GLOBAL
+        textTheme: GoogleFonts.openSansTextTheme(
+          Theme.of(context).textTheme,
+        ),
+
+        // Skema Warna
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: modernGreen,
+          primary: modernGreen,
+          surface: offWhite,
+          onPrimary: Colors.white,
+        ),
+        scaffoldBackgroundColor: offWhite,
         useMaterial3: true,
+
+        // 2. GUNAKAN OPEN SANS UNTUK APP BAR JUGA
+        appBarTheme: AppBarTheme(
+          backgroundColor: offWhite,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black87),
+          
+          // Judul AppBar wajib diset manual agar berubah
+          titleTextStyle: GoogleFonts.openSans( 
+            color: Colors.black87,
+            fontWeight: FontWeight.w700, // Bold agar tegas
+            fontSize: 22,
+          ),
+        ),
       ),
+      
       home: const AuthCheck(),
       routes: {
         '/login': (context) => const LoginScreen(),
@@ -35,7 +69,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// --- 1. Auth Check (Pintu Gerbang) ---
+// ... (Bagian AuthCheck ke bawah tetap sama, tidak perlu diubah)
 class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
 
@@ -52,12 +86,8 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   void _initialize() async {
-    // Ambil role dari memori (Kalau kosong otomatis return 'guest')
     String role = await SessionService.getCurrentRole();
-    
     if (!mounted) return;
-    
-    // Langsung arahkan ke Navbar dengan role yang didapat
     Navigator.pushReplacement(
       context, 
       MaterialPageRoute(builder: (_) => MainNavbar(role: role))
@@ -65,5 +95,7 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: CircularProgressIndicator()));
+  Widget build(BuildContext context) => const Scaffold(
+    body: Center(child: CircularProgressIndicator(color: Color(0xFF00C853)))
+  );
 }
