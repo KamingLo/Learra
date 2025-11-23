@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
-import '../../models/product_model.dart';
-import '../../widgets/admin/product/product_form_fields.dart'; // Import Widget Form
+import '../../../services/api_service.dart';
+import '../../../models/product_model.dart';
+import '../../../widgets/admin/product/product_form_fields.dart'; // Import Widget Form
 
 class ProductFormScreen extends StatefulWidget {
   final ProductModel? product; 

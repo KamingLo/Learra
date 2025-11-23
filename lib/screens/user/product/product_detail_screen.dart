@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
-import '../../models/product_model.dart';
+import '../../../services/api_service.dart';
+import '../../../models/product_model.dart';
+import '../../../utils/product_helper.dart'; // Gunakan Helper
 
 class UserProductDetailScreen extends StatefulWidget {
   final String productId; 
@@ -17,8 +18,6 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  final Color _accentGreen = const Color(0xFF00C853);
-
   @override
   void initState() {
     super.initState();
@@ -29,10 +28,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     try {
       final response = await _apiService.get('/produk/${widget.productId}');
       if (!mounted) return;
-
-      final data = (response is Map && response.containsKey('data')) 
-          ? response['data'] 
-          : response;
+      final data = (response is Map && response.containsKey('data')) ? response['data'] : response;
 
       setState(() {
         _product = ProductModel.fromJson(data);
@@ -51,7 +47,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      extendBodyBehindAppBar: true, // Agar gambar header full sampai atas
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -71,7 +67,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: _accentGreen))
+          ? const Center(child: CircularProgressIndicator(color: ProductHelper.primaryGreen))
           : _errorMessage != null
               ? Center(child: Text(_errorMessage!))
               : _buildContent(),
@@ -83,23 +79,14 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
   Widget _buildContent() {
     if (_product == null) return const SizedBox();
 
-    // Logic Gambar yang sama dengan Grid (agar konsisten)
-    String imageUrl;
-    if (_product!.tipe.toLowerCase().contains('jiwa')) {
-      imageUrl = "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80";
-    } else if (_product!.tipe.toLowerCase().contains('kendaraan')) {
-      imageUrl = "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80";
-    } else if (_product!.tipe.toLowerCase().contains('kesehatan')) {
-      imageUrl = "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=80";
-    } else {
-      imageUrl = "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80";
-    }
+    // Ambil URL dari helper agar konsisten
+    final imageUrl = ProductHelper.getImageUrl(_product!.tipe);
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // HEADER IMAGE FULL WIDTH
+          // HEADER IMAGE
           SizedBox(
             height: 350,
             width: double.infinity,
@@ -111,7 +98,6 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
           ),
           
           // INFO BODY
-          // Menggunakan Transform.translate untuk efek 'menumpuk' gambar sedikit
           Transform.translate(
             offset: const Offset(0, -30),
             child: Container(
@@ -123,7 +109,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Indikator geser kecil (opsional, hanya estetika)
+                  // Handle UI
                   Center(
                     child: Container(
                       width: 40, height: 4,
@@ -135,17 +121,17 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                     ),
                   ),
 
-                  // Badge Tipe
+                  // Badge Tipe (Konsisten Hijau)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _accentGreen.withOpacity(0.1),
+                      color: ProductHelper.lightGreen, // Background Hijau Muda
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       _product!.tipe.toUpperCase(),
-                      style: TextStyle(
-                        color: _accentGreen, 
+                      style: const TextStyle(
+                        color: ProductHelper.darkGreen, // Teks Hijau Tua
                         fontWeight: FontWeight.bold,
                         fontSize: 12
                       ),
@@ -153,7 +139,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Judul Produk
+                  // Judul
                   Text(
                     _product!.namaProduk,
                     style: const TextStyle(
@@ -168,10 +154,10 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                   // Harga
                   Text(
                     "Rp ${_product!.premiDasar}",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 22, 
                       fontWeight: FontWeight.bold,
-                      color: _accentGreen,
+                      color: ProductHelper.primaryGreen, // Harga Hijau
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -218,12 +204,11 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: _accentGreen,
+          backgroundColor: ProductHelper.primaryGreen, // Tombol Hijau Solid
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 4,
-          shadowColor: _accentGreen.withOpacity(0.4),
+          elevation: 0, // Flat design, modern
         ),
         child: const Text(
           "Beli Sekarang",
