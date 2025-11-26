@@ -25,7 +25,7 @@ class ProductCard extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade100), // Border halus
           boxShadow: [
             BoxShadow(
-              color: ProductHelper.primaryGreen.withOpacity(0.08), // Shadow kehijauan
+              color: ProductHelper.primaryGreen.withValues(alpha: 0.08), // Shadow kehijauan
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -62,7 +62,7 @@ class ProductCard extends StatelessWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.05),
+                              Colors.black.withValues(alpha: 0.05),
                             ],
                           ),
                         ),

@@ -175,7 +175,7 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
                   color: _accentGreen,
                   borderRadius: BorderRadius.circular(30),
                   elevation: 4,
-                  shadowColor: _accentGreen.withOpacity(0.4),
+                  shadowColor: _accentGreen.withValues(alpha: 0.4),
                   child: InkWell(
                     onTap: () => _openForm(),
                     borderRadius: BorderRadius.circular(30),
@@ -235,7 +235,7 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
               color: Colors.green.shade50,
               shape: BoxShape.circle
             ),
-            child: Icon(Icons.inventory_2_outlined, size: 80, color: _accentGreen.withOpacity(0.7)),
+            child: Icon(Icons.inventory_2_outlined, size: 80, color: _accentGreen.withValues(alpha: 0.7)),
           ),
           const SizedBox(height: 24),
           Text(

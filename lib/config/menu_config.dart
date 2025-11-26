@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 // --- IMPORT SCREEN SESUAI ROLE ---
-import '../screens/admin/product_screen.dart';  // Screen Admin (CRUD)
-import '../screens/user/product_screen.dart';   // Screen User (Belanja)
+import '../screens/admin/product/product_screen.dart';  // Screen Admin (CRUD)
+import '../screens/user/product/product_screen.dart';   // Screen User (Belanja)
 import '../screens/public/product_screen.dart'; // Screen Guest (Preview)
 import '../screens/user/profile_screen.dart';   // Profile (Logout)
 

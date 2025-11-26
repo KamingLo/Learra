@@ -26,7 +26,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _registerNikController = TextEditingController();
   final _registerJobController = TextEditingController();
 
-  String? _selectedIncomeRange;
   AuthMode _mode = AuthMode.login;
   bool _isLoading = false;
   

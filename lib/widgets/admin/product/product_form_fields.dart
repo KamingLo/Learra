@@ -64,7 +64,7 @@ class ProductFormFields extends StatelessWidget {
         const SizedBox(height: 16),
 
         DropdownButtonFormField<String>(
-          value: selectedType,
+          initialValue: selectedType,
           decoration: const InputDecoration(
             labelText: "Tipe Asuransi",
             border: OutlineInputBorder(),

@@ -14,7 +14,7 @@ class ProductSearchBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(30), // Sudut sangat membulat (bentuk pil)
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05), // Bayangan sangat halus
+            color: Colors.black.withValues(alpha: 0.05), // Bayangan sangat halus
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

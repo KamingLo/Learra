@@ -20,25 +20,17 @@ class ProductCardItem extends StatelessWidget {
 
     // --- LOGIKA ICONS & WARNA BERDASARKAN TIPE ---
     IconData typeIcon;
-    Color typeColor;
+    Color typeColor = Colors.green;
     String lowerType = product.tipe.toLowerCase();
 
     if (lowerType.contains('jiwa')) {
-      // Asuransi Jiwa
-      typeIcon = Icons.favorite_border_rounded; // Ikon Hati
-      typeColor = Colors.purple;
+      typeIcon = Icons.favorite_border_rounded; 
     } else if (lowerType.contains('kendaraan')) {
-      // Asuransi Kendaraan
       typeIcon = Icons.directions_car_filled_rounded; // Ikon Mobil
-      typeColor = Colors.orange;
     } else if (lowerType.contains('kesehatan')) {
-       // Asuransi Kesehatan (Default biru jika ada)
       typeIcon = Icons.local_hospital_rounded; // Ikon Rumah Sakit/Kesehatan
-      typeColor = Colors.blue;
     } else {
-      // Default / Tipe Lainnya
       typeIcon = Icons.verified_user_rounded; // Ikon Perisai umum
-      typeColor = Colors.blueGrey;
     }
     // --------------------------------------------
 
@@ -50,7 +42,7 @@ class ProductCardItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -67,8 +59,8 @@ class ProductCardItem extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 // Gunakan warna tipe tapi versi sangat muda untuk background
-                color: typeColor.withOpacity(0.1), 
-                border: Border.all(color: typeColor.withOpacity(0.3)),
+                color: typeColor.withValues(alpha: 0.1), 
+                border: Border.all(color: typeColor.withValues(alpha: 0.3)),
               ),
               // Gunakan icon dan warna yang sudah ditentukan di atas
               child: Icon(typeIcon, color: typeColor, size: 36),
@@ -108,7 +100,7 @@ class ProductCardItem extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.1),
+                      color: typeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8)
                     ),
                     child: Text(

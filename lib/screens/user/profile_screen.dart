@@ -21,15 +21,6 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7F6),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: const Text(
-          "Profil Saya",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
-        ),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         child: Column(
@@ -85,29 +76,6 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfileHeader() {
     return Column(
       children: [
-        Stack(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.white,
-              backgroundImage: const NetworkImage("https://i.pravatar.cc/300"),
-              onBackgroundImageError: (_, __) {}, 
-              child: const Icon(Icons.person, size: 50, color: Colors.grey),
-            ),
-            Positioned(
-              bottom: 0, right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF00C853),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.edit, size: 14, color: Colors.white),
-              ),
-            )
-          ],
-        ),
-        const SizedBox(height: 16),
         const Text("Nama Pengguna", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         Container(
@@ -136,7 +104,7 @@ class ProfileScreen extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
-        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+        BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
       ],
     );
   }
