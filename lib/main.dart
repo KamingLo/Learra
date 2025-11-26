@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart'; // Pastikan import ini ada
 import 'services/session_service.dart';
 import 'widgets/main_navbar.dart';
-import 'screens/auth/login_screen.dart';
+import 'screens/auth/auth_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
       
       home: const AuthCheck(),
       routes: {
-        '/login': (context) => const LoginScreen(),
+        '/login': (context) => const AuthScreen(),
       },
     );
   }

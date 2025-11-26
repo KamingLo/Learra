@@ -6,7 +6,7 @@ import '../../../services/session_service.dart'; // 1. Import SessionService And
 import '../../../models/product_model.dart';
 import '../../../utils/product_helper.dart'; 
 import '../../../widgets/user/home/product_card_item.dart';
-import '../../auth/login_screen.dart'; // Pastikan path ini sesuai
+import '../../auth/auth_screen.dart'; // Pastikan path ini sesuai
 
 class UserProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -110,7 +110,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     // Arahkan ke Login, lalu refresh session saat kembali
     Navigator.push(
       context, 
-      MaterialPageRoute(builder: (_) => const LoginScreen())
+      MaterialPageRoute(builder: (_) => const AuthScreen())
     ).then((_) {
       // PENTING: Cek ulang session setelah user kembali dari halaman login
       // Siapa tahu dia berhasil login
