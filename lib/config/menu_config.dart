@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:learra/screens/admin/polis/admin_polis_screen.dart';
+import 'package:learra/screens/user/polis/user_polis_screen.dart';
 
 // --- IMPORT SCREEN SESUAI ROLE ---
 import '../screens/admin/product/product_screen.dart';  // Screen Admin (CRUD)
 import '../screens/user/product/product_screen.dart';   // Screen User (Belanja)
 import '../screens/public/product_screen.dart'; // Screen Guest (Preview)
 import '../screens/user/profile_screen.dart';   // Profile (Logout)
+import 'package:learra/screens/user/home/home_screen.dart';
 
 class NavItem {
   final String label;
@@ -31,6 +34,12 @@ class MenuConfig {
           screen: const AdminProductScreen(), 
         ),
         NavItem(
+          label: "Polis", 
+          icon: Icons.my_library_books_rounded,
+          // Arahkan ke screen Admin yang punya fitur CRUD
+          screen: const AdminPolicyScreen(), 
+        ),
+        NavItem(
           label: "Akun",
           icon: Icons.person_rounded,
           screen: const ProfileScreen(role: 'admin'),
@@ -44,13 +53,19 @@ class MenuConfig {
         NavItem(
           label: "Home",
           icon: Icons.home_rounded,
-          screen: const Scaffold(body: Center(child: Text("User Home"))), // Placeholder
+          screen: const UserHomeScreen(role: "user") , // Placeholder
         ),
         NavItem(
           label: "Belanja",
           icon: Icons.shopping_cart_rounded,
           // Arahkan ke screen User yang punya fitur Beli
           screen: const UserProductScreen(), 
+        ),
+        NavItem(
+          label: "Polis",
+          icon: Icons.my_library_books_rounded,
+          // Arahkan ke screen User yang punya fitur Beli
+          screen: const PolicyScreen(), 
         ),
         NavItem(
           label: "Profil",
@@ -66,7 +81,7 @@ class MenuConfig {
         NavItem(
           label: "Home",
           icon: Icons.home_outlined,
-          screen: const Scaffold(body: Center(child: Text("Guest Home"))), // Placeholder
+          screen: const  UserHomeScreen(role: "public"), // Placeholder
         ),
         NavItem(
           label: "Produk",
