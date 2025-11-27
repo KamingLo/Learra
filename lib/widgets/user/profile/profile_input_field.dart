@@ -23,6 +23,10 @@ class ProfileInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    const Color primaryGreen = Color(0xFF06A900);
+    const Color deepGreen = Color(0xFF024000);
+    const Color fieldBackground = Color(0xFFF7F7F7);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(
@@ -58,12 +62,12 @@ class ProfileInputField extends StatelessWidget {
             decoration: InputDecoration(
               prefixIcon: Icon(
                 icon,
-                color: isReadOnly ? Colors.grey : Colors.blueAccent,
+                color: isReadOnly ? Colors.grey : primaryGreen,
               ),
               suffixIcon:
                   suffixIcon != null ? Icon(suffixIcon, color: Colors.grey) : null,
               filled: true,
-              fillColor: isReadOnly ? Colors.grey.shade100 : Colors.white,
+              fillColor: isReadOnly ? fieldBackground : Colors.white,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               enabledBorder: OutlineInputBorder(
@@ -72,7 +76,7 @@ class ProfileInputField extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
+                borderSide: BorderSide(color: deepGreen, width: 1.5),
               ),
               disabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),

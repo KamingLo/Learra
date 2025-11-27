@@ -123,7 +123,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       };
 
       // Mengirim request PUT ke endpoint spesifik ID user (user/profile)
-      await _apiService.put('/user/profile/$_userId', body: body);
+      await _apiService.put('/users/$_userId', body: body);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -229,8 +229,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             controller: _birthDateController,
                             icon: Icons.calendar_today,
                             isReadOnly: true,
-                            onTap: () => _selectDate(context),
-                            suffixIcon: Icons.expand_more,
                           ),
                         ],
                       ),

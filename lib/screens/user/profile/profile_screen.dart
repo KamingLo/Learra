@@ -4,6 +4,12 @@ import '../../../services/session_service.dart';
 import '../../../main.dart'; // Untuk AuthCheck
 
 class ProfileScreen extends StatelessWidget {
+  static const Color _primaryText = Color(0xFF111111);
+  static const Color _secondaryText = Color(0xFF3F3F3F);
+  static const Color _surfaceLight = Color(0xFFF7F7F7);
+  static const Color _primaryGreen = Color(0xFF06A900);
+  static const Color _deepGreen = Color(0xFF024000);
+
   final String role;
 
   const ProfileScreen({super.key, required this.role});
@@ -21,19 +27,21 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isAdmin = role.toLowerCase() == 'admin';
-    final Color accentColor = isAdmin ? const Color(0xFFE53935) : const Color(0xFF2ECC71);
+    final Color accentColor = isAdmin ? const Color(0xFFE53935) : _primaryGreen;
+    final Color accentSecondary =
+        isAdmin ? const Color(0xFFB71C1C) : _deepGreen;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFB),
+      backgroundColor: _surfaceLight,
       appBar: AppBar(
         title: const Text(
           "Profil Saya",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
+          style: TextStyle(color: _primaryText, fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        foregroundColor: Colors.black87,
+        foregroundColor: _primaryText,
       ),
       body: Stack(
         children: [
@@ -42,8 +50,8 @@ class ProfileScreen extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isAdmin
-                    ? [const Color(0xFFFF9A8B), const Color(0xFFE53935)]
-                    : [const Color(0xFFB5FFFC), const Color(0xFF2ECC71)],
+                    ? [const Color(0xFFFFC1B6), accentColor]
+                    : [_primaryGreen.withOpacity(0.35), _deepGreen],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -53,7 +61,7 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
             child: Column(
               children: [
-                _buildProfileHeroCard(accentColor, isAdmin),
+                _buildProfileHeroCard(accentColor, accentSecondary),
                 const SizedBox(height: 24),
                 _buildMenuSection(
                   title: "Pengaturan Akun",
@@ -105,7 +113,8 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 Text(
                   "Versi Aplikasi 1.0.0",
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  style:
+                      TextStyle(color: _secondaryText.withOpacity(0.5), fontSize: 12),
                 ),
                 const SizedBox(height: 32),
               ],
@@ -116,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeroCard(Color accentColor, bool isAdmin) {
+  Widget _buildProfileHeroCard(Color accentColor, Color accentSecondary) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
@@ -140,7 +149,7 @@ class ProfileScreen extends StatelessWidget {
                 height: 72,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [accentColor.withOpacity(0.9), accentColor],
+                    colors: [accentSecondary, accentColor],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -153,12 +162,12 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Nama Pengguna",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: _primaryText,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -181,24 +190,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0xFFEFF3F8)),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              _ProfileMetaItem(
-                icon: Icons.mail_outline,
-                label: "Email",
-                value: "Tersinkron otomatis",
-              ),
-              _ProfileMetaItem(
-                icon: Icons.shield_outlined,
-                label: "Keamanan",
-                value: "Aktif",
               ),
             ],
           ),
@@ -234,13 +225,13 @@ class ProfileScreen extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: _primaryText,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+            style: TextStyle(color: _secondaryText.withOpacity(0.7), fontSize: 13),
           ),
           const SizedBox(height: 20),
           ...children,
@@ -256,24 +247,27 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final Color textColor = isDestructive ? Colors.redAccent : Colors.black87;
+    final Color textColor = isDestructive ? Colors.redAccent : _deepGreen;
     final Color iconBg =
-        isDestructive ? Colors.red.shade50 : Colors.blueGrey.shade50;
+        isDestructive ? Colors.red.shade50 : _surfaceLight;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
+        splashColor: isDestructive
+            ? Colors.redAccent.withOpacity(0.1)
+            : _primaryGreen.withOpacity(0.12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: isDestructive ? Colors.red.shade50 : Colors.grey.shade50,
+            color: isDestructive ? Colors.red.shade50 : Colors.white,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isDestructive
                   ? Colors.redAccent.withOpacity(0.2)
-                  : Colors.grey.shade200,
+                  : _surfaceLight,
             ),
           ),
           child: Row(
@@ -304,7 +298,7 @@ class ProfileScreen extends StatelessWidget {
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: _secondaryText.withOpacity(0.7),
                           fontSize: 12.5,
                         ),
                       ),
@@ -312,7 +306,7 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+              Icon(Icons.chevron_right, color: _secondaryText.withOpacity(0.6), size: 20),
             ],
           ),
         ),
@@ -371,10 +365,10 @@ class _ProfileMetaItem extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: ProfileScreen._surfaceLight,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, size: 18, color: Colors.grey.shade700),
+          child: Icon(icon, size: 18, color: ProfileScreen._deepGreen),
         ),
         const SizedBox(width: 10),
         Column(
@@ -384,7 +378,7 @@ class _ProfileMetaItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey.shade500,
+                color: ProfileScreen._secondaryText.withOpacity(0.7),
                 letterSpacing: 0.2,
               ),
             ),
@@ -393,7 +387,7 @@ class _ProfileMetaItem extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: ProfileScreen._primaryText,
               ),
             ),
           ],
