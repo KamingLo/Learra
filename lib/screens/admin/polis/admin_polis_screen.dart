@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
 import '../../../widgets/admin/polis/admin_polis_card.dart';
+import '../../../services/api_service.dart';
 
 class AdminPolicyScreen extends StatefulWidget {
   const AdminPolicyScreen({super.key});
@@ -10,22 +11,95 @@ class AdminPolicyScreen extends StatefulWidget {
 }
 
 class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
-  String _searchQuery = '';
+  final ApiService _apiService = ApiService();
+  final TextEditingController _searchController = TextEditingController();
+
+  List<PolicyModel> _policies = [];
+  List<PolicyModel> _filteredPolicies = [];
+  bool _isLoading = true;
+  String? _errorMessage;
   String _filterStatus = 'Semua';
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_onSearchChanged);
+    _fetchPolicies();
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _applyFilters();
+  }
+
+  Future<void> _fetchPolicies({String? searchQuery}) async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      String endpoint = '/polis';
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        endpoint += '?search=${Uri.encodeComponent(searchQuery)}';
+      }
+
+      final response = await _apiService.get(endpoint);
+
+      if (!mounted) return;
+
+      List<dynamic> data;
+      if (response is Map && response.containsKey('data')) {
+        data = response['data'] is List ? response['data'] : [];
+      } else if (response is List) {
+        data = response;
+      } else {
+        data = [];
+      }
+
+      setState(() {
+        _policies = data.map((json) => PolicyModel.fromJson(json)).toList();
+        _applyFilters();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            "Gagal memuat polis. ${e.toString().replaceAll('Exception: ', '')}";
+      });
+    }
+  }
+
+  void _applyFilters() {
+    final searchQuery = _searchController.text.toLowerCase();
+
+    setState(() {
+      _filteredPolicies = _policies.where((policy) {
+        final matchesSearch =
+            searchQuery.isEmpty ||
+            (policy.ownerName ?? '').toLowerCase().contains(searchQuery) ||
+            policy.policyNumber.toLowerCase().contains(searchQuery) ||
+            policy.productName.toLowerCase().contains(searchQuery);
+
+        final matchesStatus =
+            _filterStatus == 'Semua' || policy.status == _filterStatus;
+
+        return matchesSearch && matchesStatus;
+      }).toList();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final policies = PolicyModel.dummyData;
-
-    final filteredPolicies = policies.where((policy) {
-      final matchesSearch =
-          policy.ownerName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          policy.productName.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesStatus =
-          _filterStatus == 'Semua' || policy.status == _filterStatus;
-      return matchesSearch && matchesStatus;
-    }).toList();
-
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -86,17 +160,16 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: Colors.black.withOpacity(0.06),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
+                      controller: _searchController,
+                      onSubmitted: (value) {
+                        _fetchPolicies(searchQuery: value);
                       },
                       decoration: InputDecoration(
                         hintText: "Cari nama pemilik atau produk...",
@@ -109,7 +182,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                           color: Colors.green.shade600,
                           size: 22,
                         ),
-                        suffixIcon: _searchQuery.isNotEmpty
+                        suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: Icon(
                                   Icons.clear,
@@ -117,9 +190,8 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                                   size: 20,
                                 ),
                                 onPressed: () {
-                                  setState(() {
-                                    _searchQuery = '';
-                                  });
+                                  _searchController.clear();
+                                  _fetchPolicies();
                                 },
                               )
                             : null,
@@ -144,7 +216,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                       Expanded(
                         child: _buildQuickStatCard(
                           "Total Polis",
-                          "${policies.length}",
+                          "${_policies.length}",
                           Icons.description_outlined,
                           Colors.blue,
                         ),
@@ -153,7 +225,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                       Expanded(
                         child: _buildQuickStatCard(
                           "Aktif",
-                          "${policies.where((p) => p.status == 'Aktif').length}",
+                          "${_policies.where((p) => p.status.toLowerCase() == 'aktif').length}",
                           Icons.verified_outlined,
                           Colors.green,
                         ),
@@ -180,40 +252,79 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
             ),
           ),
 
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            sliver: filteredPolicies.isEmpty
-                ? SliverToBoxAdapter(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 40),
-                          Icon(
-                            Icons.search_off,
-                            size: 64,
-                            color: Colors.grey.shade300,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "Tidak ada polis ditemukan",
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
+          if (_isLoading)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            )
+          else if (_errorMessage != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => _fetchPolicies(),
+                        child: const Text("Coba Lagi"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              sliver: _filteredPolicies.isEmpty
+                  ? SliverToBoxAdapter(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 40),
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey.shade300,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Text(
+                              "Tidak ada polis ditemukan",
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) =>
+                            AdminPolicyCard(policy: _filteredPolicies[index]),
+                        childCount: _filteredPolicies.length,
                       ),
                     ),
-                  )
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          AdminPolicyCard(policy: filteredPolicies[index]),
-                      childCount: filteredPolicies.length,
-                    ),
-                  ),
-          ),
+            ),
         ],
       ),
 
@@ -243,7 +354,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -254,7 +365,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -292,6 +403,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
         setState(() {
           _filterStatus = label;
         });
+        _applyFilters();
       },
       backgroundColor: Colors.white,
       selectedColor: Colors.green.shade50,
@@ -332,6 +444,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
               title: const Text("Semua Polis"),
               onTap: () {
                 setState(() => _filterStatus = 'Semua');
+                _applyFilters();
                 Navigator.pop(context);
               },
             ),
@@ -340,6 +453,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
               title: const Text("Polis Aktif"),
               onTap: () {
                 setState(() => _filterStatus = 'Aktif');
+                _applyFilters();
                 Navigator.pop(context);
               },
             ),
@@ -348,6 +462,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
               title: const Text("Polis Tidak Aktif"),
               onTap: () {
                 setState(() => _filterStatus = 'Tidak Aktif');
+                _applyFilters();
                 Navigator.pop(context);
               },
             ),

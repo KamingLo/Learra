@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
+import '../../../services/api_service.dart';
 
 class AdminPolicyDetailScreen extends StatefulWidget {
   final PolicyModel policy;
@@ -12,6 +13,7 @@ class AdminPolicyDetailScreen extends StatefulWidget {
 }
 
 class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
+  final ApiService _apiService = ApiService();
   late TextEditingController _merkController;
   late TextEditingController _jenisController;
   late TextEditingController _platController;
@@ -21,21 +23,60 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
   late TextEditingController _tahunController;
   late TextEditingController _premiController;
 
+  PolicyModel? _policy;
   bool _isEditing = false;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _merkController = TextEditingController(text: widget.policy.vehicleBrand);
-    _jenisController = TextEditingController(text: widget.policy.vehicleType);
-    _platController = TextEditingController(text: widget.policy.plateNumber);
-    _rangkaController = TextEditingController(text: widget.policy.frameNumber);
-    _mesinController = TextEditingController(text: widget.policy.engineNumber);
-    _pemilikController = TextEditingController(text: widget.policy.ownerName);
-    _tahunController = TextEditingController(text: widget.policy.yearBought);
+    _policy = widget.policy;
+    _initializeControllers();
+    _fetchPolicyDetail();
+  }
+
+  void _initializeControllers() {
+    _merkController = TextEditingController(text: _policy?.vehicleBrand ?? '');
+    _jenisController = TextEditingController(text: _policy?.vehicleType ?? '');
+    _platController = TextEditingController(text: _policy?.plateNumber ?? '');
+    _rangkaController = TextEditingController(text: _policy?.frameNumber ?? '');
+    _mesinController = TextEditingController(text: _policy?.engineNumber ?? '');
+    _pemilikController = TextEditingController(text: _policy?.ownerName ?? '');
+    _tahunController = TextEditingController(text: _policy?.yearBought ?? '');
     _premiController = TextEditingController(
-      text: widget.policy.premiumAmount.toString(),
+      text: _policy?.premiumAmount.toString() ?? '0',
     );
+  }
+
+  Future<void> _fetchPolicyDetail() async {
+    if (widget.policy.id.isEmpty) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final response = await _apiService.get('/polis/${widget.policy.id}');
+
+      if (!mounted) return;
+
+      if (response is Map) {
+        setState(() {
+          _policy = PolicyModel.fromJson(Map<String, dynamic>.from(response));
+          _initializeControllers();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            "Gagal memuat detail polis. ${e.toString().replaceAll('Exception: ', '')}";
+      });
+    }
   }
 
   @override
@@ -53,6 +94,41 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null || _policy == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(title: const Text("Detail Polis")),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage ?? "Polis tidak ditemukan",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchPolicyDetail,
+                child: const Text("Coba Lagi"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final policy = _policy!;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -71,7 +147,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -94,7 +170,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -141,12 +217,14 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                               width: 56,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Center(
                                 child: Text(
-                                  widget.policy.ownerName[0].toUpperCase(),
+                                  (policy.ownerName?.isNotEmpty ?? false)
+                                      ? policy.ownerName![0].toUpperCase()
+                                      : '?',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
@@ -161,7 +239,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.policy.ownerName,
+                                    policy.ownerName ?? 'Tanpa Nama',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 24,
@@ -169,11 +247,9 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                     ),
                                   ),
                                   Text(
-                                    widget.policy.productName,
+                                    policy.productName,
                                     style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.9,
-                                      ),
+                                      color: Colors.white.withOpacity(0.9),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -196,15 +272,15 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                     width: 6,
                                     height: 6,
                                     decoration: BoxDecoration(
-                                      color: widget.policy.statusColor,
+                                      color: policy.statusColor,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    widget.policy.status,
+                                    policy.status,
                                     style: TextStyle(
-                                      color: widget.policy.statusColor,
+                                      color: policy.statusColor,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -239,7 +315,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.green.withValues(alpha: 0.3),
+                          color: Colors.green.withOpacity(0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),
@@ -256,13 +332,13 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                 Text(
                                   "Nomor Polis",
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacity(0.8),
                                     fontSize: 12,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  widget.policy.policyNumber,
+                                  policy.policyNumber,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
@@ -274,7 +350,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                             ),
                             Icon(
                               Icons.shield_outlined,
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: Colors.white.withOpacity(0.3),
                               size: 48,
                             ),
                           ],
@@ -282,7 +358,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                         const SizedBox(height: 20),
                         Container(
                           height: 1,
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: Colors.white.withOpacity(0.2),
                         ),
                         const SizedBox(height: 20),
                         Row(
@@ -294,13 +370,13 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                 Text(
                                   "Berakhir Pada",
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacity(0.8),
                                     fontSize: 12,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  widget.policy.formattedDate,
+                                  policy.formattedDate,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
@@ -315,13 +391,13 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                 Text(
                                   "Biaya Premi",
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacity(0.8),
                                     fontSize: 12,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  widget.policy.formattedPrice,
+                                  policy.formattedPrice,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -363,7 +439,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black.withOpacity(0.04),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -537,7 +613,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
       decoration: BoxDecoration(
         gradient: isOutline
             ? null
-            : LinearGradient(colors: [color, color.withValues(alpha: 0.8)]),
+            : LinearGradient(colors: [color, color.withOpacity(0.8)]),
         color: isOutline ? Colors.white : null,
         borderRadius: BorderRadius.circular(16),
         border: isOutline ? Border.all(color: color, width: 2) : null,
@@ -545,7 +621,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
             ? null
             : [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.3),
+                  color: color.withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
