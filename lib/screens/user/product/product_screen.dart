@@ -32,7 +32,7 @@ class _UserProductScreenState extends State<UserProductScreen> {
   Future<void> _fetchProducts({String query = ""}) async {
     if (mounted) setState(() => _isLoading = true);
     try {
-      final endpoint = query.isEmpty ? '/produk' : '/produk?search=$query';
+      final endpoint = query.isEmpty ? '/produk?limit=8' : '/produk?search=$query&limit=6';
       final response = await _apiService.get(endpoint);
 
       if (!mounted) return;

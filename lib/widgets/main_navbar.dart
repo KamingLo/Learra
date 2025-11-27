@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// --- IMPORTS ---
+// Sesuaikan path ini dengan struktur foldermu
 import '../config/menu_config.dart';
-import '../screens/auth/auth_screen.dart'; // <-- Diperbarui
+import '../screens/auth/auth_screen.dart';
+import '../../screens/user/home/home_screen.dart'; // Import ini PENTING agar bisa deteksi UserHomeScreen
 
 class MainNavbar extends StatefulWidget {
   final String role;
@@ -18,51 +22,92 @@ class _MainNavbarState extends State<MainNavbar> {
   @override
   void initState() {
     super.initState();
-    _menuItems = MenuConfig.getMenus(widget.role);
+    _initializeMenu();
+  }
+
+  /// Inisialisasi menu dan menyuntikkan callback ke UserHomeScreen
+  void _initializeMenu() {
+    // 1. Ambil konfigurasi menu awal dari MenuConfig
+    final List<NavItem> originalMenus = MenuConfig.getMenus(widget.role);
+
+    // 2. Kita perlu memodifikasi item menu jika itu adalah UserHomeScreen
+    // agar kita bisa memberikan fungsi 'onSwitchTab' kepadanya.
+    _menuItems = originalMenus.map((item) {
+      
+      // Cek apakah screen yang didaftarkan adalah UserHomeScreen
+      if (item.screen is UserHomeScreen) {
+        return NavItem(
+          icon: item.icon,
+          label: item.label,
+          
+          // Ganti screen dengan instance baru yang membawa callback
+          screen: UserHomeScreen(
+            role: widget.role,
+            onSwitchTab: (int targetIndex) {
+              // Fungsi ini akan dipanggil dari dalam Home Screen
+              _onItemTapped(targetIndex);
+            },
+          ),
+        );
+      }
+      
+      // Jika bukan Home Screen, kembalikan item apa adanya
+      return item;
+    }).toList();
   }
 
   void _onItemTapped(int index) {
+    // Logika Guest: Jika klik menu terakhir (biasanya Profil/Akun), arahkan ke Login
     if (widget.role == 'guest' && index == _menuItems.length - 1) {
-      // Navigasi ke LoginScreen saat mengklik menu 'Masuk'
       Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen()));
       return;
     }
-    HapticFeedback.selectionClick();
-    setState(() => _currentIndex = index);
+
+    HapticFeedback.selectionClick(); // Efek getar kecil
+    
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
-    // --- 1. KONFIGURASI UKURAN YANG LEBIH PROPORSIONAL ---
-    const double navBarHeight = 70.0;  // Tinggi total navbar
-    const double bubbleSize = 42.0;    // Diperkecil (sebelumnya 50)
-    const double iconSize = 24.0;      // Ukuran icon standar
-    const double sidePadding = 12.0;   // Jarak aman kiri-kanan di dalam navbar
-    
+
+    // --- KONFIGURASI UKURAN ---
+    const double navBarHeight = 70.0;
+    const double bubbleSize = 42.0;
+    const double iconSize = 24.0;
+    const double sidePadding = 12.0;
+    const double navBarBottomMargin = 24.0; 
+
     const Duration animDuration = Duration(milliseconds: 300);
     const Curve animCurve = Curves.fastOutSlowIn;
 
     return Scaffold(
-      extendBody: true,
+      extendBody: true, 
       backgroundColor: const Color(0xFFF5F7FA),
-      
-      body: _menuItems[_currentIndex].screen,
+
+      // Body menggunakan IndexedStack agar state halaman tidak hilang saat pindah tab
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: navBarHeight + navBarBottomMargin + 10),
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _menuItems.map((item) => item.screen).toList(),
+        ),
+      ),
 
       bottomNavigationBar: Container(
         height: navBarHeight,
-        // Margin luar agar navbar melayang
-        margin: const EdgeInsets.fromLTRB(24, 0, 24, 24), 
-        // Padding dalam agar item paling kiri/kanan tidak nabrak sudut bulat
-        padding: const EdgeInsets.symmetric(horizontal: sidePadding), 
+        margin: const EdgeInsets.fromLTRB(24, 0, 24, navBarBottomMargin), 
+        padding: const EdgeInsets.symmetric(horizontal: sidePadding),
         
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(30), 
+          borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withOpacity(0.08),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
@@ -71,35 +116,30 @@ class _MainNavbarState extends State<MainNavbar> {
         
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Lebar tersedia dibagi jumlah menu
             final double itemWidth = constraints.maxWidth / _menuItems.length;
-            
-            // Posisi Bubble: (Lebar Item / 2) - (Lebar Bubble / 2)
-            // Ditambah (Index * Lebar Item)
             final double centerOffset = (itemWidth - bubbleSize) / 2;
+            
+            // Hitung posisi bubble berdasarkan index aktif
             final double bubbleLeftPosition = (_currentIndex * itemWidth) + centerOffset;
-
-            // Posisi vertikal bubble agar pas tengah secara vertikal dengan Icon
-            // (Tinggi Icon Area - Tinggi Bubble) / 2 + Top Padding Icon
-            const double iconAreaTopPadding = 6.0; // Jarak ikon dari atas
+            const double iconAreaTopPadding = 6.0;
 
             return Stack(
               children: [
-                // --- LAYER 1: SLIDING BUBBLE ---
+                // LAYER 1: BUBBLE ANIMASI (Lingkaran Hijau)
                 AnimatedPositioned(
                   duration: animDuration,
                   curve: animCurve,
-                  top: iconAreaTopPadding, 
+                  top: iconAreaTopPadding,
                   left: bubbleLeftPosition,
                   child: Container(
                     width: bubbleSize,
                     height: bubbleSize,
                     decoration: BoxDecoration(
-                      color: colorScheme.primary,
+                      color: colorScheme.primary, // Mengambil warna primary (Hijau)
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.4),
+                          color: colorScheme.primary.withOpacity(0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         )
@@ -108,7 +148,7 @@ class _MainNavbarState extends State<MainNavbar> {
                   ),
                 ),
 
-                // --- LAYER 2: ICONS & TEXTS ---
+                // LAYER 2: ICON MENU
                 Row(
                   children: _menuItems.asMap().entries.map((entry) {
                     final int index = entry.key;
@@ -124,16 +164,15 @@ class _MainNavbarState extends State<MainNavbar> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            // 2. PEMBUNGKUS ICON
-                            // Tingginya harus cukup untuk menampung bubble + padding
+                            // Icon Container
                             Container(
                               padding: const EdgeInsets.only(top: iconAreaTopPadding),
-                              height: bubbleSize + iconAreaTopPadding, 
+                              height: bubbleSize + iconAreaTopPadding,
                               alignment: Alignment.center,
                               child: TweenAnimationBuilder<Color?>(
                                 duration: animDuration,
                                 tween: ColorTween(
-                                  begin: Colors.grey, 
+                                  begin: Colors.grey,
                                   end: isSelected ? Colors.white : Colors.grey.shade400
                                 ),
                                 builder: (context, color, child) {
@@ -141,16 +180,16 @@ class _MainNavbarState extends State<MainNavbar> {
                                 },
                               ),
                             ),
-                            
-                            // 3. LABEL TEXT (Jarak sedikit dari icon)
                             const SizedBox(height: 2),
+                            
+                            // Label Text
                             AnimatedOpacity(
                               duration: animDuration,
                               opacity: isSelected ? 1.0 : 0.8,
                               child: Text(
                                 item.label,
                                 style: TextStyle(
-                                  fontSize: 10, // Font size pas agar tidak nabrak
+                                  fontSize: 10,
                                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                   color: isSelected ? colorScheme.primary : Colors.grey.shade400,
                                 ),

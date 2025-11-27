@@ -4,17 +4,17 @@ import '../../../services/api_service.dart';
 import '../../../services/session_service.dart';
 import '../../../models/product_model.dart';
 import '../../../utils/product_helper.dart';
-import '../../../widgets/user/home/product_card_item.dart';
 import '../../auth/auth_screen.dart';
+
+// Import Widget Baru (Sesuaikan path jika perlu)
+import '../../../widgets/user/home/product_carousel.dart'; 
 
 class UserProductDetailScreen extends StatefulWidget {
   final String productId;
-
   const UserProductDetailScreen({super.key, required this.productId});
 
   @override
-  State<UserProductDetailScreen> createState() =>
-      _UserProductDetailScreenState();
+  State<UserProductDetailScreen> createState() => _UserProductDetailScreenState();
 }
 
 class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
@@ -26,7 +26,6 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
 
   List<ProductModel> _relatedProducts = [];
   bool _isLoadingRelated = true;
-
   String _currentRole = 'guest';
 
   @override
@@ -37,34 +36,26 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     _fetchRelatedProducts();
   }
 
+  // ... (Method _checkSession, _fetchProductDetail, _navigateToLogin, _buyNow SAMA SEPERTI SEBELUMNYA) ...
+  // Salin method-method logic tersebut jika belum ada perubahannya
+  
   Future<void> _checkSession() async {
     final role = await SessionService.getCurrentRole();
-    if (mounted) {
-      setState(() {
-        _currentRole = role;
-      });
-    }
+    if (mounted) setState(() => _currentRole = role);
   }
 
   Future<void> _fetchProductDetail() async {
     try {
       final response = await _apiService.get('/produk/${widget.productId}');
       if (!mounted) return;
-
-      final data = (response is Map && response.containsKey('data'))
-          ? response['data']
-          : response;
-
+      final data = (response is Map && response.containsKey('data')) ? response['data'] : response;
       setState(() {
         _product = ProductModel.fromJson(data);
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "Gagal memuat detail: $e";
-      });
+      setState(() { _isLoading = false; _errorMessage = "Gagal memuat detail: $e"; });
     }
   }
 
@@ -72,19 +63,10 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     try {
       final response = await _apiService.get('/produk');
       if (!mounted) return;
-
-      List<dynamic> data = (response is Map && response.containsKey('data'))
-          ? response['data']
-          : (response is List ? response : []);
-
-      List<ProductModel> allProducts = data
-          .map((json) => ProductModel.fromJson(json))
-          .toList();
-
-      final filtered = allProducts
-          .where((p) => p.id != widget.productId)
-          .take(3)
-          .toList();
+      List<dynamic> data = (response is Map && response.containsKey('data')) ? response['data'] : (response is List ? response : []);
+      
+      List<ProductModel> allProducts = data.map((json) => ProductModel.fromJson(json)).toList();
+      final filtered = allProducts.where((p) => p.id != widget.productId).take(5).toList();
 
       setState(() {
         _relatedProducts = filtered;
@@ -97,28 +79,18 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
   }
 
   void _navigateToLogin() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AuthScreen()),
-    ).then((_) {
-      _checkSession();
-    });
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen())).then((_) => _checkSession());
   }
-
+  
   void _buyNow() {
-    Navigator.push(
-      context,
-
-      MaterialPageRoute(builder: (_) => const UserPolisForm()),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const UserPolisForm()));
   }
 
   void _goToDetail(ProductModel product) {
-    Navigator.push(
+    // PushReplacement agar stack tidak menumpuk terlalu banyak jika klik produk berulang kali
+    Navigator.pushReplacement( 
       context,
-      MaterialPageRoute(
-        builder: (_) => UserProductDetailScreen(productId: product.id),
-      ),
+      MaterialPageRoute(builder: (_) => UserProductDetailScreen(productId: product.id)),
     );
   }
 
@@ -127,39 +99,24 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: ProductHelper.primaryGreen,
-              ),
-            )
-          : _errorMessage != null
-          ? Center(child: Text(_errorMessage!))
-          : _buildContent(),
-
-      bottomNavigationBar: _buildBottomBar(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: Container(
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
-          ],
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9), shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)],
+          ),
+          child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black87), onPressed: () => Navigator.pop(context)),
         ),
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: ProductHelper.primaryGreen))
+          : _errorMessage != null
+              ? Center(child: Text(_errorMessage!))
+              : _buildContent(),
+      bottomNavigationBar: _buildBottomBar(),
     );
   }
 
@@ -171,15 +128,11 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Gambar Header
           SizedBox(
             height: 350,
             width: double.infinity,
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-                  Container(color: Colors.grey.shade200),
-            ),
+            child: Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200)),
           ),
 
           Transform.translate(
@@ -189,106 +142,53 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
               ),
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 10), // Bottom padding kecil
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
+                  Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+                  
+                  // Tipe & Judul
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ProductHelper.lightGreen,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _product!.tipe.toUpperCase(),
-                      style: const TextStyle(
-                        color: ProductHelper.darkGreen,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(color: ProductHelper.lightGreen, borderRadius: BorderRadius.circular(20)),
+                    child: Text(_product!.tipe.toUpperCase(), style: const TextStyle(color: ProductHelper.darkGreen, fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    _product!.namaProduk,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
-                      height: 1.2,
-                    ),
-                  ),
+                  Text(_product!.namaProduk, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.black87, height: 1.2)),
                   const SizedBox(height: 8),
-                  Text(
-                    "Rp ${_product!.premiDasar}",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: ProductHelper.primaryGreen,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Divider(),
-                  const SizedBox(height: 16),
+                  Text("Rp ${_product!.premiDasar}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: ProductHelper.primaryGreen)),
+                  
+                  const SizedBox(height: 24), const Divider(), const SizedBox(height: 16),
 
-                  const Text(
-                    "Deskripsi Produk",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  // Deskripsi
+                  const Text("Deskripsi Produk", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Text(
-                    _product!.description,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.grey.shade600,
-                      height: 1.6,
-                    ),
-                  ),
+                  Text(_product!.description, style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.6)),
 
                   const SizedBox(height: 40),
-
-                  if (!_isLoadingRelated && _relatedProducts.isNotEmpty) ...[
-                    const Text(
-                      "Produk Lainnya",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ListView.builder(
-                      padding: EdgeInsets.zero,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: _relatedProducts.length,
-                      itemBuilder: (context, index) {
-                        final related = _relatedProducts[index];
-                        return ProductCardItem(
-                          product: related,
-                          onTap: () => _goToDetail(related),
-                        );
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: 50),
                 ],
               ),
             ),
           ),
+          
+          // PRODUK LAINNYA (Menggunakan Widget Carousel Baru)
+          if (_relatedProducts.isNotEmpty || _isLoadingRelated) ...[
+             const Padding(
+               padding: EdgeInsets.symmetric(horizontal: 24),
+               child: Text("Produk Lainnya", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+             ),
+             const SizedBox(height: 12),
+             
+             // Panggil Widget Carousel
+             ProductCarousel(
+               products: _relatedProducts, 
+               isLoading: _isLoadingRelated, 
+               onTap: _goToDetail
+             ),
+             
+             const SizedBox(height: 30),
+          ],
         ],
       ),
     );
@@ -296,42 +196,19 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
 
   Widget _buildBottomBar() {
     final bool isUser = _currentRole == 'user';
-    final String buttonText = isUser ? "Beli Sekarang" : "Login Untuk Membeli";
-    final Color buttonColor = isUser
-        ? ProductHelper.primaryGreen
-        : Colors.grey.shade800;
-    final VoidCallback onPressed = isUser ? _buyNow : _navigateToLogin;
-
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))]),
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isUser ? _buyNow : _navigateToLogin,
         style: ElevatedButton.styleFrom(
-          backgroundColor: buttonColor,
+          backgroundColor: isUser ? ProductHelper.primaryGreen : Colors.grey.shade800,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: isUser ? 4 : 2,
-          shadowColor: isUser
-              ? ProductHelper.primaryGreen.withOpacity(0.4)
-              : Colors.black12,
         ),
-        child: Text(
-          buttonText,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        child: Text(isUser ? "Beli Sekarang" : "Login Untuk Membeli", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
       ),
     );
   }
