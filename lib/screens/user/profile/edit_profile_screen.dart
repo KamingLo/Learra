@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../services/session_service.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/user/profile/profile_input_field.dart';
 
@@ -56,13 +57,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // --- 1. AMBIL DATA USER (GET) ---
   Future<void> _fetchUserData() async {
     try {
+      final sessionId = await SessionService.getCurrentId();
+      if (sessionId != null) {
+        setState(() => _userId = sessionId);
+      }
+      
       final response = await _apiService.get('/user/profile');
 
       if (response['user'] != null) {
         final data = response['user'];
 
         setState(() {
-          _userId = data['_id']?.toString();
+          // _userId = data['_id']?.toString();
           _nameController.text = data['name'] ?? '';
           _emailController.text = data['email'] ?? '';
           _identityController.text = data['nomorIdentitas'] ?? '';

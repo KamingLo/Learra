@@ -3,16 +3,43 @@ import '../../../screens/user/profile/edit_profile_screen.dart';
 import '../../../services/session_service.dart';
 import '../../../main.dart'; // Untuk AuthCheck
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  final String role;
+
+  const ProfileScreen({super.key, required this.role});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Konstanta Warna dipindahkan ke dalam State agar mudah diakses
   static const Color _primaryText = Color(0xFF111111);
   static const Color _secondaryText = Color(0xFF3F3F3F);
   static const Color _surfaceLight = Color(0xFFF7F7F7);
   static const Color _primaryGreen = Color(0xFF06A900);
   static const Color _deepGreen = Color(0xFF024000);
 
-  final String role;
+  // 1. Variabel untuk menampung nama (Default 'Nama Pengguna' sebelum load selesai)
+  String _userName = 'Nama Pengguna';
 
-  const ProfileScreen({super.key, required this.role});
+  @override
+  void initState() {
+    super.initState();
+    // 2. Panggil fungsi load saat halaman pertama kali dibuat
+    _loadUserData();
+  }
+
+  // 3. Fungsi Asynchronous untuk mengambil nama dari SessionService
+  Future<void> _loadUserData() async {
+    final name = await SessionService.getCurrentName();
+    // Jika widget masih aktif (mounted) dan nama ada, update state
+    if (mounted && name != null) {
+      setState(() {
+        _userName = name;
+      });
+    }
+  }
 
   void _performLogout(BuildContext context) async {
     await SessionService.clearSession();
@@ -26,7 +53,8 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isAdmin = role.toLowerCase() == 'admin';
+    // Perhatikan penggunaan 'widget.role' karena kita ada di dalam State
+    final bool isAdmin = widget.role.toLowerCase() == 'admin';
     final Color accentColor = isAdmin ? const Color(0xFFE53935) : _primaryGreen;
     final Color accentSecondary =
         isAdmin ? const Color(0xFFB71C1C) : _deepGreen;
@@ -77,7 +105,10 @@ class ProfileScreen extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => const EditProfileScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          // Opsional: Reload nama setelah kembali dari edit profile
+                          _loadUserData(); 
+                        });
                       },
                     ),
                     const SizedBox(height: 12),
@@ -113,8 +144,8 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 Text(
                   "Versi Aplikasi 1.0.0",
-                  style:
-                      TextStyle(color: _secondaryText.withOpacity(0.5), fontSize: 12),
+                  style: TextStyle(
+                      color: _secondaryText.withOpacity(0.5), fontSize: 12),
                 ),
                 const SizedBox(height: 32),
               ],
@@ -163,7 +194,7 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Nama Pengguna",
+                      _userName, // 4. Menggunakan variabel state yang sudah diload
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -172,14 +203,14 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: accentColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        role.toUpperCase(),
+                        widget.role.toUpperCase(), // Gunakan widget.role
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -231,7 +262,8 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: TextStyle(color: _secondaryText.withOpacity(0.7), fontSize: 13),
+            style: TextStyle(
+                color: _secondaryText.withOpacity(0.7), fontSize: 13),
           ),
           const SizedBox(height: 20),
           ...children,
@@ -306,7 +338,8 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: _secondaryText.withOpacity(0.6), size: 20),
+              Icon(Icons.chevron_right,
+                  color: _secondaryText.withOpacity(0.6), size: 20),
             ],
           ),
         ),
@@ -347,6 +380,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+// Widget ini bisa tetap StatelessWidget dan berada di luar state
 class _ProfileMetaItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -360,15 +394,24 @@ class _ProfileMetaItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Karena kita mengakses warna privat dari _ProfileScreenState,
+    // kita perlu membuatnya public atau mendefinisikan ulang warna disini.
+    // Agar simpel, saya hardcode warna yang sama di sini, 
+    // atau Anda bisa membuat Class Color terpisah (Theme).
+    const Color localSecondaryText = Color(0xFF3F3F3F);
+    const Color localPrimaryText = Color(0xFF111111);
+    const Color localDeepGreen = Color(0xFF024000);
+    const Color localSurfaceLight = Color(0xFFF7F7F7);
+
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: ProfileScreen._surfaceLight,
+            color: localSurfaceLight,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, size: 18, color: ProfileScreen._deepGreen),
+          child: Icon(icon, size: 18, color: localDeepGreen),
         ),
         const SizedBox(width: 10),
         Column(
@@ -378,7 +421,7 @@ class _ProfileMetaItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: ProfileScreen._secondaryText.withOpacity(0.7),
+                color: localSecondaryText.withOpacity(0.7),
                 letterSpacing: 0.2,
               ),
             ),
@@ -387,7 +430,7 @@ class _ProfileMetaItem extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: ProfileScreen._primaryText,
+                color: localPrimaryText,
               ),
             ),
           ],
