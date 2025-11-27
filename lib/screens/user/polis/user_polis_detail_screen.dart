@@ -13,7 +13,7 @@ class PolicyDetailScreen extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 125,
             floating: false,
             pinned: true,
             backgroundColor: Colors.white,
@@ -51,15 +51,20 @@ class PolicyDetailScreen extends StatelessWidget {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                    padding: const EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      bottom: 16,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
@@ -67,19 +72,21 @@ class PolicyDetailScreen extends StatelessWidget {
                               child: Icon(
                                 policy.vehicleIcon,
                                 color: Colors.white,
-                                size: 28,
+                                size: 24,
                               ),
                             ),
                             const SizedBox(width: 12),
+
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     policy.productName,
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 24,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -89,16 +96,17 @@ class PolicyDetailScreen extends StatelessWidget {
                                       color: Colors.white.withValues(
                                         alpha: 0.9,
                                       ),
-                                      fontSize: 14,
+                                      fontSize: 13,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
+                                horizontal: 10,
+                                vertical: 5,
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -120,7 +128,7 @@ class PolicyDetailScreen extends StatelessWidget {
                                     policy.status,
                                     style: TextStyle(
                                       color: policy.statusColor,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

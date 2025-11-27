@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
-import '../../../screens/user/polis/user_polis_detail_screen.dart';
 
 class PolicyCard extends StatelessWidget {
   final PolicyModel policy;
+  // 1. Tambahkan callback ini agar parent bisa menentukan aksi navigasi
+  final VoidCallback? onTap;
 
-  const PolicyCard({super.key, required this.policy});
+  const PolicyCard({
+    super.key,
+    required this.policy,
+    this.onTap, // Masukkan ke constructor
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,20 +34,18 @@ class PolicyCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PolicyDetailScreen(policy: policy),
-              ),
-            );
-          },
+          // 2. Gunakan onTap dari parameter, bukan hardcode Navigator di sini
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
+          splashColor: Colors.green.withValues(
+            alpha: 0.1,
+          ), // Efek sentuhan hijau halus
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // --- HEADER SECTION ---
                 Row(
                   children: [
                     Container(
@@ -81,47 +84,63 @@ class PolicyCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: policy.statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: policy.statusColor.withValues(alpha: 0.3),
-                          width: 1,
+
+                    // STATUS CHIP & ARROW
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: policy.statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: policy.statusColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: policy.statusColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                policy.status,
+                                style: TextStyle(
+                                  color: policy.statusColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: policy.statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            policy.status,
-                            style: TextStyle(
-                              color: policy.statusColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                        // 3. Tambahan Visual Hint (Panah kecil) agar user tahu ini bisa diklik
+                        // Bisa dihapus jika ingin tampilan lebih bersih
+                        const SizedBox(height: 4),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey.shade300,
+                          size: 20,
+                        ),
+                      ],
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 20),
 
+                // GARIS PEMBATAS
                 Container(
                   height: 1,
                   decoration: BoxDecoration(
@@ -137,6 +156,7 @@ class PolicyCard extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
+                // INFO NOMOR POLIS
                 Row(
                   children: [
                     Expanded(
@@ -163,6 +183,8 @@ class PolicyCard extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
+                // --- FOOTER (TANGGAL & HARGA) ---
+                // Container Hijau
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -230,69 +252,7 @@ class PolicyCard extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.green.shade600,
-                              Colors.green.shade700,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      PolicyDetailScreen(policy: policy),
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  Text(
-                                    "Lihat Detail",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // 4. BAGIAN TOMBOL "LIHAT DETAIL" SUDAH DIHAPUS DISINI
               ],
             ),
           ),
