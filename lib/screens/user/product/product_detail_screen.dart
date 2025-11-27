@@ -1,52 +1,43 @@
 import 'package:flutter/material.dart';
-
-// --- IMPORTS ---
+import '../polis/user_polis_form.dart';
 import '../../../services/api_service.dart';
-import '../../../services/session_service.dart'; // 1. Import SessionService Anda
+import '../../../services/session_service.dart';
 import '../../../models/product_model.dart';
-import '../../../utils/product_helper.dart'; 
+import '../../../utils/product_helper.dart';
 import '../../../widgets/user/home/product_card_item.dart';
-import '../../auth/auth_screen.dart'; // Pastikan path ini sesuai
+import '../../auth/auth_screen.dart';
 
 class UserProductDetailScreen extends StatefulWidget {
   final String productId;
-  // Parameter role DIHAPUS, karena kita cek via SessionService
-  
-  const UserProductDetailScreen({
-    super.key, 
-    required this.productId,
-  });
+
+  const UserProductDetailScreen({super.key, required this.productId});
 
   @override
-  State<UserProductDetailScreen> createState() => _UserProductDetailScreenState();
+  State<UserProductDetailScreen> createState() =>
+      _UserProductDetailScreenState();
 }
 
 class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
   final ApiService _apiService = ApiService();
-  
-  // State Utama
+
   ProductModel? _product;
   bool _isLoading = true;
   String? _errorMessage;
 
-  // State Rekomendasi
   List<ProductModel> _relatedProducts = [];
   bool _isLoadingRelated = true;
 
-  // 2. State untuk Session Role
-  String _currentRole = 'guest'; // Default guest
+  String _currentRole = 'guest';
 
   @override
   void initState() {
     super.initState();
-    _checkSession(); // Cek session saat pertama kali load
+    _checkSession();
     _fetchProductDetail();
     _fetchRelatedProducts();
   }
 
-  // --- 3. FUNGSI CEK SESSION PAKAI SERVICE ---
   Future<void> _checkSession() async {
-    // Menggunakan method dari SessionService yang Anda buat
     final role = await SessionService.getCurrentRole();
     if (mounted) {
       setState(() {
@@ -55,14 +46,13 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     }
   }
 
-  // --- AMBIL DETAIL PRODUK UTAMA ---
   Future<void> _fetchProductDetail() async {
     try {
       final response = await _apiService.get('/produk/${widget.productId}');
       if (!mounted) return;
 
-      final data = (response is Map && response.containsKey('data')) 
-          ? response['data'] 
+      final data = (response is Map && response.containsKey('data'))
+          ? response['data']
           : response;
 
       setState(() {
@@ -78,17 +68,18 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     }
   }
 
-  // --- AMBIL PRODUK LAINNYA ---
   Future<void> _fetchRelatedProducts() async {
     try {
       final response = await _apiService.get('/produk');
       if (!mounted) return;
 
-      List<dynamic> data = (response is Map && response.containsKey('data')) 
-          ? response['data'] 
+      List<dynamic> data = (response is Map && response.containsKey('data'))
+          ? response['data']
           : (response is List ? response : []);
 
-      List<ProductModel> allProducts = data.map((json) => ProductModel.fromJson(json)).toList();
+      List<ProductModel> allProducts = data
+          .map((json) => ProductModel.fromJson(json))
+          .toList();
 
       final filtered = allProducts
           .where((p) => p.id != widget.productId)
@@ -105,22 +96,20 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     }
   }
 
-  // --- NAVIGASI ---
   void _navigateToLogin() {
-    // Arahkan ke Login, lalu refresh session saat kembali
     Navigator.push(
-      context, 
-      MaterialPageRoute(builder: (_) => const AuthScreen())
+      context,
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
     ).then((_) {
-      // PENTING: Cek ulang session setelah user kembali dari halaman login
-      // Siapa tahu dia berhasil login
       _checkSession();
     });
   }
 
   void _buyNow() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Lanjut ke form pembayaran..."))
+    Navigator.push(
+      context,
+
+      MaterialPageRoute(builder: (_) => const UserPolisForm()),
     );
   }
 
@@ -128,10 +117,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => UserProductDetailScreen(
-          productId: product.id,
-          // Tidak perlu kirim role
-        ),
+        builder: (_) => UserProductDetailScreen(productId: product.id),
       ),
     );
   }
@@ -140,14 +126,18 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      extendBodyBehindAppBar: true, 
+      extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: ProductHelper.primaryGreen))
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: ProductHelper.primaryGreen,
+              ),
+            )
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : _buildContent(),
-      
+          ? Center(child: Text(_errorMessage!))
+          : _buildContent(),
+
       bottomNavigationBar: _buildBottomBar(),
     );
   }
@@ -162,8 +152,8 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
           color: Colors.white.withOpacity(0.9),
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)
-          ]
+            BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
+          ],
         ),
         child: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
@@ -181,18 +171,17 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gambar Header
           SizedBox(
             height: 350,
             width: double.infinity,
             child: Image.network(
               imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_,__,___) => Container(color: Colors.grey.shade200),
+              errorBuilder: (_, __, ___) =>
+                  Container(color: Colors.grey.shade200),
             ),
           ),
-          
-          // Konten Body
+
           Transform.translate(
             offset: const Offset(0, -30),
             child: Container(
@@ -204,19 +193,22 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ... (Bagian UI Header, Nama, Harga sama seperti sebelumnya)
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       margin: const EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2)
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: ProductHelper.lightGreen,
                       borderRadius: BorderRadius.circular(20),
@@ -224,9 +216,9 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                     child: Text(
                       _product!.tipe.toUpperCase(),
                       style: const TextStyle(
-                        color: ProductHelper.darkGreen, 
+                        color: ProductHelper.darkGreen,
                         fontWeight: FontWeight.bold,
-                        fontSize: 12
+                        fontSize: 12,
                       ),
                     ),
                   ),
@@ -234,33 +226,49 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                   Text(
                     _product!.namaProduk,
                     style: const TextStyle(
-                      fontSize: 26, fontWeight: FontWeight.w800, color: Colors.black87, height: 1.2
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                      height: 1.2,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "Rp ${_product!.premiDasar}",
                     style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.bold, color: ProductHelper.primaryGreen
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: ProductHelper.primaryGreen,
                     ),
                   ),
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 16),
 
-                  // Deskripsi
-                  const Text("Deskripsi Produk", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Deskripsi Produk",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     _product!.description,
-                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.6),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey.shade600,
+                      height: 1.6,
+                    ),
                   ),
-                  
+
                   const SizedBox(height: 40),
 
-                  // Produk Lainnya
                   if (!_isLoadingRelated && _relatedProducts.isNotEmpty) ...[
-                    const Text("Produk Lainnya", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Produk Lainnya",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     ListView.builder(
                       padding: EdgeInsets.zero,
@@ -286,14 +294,12 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
     );
   }
 
-  // --- 4. BOTTOM BAR LOGIC (Menggunakan _currentRole) ---
   Widget _buildBottomBar() {
-    // Cek apakah role adalah 'user' (sesuaikan string 'user' dengan logic backend Anda)
-    // Jika backend mengembalikan 'guest' saat belum login, logika ini valid.
-    final bool isUser = _currentRole == 'user'; 
-    
+    final bool isUser = _currentRole == 'user';
     final String buttonText = isUser ? "Beli Sekarang" : "Login Untuk Membeli";
-    final Color buttonColor = isUser ? ProductHelper.primaryGreen : Colors.grey.shade800;
+    final Color buttonColor = isUser
+        ? ProductHelper.primaryGreen
+        : Colors.grey.shade800;
     final VoidCallback onPressed = isUser ? _buyNow : _navigateToLogin;
 
     return Container(
@@ -304,9 +310,9 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 20,
-            offset: const Offset(0, -5)
-          )
-        ]
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: ElevatedButton(
         onPressed: onPressed,
@@ -314,9 +320,13 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
           backgroundColor: buttonColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: isUser ? 4 : 2,
-          shadowColor: isUser ? ProductHelper.primaryGreen.withOpacity(0.4) : Colors.black12,
+          shadowColor: isUser
+              ? ProductHelper.primaryGreen.withOpacity(0.4)
+              : Colors.black12,
         ),
         child: Text(
           buttonText,

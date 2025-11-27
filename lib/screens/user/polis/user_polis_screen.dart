@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
 import '../../../widgets/user/polis/user_polis_card.dart';
+import 'user_polis_detail_screen.dart';
 
 class PolicyScreen extends StatelessWidget {
   const PolicyScreen({super.key});
@@ -11,81 +12,76 @@ class PolicyScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: false,
-            pinned: true,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new,
-                color: Colors.green.shade700,
-                size: 20,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.grey[50],
+              elevation: 0,
+              pinned: false,
+              floating: true,
+              automaticallyImplyLeading: false,
+              centerTitle: false,
               title: const Text(
-                "Polis Anda",
+                "Daftar Polis",
                 style: TextStyle(
                   color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.green.shade50, Colors.white],
-                  ),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
                 ),
               ),
             ),
-          ),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      "Total Polis",
-                      "${policies.length}",
-                      Icons.description_outlined,
-                      Colors.blue,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        "Total Polis",
+                        "${policies.length}",
+                        Icons.description_outlined,
+                        Colors.blue,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      "Polis Aktif",
-                      "${policies.where((p) => p.status == 'Aktif').length}",
-                      Icons.verified_outlined,
-                      Colors.green,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        "Polis Aktif",
+                        "${policies.where((p) => p.status == 'Aktif').length}",
+                        Icons.verified_outlined,
+                        Colors.green,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
 
-          SliverPadding(
-            padding: const EdgeInsets.all(20),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => PolicyCard(policy: policies[index]),
-                childCount: policies.length,
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final policy = policies[index];
+                  return PolicyCard(
+                    policy: policy,
+
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              PolicyDetailScreen(policy: policy),
+                        ),
+                      );
+                    },
+                  );
+                }, childCount: policies.length),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
