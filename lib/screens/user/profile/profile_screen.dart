@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../services/session_service.dart';
-import '../../main.dart'; // Untuk AuthCheck
+import '../../../screens/user/profile/edit_profile_screen.dart';
+import '../../../services/session_service.dart';
+import '../../../main.dart'; // Untuk AuthCheck
 
 class ProfileScreen extends StatelessWidget {
   final String role;
@@ -35,9 +36,12 @@ class ProfileScreen extends StatelessWidget {
               decoration: _boxDecoration(),
               child: Column(
                 children: [
-                  _buildMenuItem(Icons.person_outline, "Edit Profil", () {}),
-                  _buildDivider(),
-                  _buildMenuItem(Icons.notifications_outlined, "Notifikasi", () {}),
+                  _buildMenuItem(Icons.person_outline, "Edit Profil", () {
+                     Navigator.push(
+                        context,
+                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                    );
+                  }),
                   _buildDivider(),
                   _buildMenuItem(Icons.lock_outline, "Ganti Password", () {}),
                 ],
