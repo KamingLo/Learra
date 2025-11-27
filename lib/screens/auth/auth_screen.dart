@@ -12,46 +12,52 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool isLoginMode = true;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isLoginMode ? 'Login' : 'Register'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: isLoginMode
-                    ? const LoginForm(isLoginMode: true)
-                    : const RegisterForm(),
-              ),
+  void _toggleAuthMode() {
+    setState(() => isLoginMode = !isLoginMode);
+  }
+
+ // File: auth_screen.dart
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    // AppBar transparan (opsional)
+    appBar: AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: 0,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+    ),
+    // Gunakan LayoutBuilder untuk mendapatkan tinggi layar
+    body: LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          // ConstrainedBox memaksa konten minimal setinggi layar
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
             ),
-            const SizedBox(height: 10),
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() => isLoginMode = !isLoginMode);
-                },
-                child: Text(
-                  isLoginMode
-                      ? "Belum punya akun? Daftar di sini"
-                      : "Sudah punya akun? Login di sini",
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                  ),
+            // IntrinsicHeight membantu menjaga layout tetap rapi
+            child: IntrinsicHeight(
+              child: Center( // Center ini yang membuat Vertikal & Horizontal
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: isLoginMode
+                      ? LoginForm(
+                          isLoginMode: true,
+                          onSwitchToRegister: _toggleAuthMode,
+                        )
+                      : RegisterForm(
+                          onSwitchToLogin: _toggleAuthMode,
+                        ),
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
-    );
-  }
+          ),
+        );
+      },
+    ),
+  );
+}
 }
