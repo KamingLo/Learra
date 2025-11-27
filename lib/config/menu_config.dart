@@ -4,9 +4,11 @@ import 'package:learra/screens/user/polis/user_polis_screen.dart';
 
 // --- IMPORT SCREEN SESUAI ROLE ---
 import '../screens/admin/product/product_screen.dart';  // Screen Admin (CRUD)
+import '../screens/admin/client/client_screen.dart' ;  // Screen Admin (Management User)
 import '../screens/user/product/product_screen.dart';   // Screen User (Belanja)
 import '../screens/user/profile/profile_screen.dart';   // Profile (Logout)
 import 'package:learra/screens/user/home/home_screen.dart';
+
 
 class NavItem {
   final String label;
@@ -21,6 +23,12 @@ class MenuConfig {
     // --- 1. MENU ADMIN ---
     if (role == 'admin') {
       return [
+        NavItem(
+          label: "Client", 
+          icon: Icons.diversity_3_rounded,
+          // Arahkan ke screen Admin yang punya fitur CRUD
+          screen: const ClientScreen(), 
+        ),
         NavItem(
           label: "Produk", 
           icon: Icons.inventory_2_rounded,
