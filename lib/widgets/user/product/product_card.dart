@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/product_model.dart';
-import '../../../utils/product_helper.dart'; // Sesuaikan import helper
+import '../../../utils/product_helper.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
@@ -12,108 +12,109 @@ class ProductCard extends StatelessWidget {
     required this.onTap,
   });
 
+  // --- HELPER 1: Format Rupiah ---
+  String _formatRupiah(int price) {
+    String priceStr = price.toString();
+    String result = '';
+    int count = 0;
+    for (int i = priceStr.length - 1; i >= 0; i--) {
+      result = priceStr[i] + result;
+      count++;
+      if (count == 3 && i > 0) {
+        result = '.$result';
+        count = 0;
+      }
+    }
+    return result;
+  }
+
+  // --- HELPER 2: Kapitalisasi (Huruf pertama besar) ---
+  // Cara kerjanya: Ambil huruf pertama, besarkan. Ambil sisanya, kecilkan.
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageUrl = ProductHelper.getImageUrl(product.tipe);
+    const double radius = 20.0; 
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade100), // Border halus
+          borderRadius: BorderRadius.circular(radius),
+          // Shadow halus warna abu-abu (Clean look)
           boxShadow: [
             BoxShadow(
-              color: ProductHelper.primaryGreen.withValues(alpha: 0.08), // Shadow kehijauan
-              blurRadius: 10,
+              color: Colors.grey.withValues(alpha: 0.08), 
+              blurRadius: 15,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // AREA GAMBAR
+            // --- BAGIAN 1: GAMBAR ---
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                child: Stack(
-                  children: [
-                    Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, error, stack) => Container(
-                        color: Colors.grey.shade200,
-                        child: Icon(Icons.broken_image, color: Colors.grey.shade400),
-                      ),
-                    ),
-                    // Overlay gradasi hijau tipis di bawah gambar agar teks jelas (opsional)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: 40,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.05),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  ],
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(radius)),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (ctx, err, stack) => 
+                      Container(color: Colors.grey.shade100, child: const Icon(Icons.broken_image, color: Colors.grey)),
+                  ),
                 ),
               ),
             ),
-            
-            // INFO AREA
+
+            // --- BAGIAN 2: INFO PRODUK ---
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(14.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Badge Tipe (Hijau Muda)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    margin: const EdgeInsets.only(bottom: 6),
-                    decoration: BoxDecoration(
-                      color: ProductHelper.lightGreen, // Background Hijau Muda
-                      borderRadius: BorderRadius.circular(6)
-                    ),
-                    child: Text(
-                      product.tipe.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 9, 
-                        fontWeight: FontWeight.bold, 
-                        color: ProductHelper.primaryGreen // Teks Hijau Tua
-                      ),
-                    ),
-                  ),
-                  
+                  // 1. Nama Produk
                   Text(
                     product.namaProduk,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 14,
-                      color: Colors.black87
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937), // Dark Grey
+                      height: 1.2,
                     ),
                   ),
+                  
                   const SizedBox(height: 4),
+                  
+                  // 2. Tipe Produk (Hijau & Kapitalisasi)
                   Text(
-                    "Rp ${product.premiDasar}",
+                    _capitalize(product.tipe), // <-- Panggil helper di sini
                     style: const TextStyle(
-                      fontWeight: FontWeight.w800, 
-                      fontSize: 14,
-                      color: ProductHelper.primaryGreen // Harga Hijau
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400, // Sedikit tebal agar warna hijaunya jelas
+                      color: ProductHelper.primaryGreen, // Warna Hijau sesuai request
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+                  
+                  // 3. Harga
+                  Text(
+                    "Rp ${_formatRupiah(product.premiDasar)}",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: ProductHelper.primaryGreen,
                     ),
                   ),
                 ],

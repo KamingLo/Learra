@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProductFormFields extends StatelessWidget {
   final TextEditingController nameController;
@@ -12,7 +13,8 @@ class ProductFormFields extends StatelessWidget {
 
   // Palet Warna
   static const Color kPrimaryGreen = Color(0xFF0FA958);
-  static const Color kGreyBorder = Color(0xFFE0E0E0); // Abu-abu lembut untuk border diam
+  static const Color kBorderColor = Color(0xFFE0E0E0); // Abu-abu muda untuk garis tepi halus
+  static const Color kTextLabel = Color(0xFF6B7280); 
 
   const ProductFormFields({
     super.key,
@@ -26,40 +28,52 @@ class ProductFormFields extends StatelessWidget {
     required this.isEdit,
   });
 
-  // Helper Decoration: Putih bersih dengan border abu-abu, berubah hijau saat fokus
-  InputDecoration _inputDecoration({required String label, required IconData icon}) {
+  // Helper Decoration: White Style
+  InputDecoration _whiteDecoration({
+    required String label,
+    IconData? icon,
+    String? prefixText,
+    String? hintText,
+  }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.grey), // Label abu-abu saat diam
-      floatingLabelStyle: const TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.w600), // Label hijau saat fokus
+      hintText: hintText,
+      prefixText: prefixText,
       
-      prefixIcon: Icon(icon, color: kPrimaryGreen), // Ikon tetap hijau sebagai aksen
+      // Styling Text
+      labelStyle: const TextStyle(color: kTextLabel, fontSize: 14),
+      floatingLabelStyle: const TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.bold),
+      prefixStyle: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
       
+      // Icon
+      prefixIcon: icon != null 
+          ? Icon(icon, color: kTextLabel, size: 22) 
+          : null,
+      prefixIconColor: MaterialStateColor.resolveWith((states) => 
+          states.contains(MaterialState.focused) ? kPrimaryGreen : kTextLabel
+      ),
+
       filled: true,
-      fillColor: Colors.white, // TETAP PUTIH
-      
-      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-      
-      // Border saat diam (Abu-abu halus)
+      fillColor: Colors.white, // UBAH KE PUTIH
+
+      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+
+      // Border: Menggunakan border tipis agar terlihat di background putih
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: kGreyBorder, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: kBorderColor, width: 1), // Garis halus
       ),
-      
-      // Border saat diklik/fokus (Hijau menyala)
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: kPrimaryGreen, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: kPrimaryGreen, width: 1.5), // Hijau saat aktif
       ),
-      
-      // Border saat error (Merah)
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
     );
   }
@@ -69,80 +83,117 @@ class ProductFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // --- NAMA PRODUK ---
+        
+        // --- SECTION 1: IDENTITAS PRODUK ---
+        const Text(
+          "Detail Produk",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        const SizedBox(height: 12),
+
+        // 1. Nama Produk
         TextFormField(
           controller: nameController,
-          style: const TextStyle(color: Colors.black87),
-          cursorColor: kPrimaryGreen, // Kursor warna hijau
-          decoration: _inputDecoration(
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          cursorColor: kPrimaryGreen,
+          decoration: _whiteDecoration(
             label: "Nama Produk",
-            icon: Icons.inventory_2_outlined,
+            hintText: "Contoh: Asuransi Jiwa Keluarga",
+            icon: Icons.edit_note_rounded,
           ),
           validator: (val) => val!.isEmpty ? "Nama produk wajib diisi" : null,
         ),
-        const SizedBox(height: 20),
+        
+        const SizedBox(height: 16),
 
-        // --- DESKRIPSI ---
-        TextFormField(
-          controller: descController,
-          maxLines: 3,
-          style: const TextStyle(color: Colors.black87),
-          cursorColor: kPrimaryGreen,
-          decoration: _inputDecoration(
-            label: "Deskripsi",
-            icon: Icons.description_outlined,
-          ).copyWith(alignLabelWithHint: true),
-          validator: (val) => val!.isEmpty ? "Deskripsi wajib diisi" : null,
-        ),
-        const SizedBox(height: 20),
-
-        // --- HARGA ---
-        TextFormField(
-          controller: priceController,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-          cursorColor: kPrimaryGreen,
-          decoration: _inputDecoration(
-            label: "Premi Dasar (Rp)",
-            icon: Icons.attach_money,
-          ),
-          validator: (val) => val!.isEmpty ? "Harga wajib diisi" : null,
-        ),
-        const SizedBox(height: 20),
-
-        // --- TIPE ASURANSI ---
+        // 2. Tipe Asuransi
         DropdownButtonFormField<String>(
-          initialValue: selectedType,
-          icon: const Icon(Icons.arrow_drop_down, color: kPrimaryGreen), // Panah dropdown hijau
-          style: const TextStyle(color: Colors.black87, fontSize: 16),
-          decoration: _inputDecoration(
-            label: "Tipe Asuransi",
+          value: selectedType,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: kTextLabel),
+          style: const TextStyle(color: Colors.black87, fontSize: 15),
+          decoration: _whiteDecoration(
+            label: "Kategori Asuransi",
             icon: Icons.category_outlined,
           ),
           dropdownColor: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           items: ['kesehatan', 'jiwa', 'kendaraan'].map((String type) {
             return DropdownMenuItem(
               value: type,
-              child: Text(type[0].toUpperCase() + type.substring(1)),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8, height: 8,
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      color: _getColorByType(type),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Text(
+                    type[0].toUpperCase() + type.substring(1),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             );
           }).toList(),
           onChanged: onTypeChanged,
         ),
+
+        const SizedBox(height: 24),
+
+        // --- SECTION 2: HARGA & DESKRIPSI ---
+        const Text(
+          "Informasi Penjualan",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+        ),
+        const SizedBox(height: 12),
+
+        // 3. Harga
+        TextFormField(
+          controller: priceController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          style: const TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.bold, fontSize: 16),
+          cursorColor: kPrimaryGreen,
+          decoration: _whiteDecoration(
+            label: "Premi Dasar",
+            prefixText: "Rp ",
+            icon: Icons.wallet_rounded,
+          ),
+          validator: (val) => val!.isEmpty ? "Harga wajib diisi" : null,
+        ),
+
+        const SizedBox(height: 16),
+
+        // 4. Deskripsi
+        TextFormField(
+          controller: descController,
+          maxLines: 4,
+          style: const TextStyle(color: Colors.black87, height: 1.5),
+          cursorColor: kPrimaryGreen,
+          decoration: _whiteDecoration(
+            label: "Deskripsi Lengkap",
+            hintText: "Jelaskan manfaat produk ini...",
+            icon: Icons.description_outlined,
+          ).copyWith(alignLabelWithHint: true),
+          validator: (val) => val!.isEmpty ? "Deskripsi wajib diisi" : null,
+        ),
+
         const SizedBox(height: 40),
 
         // --- TOMBOL SUBMIT ---
         SizedBox(
           width: double.infinity,
-          height: 54,
+          height: 56,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimaryGreen, // Tombol tetap hijau solid agar kontras
+              backgroundColor: kPrimaryGreen,
               foregroundColor: Colors.white,
-              elevation: 2, // Bayangan lebih tipis agar modern
-              shadowColor: kPrimaryGreen.withOpacity(0.3),
+              elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             onPressed: isLoading ? null : onSubmit,
@@ -150,18 +201,28 @@ class ProductFormFields extends StatelessWidget {
                 ? const SizedBox(
                     height: 24,
                     width: 24,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                   )
                 : Text(
-                    isEdit ? "Simpan Perubahan" : "Buat Produk",
+                    isEdit ? "Simpan Perubahan" : "Buat Produk Sekarang",
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
                     ),
                   ),
           ),
         )
       ],
     );
+  }
+
+  Color _getColorByType(String type) {
+    switch (type) {
+      case 'kesehatan': return Colors.blueAccent;
+      case 'jiwa': return Colors.purpleAccent;
+      case 'kendaraan': return Colors.orangeAccent;
+      default: return Colors.grey;
+    }
   }
 }

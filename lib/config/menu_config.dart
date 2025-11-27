@@ -22,11 +22,6 @@ class MenuConfig {
     if (role == 'admin') {
       return [
         NavItem(
-          label: "Dashboard",
-          icon: Icons.dashboard_rounded,
-          screen: const Scaffold(body: Center(child: Text("Admin Dashboard"))), // Placeholder
-        ),
-        NavItem(
           label: "Produk", 
           icon: Icons.inventory_2_rounded,
           // Arahkan ke screen Admin yang punya fitur CRUD
