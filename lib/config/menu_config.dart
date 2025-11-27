@@ -5,7 +5,7 @@ import 'package:learra/screens/user/polis/user_polis_screen.dart';
 // --- IMPORT SCREEN SESUAI ROLE ---
 import '../screens/admin/product/product_screen.dart';  // Screen Admin (CRUD)
 import '../screens/user/product/product_screen.dart';   // Screen User (Belanja)
-import '../screens/user/profile_screen.dart';   // Profile (Logout)
+import '../screens/user/profile/profile_screen.dart';   // Profile (Logout)
 import 'package:learra/screens/user/home/home_screen.dart';
 
 class NavItem {

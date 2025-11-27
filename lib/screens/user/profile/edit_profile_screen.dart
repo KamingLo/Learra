@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
+import '../../../widgets/user/profile/profile_input_field.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -9,13 +10,19 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  static const Color _textPrimary = Color(0xFF111111);
+  static const Color _textSecondary = Color(0xFF3F3F3F);
+  static const Color _backgroundColor = Color(0xFFF7F7F7);
+  static const Color _primaryGreen = Color(0xFF06A900);
+  static const Color _deepGreen = Color(0xFF024000);
+
   final _formKey = GlobalKey<FormState>();
   final _apiService = ApiService();
 
   // State
   bool _isInitialLoading = true;
   bool _isSaving = false;
-  String? _userId = ''; // Variabel untuk menyimpan ID User
+  String? _userId;
 
   // Controllers
   final TextEditingController _nameController = TextEditingController();
@@ -51,20 +58,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final response = await _apiService.get('/user/profile');
 
-      // Cek apakah key 'user' ada sesuai struktur JSON response
       if (response['user'] != null) {
         final data = response['user'];
 
         setState(() {
-          // Simpan ID untuk keperluan Update nanti
-          _userId = data['_id'];
-
+          _userId = data['_id']?.toString();
           _nameController.text = data['name'] ?? '';
           _emailController.text = data['email'] ?? '';
           _identityController.text = data['nomorIdentitas'] ?? '';
           _phoneController.text = data['phone'] ?? '';
 
-          // Parsing Tanggal: Ambil 10 karakter pertama (YYYY-MM-DD)
+          // Parsing Tanggal (ambil YYYY-MM-DD saja)
           String rawDate = data['birthDate'] ?? '';
           if (rawDate.length >= 10) {
             _birthDateController.text = rawDate.substring(0, 10);
@@ -79,15 +83,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _isInitialLoading = false;
         });
       } else {
-        throw Exception("Data user tidak ditemukan dalam response");
+        throw Exception("Data user tidak ditemukan");
       }
     } catch (e) {
       setState(() => _isInitialLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("Gagal memuat profil: $e"),
-            backgroundColor: Colors.red),
+          content: Text("Gagal memuat profil: $e"),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
     }
   }
@@ -96,12 +101,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Pastikan ID sudah didapatkan dari proses GET sebelumnya
     if (_userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Error: ID User tidak ditemukan, silakan refresh."),
-            backgroundColor: Colors.red),
+        SnackBar(
+          content: const Text("Error: ID User tidak ditemukan, silakan refresh."),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
       return;
     }
@@ -109,7 +114,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // Body Request
       final body = {
         "name": _nameController.text,
         "birthDate": _birthDateController.text,
@@ -118,14 +122,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         "rentangGaji": _salaryController.text,
       };
 
-      // Gunakan ID di URL Endpoint
-      await _apiService.put('/users/$_userId', body: body);
+      // Mengirim request PUT ke endpoint spesifik ID user (user/profile)
+      await _apiService.put('/user/profile/$_userId', body: body);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Profil berhasil diperbarui"),
-            backgroundColor: Colors.green),
+        SnackBar(
+          content: const Text("Profil berhasil diperbarui"),
+          backgroundColor: _primaryGreen,
+        ),
       );
 
       Navigator.pop(context, true);
@@ -133,7 +138,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("Gagal update: $e"), backgroundColor: Colors.red),
+          content: Text("Gagal update: $e"),
+          backgroundColor: Colors.red.shade700,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -161,152 +168,260 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F6),
+      backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: const Text("Edit Profil", style: TextStyle(color: Colors.black)),
+        title: Text(
+          "Edit Profil",
+          style: const TextStyle(
+            color: _textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: _textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isInitialLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionLabel("Informasi Pribadi"),
-                    const SizedBox(height: 10),
-
-                    // Nama (Editable)
-                    _buildTextField("Nama Lengkap", _nameController, Icons.person),
-
-                    // Email & Phone & ID (Read Only)
-                    _buildTextField("Email", _emailController, Icons.email,
-                        isReadOnly: true),
-                    _buildTextField("No. Telepon", _phoneController, Icons.phone,
-                        isReadOnly: true),
-                    _buildTextField(
-                        "No. Identitas", _identityController, Icons.badge,
-                        isReadOnly: true),
-
-                    // Tanggal Lahir (Picker)
-                    _buildDatePickerField(),
-
-                    const SizedBox(height: 20),
-                    _buildSectionLabel("Data Tambahan"),
-                    const SizedBox(height: 10),
-
-                    // Alamat, Pekerjaan, Gaji (Editable)
-                    _buildTextField(
-                        "Alamat Lengkap", _addressController, Icons.home,
-                        maxLines: 3),
-                    _buildTextField("Pekerjaan", _jobController, Icons.work),
-                    _buildTextField(
-                        "Rentang Gaji", _salaryController, Icons.attach_money),
-
-                    const SizedBox(height: 30),
-
-                    // Tombol Simpan
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: _isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text("Simpan Perubahan",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
+          : GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildProfileSummaryCard(),
+                      const SizedBox(height: 24),
+                      _buildSectionCard(
+                        title: "Informasi Pribadi",
+                        subtitle: "Perbarui data utama akun Anda",
+                        children: [
+                          ProfileInputField(
+                            label: "Nama Lengkap",
+                            controller: _nameController,
+                            icon: Icons.person,
+                          ),
+                          ProfileInputField(
+                            label: "Email",
+                            controller: _emailController,
+                            icon: Icons.email,
+                            isReadOnly: true,
+                          ),
+                          ProfileInputField(
+                            label: "No. Telepon",
+                            controller: _phoneController,
+                            icon: Icons.phone,
+                            isReadOnly: true,
+                          ),
+                          ProfileInputField(
+                            label: "No. Identitas",
+                            controller: _identityController,
+                            icon: Icons.badge,
+                            isReadOnly: true,
+                          ),
+                          ProfileInputField(
+                            label: "Tanggal Lahir",
+                            controller: _birthDateController,
+                            icon: Icons.calendar_today,
+                            isReadOnly: true,
+                            onTap: () => _selectDate(context),
+                            suffixIcon: Icons.expand_more,
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                  ],
+                      const SizedBox(height: 20),
+                      _buildSectionCard(
+                        title: "Data Tambahan",
+                        subtitle: "Lengkapi informasi pendukung untuk layanan optimal",
+                        children: [
+                          ProfileInputField(
+                            label: "Alamat Lengkap",
+                            controller: _addressController,
+                            icon: Icons.home,
+                            maxLines: 3,
+                          ),
+                          ProfileInputField(
+                            label: "Pekerjaan",
+                            controller: _jobController,
+                            icon: Icons.work,
+                          ),
+                          ProfileInputField(
+                            label: "Rentang Gaji",
+                            controller: _salaryController,
+                            icon: Icons.attach_money,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      _buildSaveButton(),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
               ),
             ),
     );
   }
 
-  Widget _buildSectionLabel(String label) {
-    return Text(
-      label,
-      style: TextStyle(
-          fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[600]),
-    );
-  }
-
-  Widget _buildTextField(
-      String label, TextEditingController controller, IconData icon,
-      {bool isReadOnly = false, int maxLines = 1}) {
+  Widget _buildProfileSummaryCard() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: isReadOnly ? Colors.grey.shade200 : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: isReadOnly
-            ? []
-            : [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2))
-              ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        readOnly: isReadOnly,
-        maxLines: maxLines,
-        validator: (value) =>
-            value == null || value.isEmpty ? "$label tidak boleh kosong" : null,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon:
-              Icon(icon, color: isReadOnly ? Colors.grey : Colors.blueAccent),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        gradient: const LinearGradient(
+          colors: [_primaryGreen, _deepGreen],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-      ),
-    );
-  }
-
-  Widget _buildDatePickerField() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2))
+            color: _deepGreen.withOpacity(0.18),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
+          ),
         ],
       ),
-      child: TextFormField(
-        controller: _birthDateController,
-        readOnly: true,
-        onTap: () => _selectDate(context),
-        validator: (value) =>
-            value == null || value.isEmpty ? "Tanggal lahir wajib diisi" : null,
-        decoration: const InputDecoration(
-          labelText: "Tanggal Lahir",
-          prefixIcon: Icon(Icons.calendar_today, color: Colors.blueAccent),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          suffixIcon: Icon(Icons.arrow_drop_down),
+      child: Row(
+        children: [
+          Container(
+            height: 72,
+            width: 72,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 36),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _nameController,
+                  builder: (_, value, __) => Text(
+                    value.text.isEmpty ? "Lengkapi nama Anda" : value.text,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _emailController,
+                  builder: (_, value, __) => Text(
+                    value.text.isEmpty ? "Email belum tersedia" : value.text,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.85),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: const [
+                    Icon(Icons.eco_outlined, size: 18, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      "Data pribadi terlindungi",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    String? subtitle,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _backgroundColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                color: _textSecondary,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: FilledButton(
+        onPressed: _isSaving ? null : _saveProfile,
+        style: FilledButton.styleFrom(
+          backgroundColor: _primaryGreen,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          elevation: 3,
         ),
+        child: _isSaving
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text("Simpan Perubahan"),
       ),
     );
   }
