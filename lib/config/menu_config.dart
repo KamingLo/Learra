@@ -5,7 +5,6 @@ import 'package:learra/screens/user/polis/user_polis_screen.dart';
 // --- IMPORT SCREEN SESUAI ROLE ---
 import '../screens/admin/product/product_screen.dart';  // Screen Admin (CRUD)
 import '../screens/user/product/product_screen.dart';   // Screen User (Belanja)
-import '../screens/public/product_screen.dart'; // Screen Guest (Preview)
 import '../screens/user/profile_screen.dart';   // Profile (Logout)
 import 'package:learra/screens/user/home/home_screen.dart';
 
@@ -87,7 +86,7 @@ class MenuConfig {
           label: "Produk",
           icon: Icons.grid_view_rounded,
           // Arahkan ke screen Public yang hanya Preview
-          screen: const GuestProductScreen(), 
+          screen: const UserProductScreen(), 
         ),
         NavItem(
           label: "Masuk",

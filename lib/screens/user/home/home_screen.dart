@@ -8,6 +8,7 @@ import '../../../utils/product_helper.dart'; // Helper Warna & Gambar
 import '../../../widgets/user/home/product_card_item.dart'; // Widget Item Card (Lokasi Baru)
 // Sesuaikan import ini jika lokasi product detail berbeda
 import '../product/product_detail_screen.dart'; 
+import '../../auth/auth_screen.dart';
 // import 'login_screen.dart'; // Uncomment jika sudah ada login screen
 
 class UserHomeScreen extends StatefulWidget {
@@ -81,10 +82,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   // --- NAVIGASI ---
   void _navigateToLogin() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Navigasi ke Login Screen..."))
-    );
-    // Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen()));
   }
 
   void _goToDetail(ProductModel product) {
@@ -272,7 +270,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: ProductHelper.primaryGreen.withOpacity(0.3),
+            color: ProductHelper.primaryGreen.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 5)
           )
@@ -340,7 +338,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             border: Border.all(color: Colors.grey.shade200),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 4)
               )
