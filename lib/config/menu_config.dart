@@ -9,6 +9,8 @@ import '../screens/user/product/product_screen.dart'; // Screen User (Belanja)
 import '../screens/user/profile/profile_screen.dart'; // Profile (Logout)
 import 'package:learra/screens/user/home/home_screen.dart';
 import '../screens/user/claim/claim_menu.dart'; // Import Claim Menu
+import 'package:learra/screens/admin/payment/ad_payment_menu.dart';
+import 'package:learra/screens/admin/claim/ad_claim_menu.dart';
 
 class NavItem {
   final String label;
@@ -40,6 +42,16 @@ class MenuConfig {
           icon: Icons.my_library_books_rounded,
           // Arahkan ke screen Admin yang punya fitur CRUD
           screen: const AdminPolicyScreen(),
+        ),
+        NavItem(
+          label: "Pembayaran",
+          icon: Icons.payment,
+          screen: const AdminPembayaranScreen(),
+        ),
+        NavItem(
+          label: "Klaim",
+          icon: Icons.payment,
+          screen: const AdminKlaimScreen(),
         ),
         NavItem(
           label: "Akun",

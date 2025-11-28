@@ -11,6 +11,8 @@ class PaymentDetail extends StatefulWidget {
   final String? policyId;
   final String? userId;
   final String? policyNumber;
+  final bool
+  isPerpanjangan; // Parameter tambahan untuk membedakan pembayaran pertama atau perpanjangan
 
   const PaymentDetail({
     super.key,
@@ -18,6 +20,7 @@ class PaymentDetail extends StatefulWidget {
     this.policyId,
     this.userId,
     this.policyNumber,
+    this.isPerpanjangan = false, // Default: false (pembayaran pertama)
   });
 
   @override
@@ -129,9 +132,17 @@ class _PaymentDetailState extends State<PaymentDetail> {
       print('Amount: ${widget.product.premiDasar}');
       print('Method: $_selectedPaymentMethod');
       print('User Input Policy Number: $policyNumber');
+      print(
+        'Type: ${widget.isPerpanjangan ? "Perpanjangan" : "Pembayaran Pertama"}',
+      );
+
+      // Pilih endpoint berdasarkan jenis pembayaran
+      final String endpoint = widget.isPerpanjangan
+          ? '/payment/perpanjangan'
+          : '/payment';
 
       final response = await _apiService.post(
-        '/payment',
+        endpoint,
         body: {
           'policyId': widget.policyId!,
           'amount': widget.product.premiDasar,
@@ -251,7 +262,9 @@ class _PaymentDetailState extends State<PaymentDetail> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Pembayaran ${widget.product.namaProduk}',
+          widget.isPerpanjangan
+              ? 'Perpanjangan ${widget.product.namaProduk}' // Ubah judul jika perpanjangan
+              : 'Pembayaran ${widget.product.namaProduk}',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -370,30 +383,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
                       ),
                       const SizedBox(height: 8),
                       const Divider(),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Total Pembayaran:',
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            _formatCurrency(
-                              widget.product.premiDasar.toString(),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF06A900),
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),

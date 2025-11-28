@@ -113,7 +113,7 @@ flutter:
 
 flutter_native_splash:
   color: "#FFFFFF"
-  image: assets/IconApp/ico.png
+  image: assets/IconApp/LearraFull.png
   android_gravity: center
   ios_content_mode: scaleAspectFit
   android: true

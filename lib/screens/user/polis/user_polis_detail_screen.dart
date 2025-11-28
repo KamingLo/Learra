@@ -212,6 +212,8 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
         description: _policy!.summarySubtitle,
       );
 
+      final isPerpanjangan = _policy!.status.toLowerCase() == 'aktif';
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -220,6 +222,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
             policyId: _policy!.id,
             policyNumber: _policy!.policyNumber,
             userId: _policy!.ownerId,
+            isPerpanjangan: isPerpanjangan,
           ),
         ),
       ).then((_) {

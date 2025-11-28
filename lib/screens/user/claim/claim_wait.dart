@@ -1,91 +1,88 @@
+// lib/screens/user/claim/claim_wait.dart
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:intl/intl.dart';
 
-// 1. Ubah class utama menjadi StatefulWidget
-class PengajuanKlaimBerhasilScreen extends StatefulWidget {
-  const PengajuanKlaimBerhasilScreen({super.key});
+class ClaimWaitScreen extends StatefulWidget {
+  final Map<String, dynamic> klaimData;
+
+  const ClaimWaitScreen({super.key, required this.klaimData});
 
   @override
-  State<PengajuanKlaimBerhasilScreen> createState() =>
-      _PengajuanKlaimBerhasilScreenState();
+  State<ClaimWaitScreen> createState() => _ClaimWaitScreenState();
 }
 
-// 2. Gunakan TickerProviderStateMixin dan inisialisasi semua animasi
-class _PengajuanKlaimBerhasilScreenState
-    extends State<PengajuanKlaimBerhasilScreen>
+class _ClaimWaitScreenState extends State<ClaimWaitScreen>
     with TickerProviderStateMixin {
-  // Variabel untuk Rotasi Jam
   late AnimationController _rotationController;
   late Animation<double> _rotationAnimation;
 
-  // Variabel untuk Skala (Pulse) Lingkaran Luar
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
+
+  final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
 
   @override
   void initState() {
     super.initState();
 
-    // --- 1. Animation Controller for Clock Rotation ---
     _rotationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Durasi putaran
+      duration: const Duration(seconds: 3),
     );
     _rotationAnimation = Tween<double>(
       begin: 0,
       end: 1,
     ).animate(_rotationController);
-    _rotationController.repeat(); // Putaran terus menerus
+    _rotationController.repeat();
 
-    // --- 2. Animation Controller for Outer Circle Scale (Pulse) ---
     _scaleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), // Durasi denyutan 1 detik
+      duration: const Duration(milliseconds: 1000),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(
-        parent: _scaleController,
-        curve: Curves.easeInOut, // Denyutan mulus
-      ),
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
-    _scaleController.repeat(
-      reverse: true,
-    ); // Denyutan berulang: membesar lalu mengecil
+    _scaleController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    // Wajib dispose SEMUA controller
     _rotationController.dispose();
     _scaleController.dispose();
     super.dispose();
   }
 
-  // Widget _infoRow dipindahkan ke sini karena ini adalah State class
-  Widget _infoRow(String label, String value, {Color? color}) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 150,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: color ?? Colors.black,
-            ),
-          ),
-        ),
-      ],
-    );
+  String _getPolisNumber() {
+    final polis = widget.klaimData['polis'];
+    if (polis == null) return 'Tidak tersedia';
+    return polis['policyNumber']?.toString() ??
+        polis['nomorPolis']?.toString() ??
+        'Tidak tersedia';
+  }
+
+  String _getProductName() {
+    final polis = widget.klaimData['polis'];
+    if (polis == null) return 'Tidak tersedia';
+
+    final productId = polis['productId'];
+    if (productId == null) return 'Tidak tersedia';
+
+    return productId['name']?.toString() ??
+        productId['namaProduk']?.toString() ??
+        'Tidak tersedia';
+  }
+
+  double _getJumlahKlaim() {
+    final jumlah = widget.klaimData['jumlahKlaim'];
+    if (jumlah is int) return jumlah.toDouble();
+    if (jumlah is double) return jumlah;
+    if (jumlah is String) return double.tryParse(jumlah) ?? 0.0;
+    return 0.0;
+  }
+
+  String _getDeskripsi() {
+    return widget.klaimData['deskripsi']?.toString() ?? '-';
   }
 
   @override
@@ -93,7 +90,9 @@ class _PengajuanKlaimBerhasilScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: const SizedBox(),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
         title: const Text(
           'Pengajuan Klaim',
           style: TextStyle(
@@ -103,127 +102,138 @@ class _PengajuanKlaimBerhasilScreenState
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.help_outline, color: Colors.black),
-          ),
-        ],
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 300),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             child: Column(
               children: [
-                const SizedBox(height: 60),
+                // Animasi jam
                 Center(
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Lingkaran Terluar: Diberi ScaleTransition
-                      ScaleTransition(
-                        scale: _scaleAnimation, // Menggunakan Scale Animation
+                      AnimatedBuilder(
+                        animation: _scaleController,
+                        builder: (_, child) => Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: child,
+                        ),
                         child: Container(
-                          width: 220,
-                          height: 220,
+                          width: 100,
+                          height: 100,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFFFFD966).withOpacity(0.15),
+                            color: Colors.green.withOpacity(0.1),
                           ),
                         ),
                       ),
-                      // Lingkaran Tengah: Tetap statis
-                      Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFFFD966).withOpacity(0.3),
+                      AnimatedBuilder(
+                        animation: _rotationController,
+                        builder: (_, child) => Transform.rotate(
+                          angle: _rotationAnimation.value * 2 * 3.1416,
+                          child: child,
+                        ),
+                        child: const Icon(
+                          Icons.hourglass_bottom,
+                          size: 60,
+                          color: Colors.green,
                         ),
                       ),
-                      // Ikon Jam: Tetap dengan RotationTransition
-                      RotationTransition(
-                        turns:
-                            _rotationAnimation, // Menggunakan Rotation Animation
-                        child: Container(
-                          width: 130,
-                          height: 130,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFFFD966),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Pengajuan klaim Anda berhasil dikirim!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Admin akan memverifikasi klaim dalam 1-3 hari kerja.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+
+                // Kotak info klaim
+                Center(
+                  child: DottedBorder(
+                    color: const Color(0xFFDEDEDE),
+                    strokeWidth: 1.5,
+                    dashPattern: const [5, 3],
+                    borderType: BorderType.RRect,
+                    radius: const Radius.circular(8),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 20,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0x0CD9D9D9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          _infoRow('Nama Produk:', _getProductName()),
+                          const SizedBox(height: 12),
+                          _infoRow('Nomor Polis:', _getPolisNumber()),
+                          const SizedBox(height: 12),
+                          _infoRow(
+                            'Jumlah Klaim:',
+                            currency.format(_getJumlahKlaim()),
                           ),
-                          child: const Icon(
-                            Icons.access_time,
-                            color: Colors.white,
-                            size: 70,
+                          const SizedBox(height: 12),
+                          _infoRow('Deskripsi:', _getDeskripsi(), maxLines: 3),
+                          const SizedBox(height: 12),
+                          _infoRow(
+                            'Status:',
+                            'Menunggu Verifikasi',
+                            color: Colors.orange,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Info tambahan
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue[700],
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Anda dapat melihat status klaim di menu "Klaim Saya"',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.blue[900],
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
-                const Text(
-                  'Pengajuan Berhasil!',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Mohon menunggu pengajuan klaim anda,\nkami akan segera memprosesnya',
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 100),
               ],
             ),
           ),
-          Positioned(
-            bottom: 124,
-            left: 16,
-            right: 16,
-            child: DottedBorder(
-              color: const Color(0xFFDEDEDE),
-              strokeWidth: 1.5,
-              dashPattern: const [5, 3],
-              borderType: BorderType.RRect,
-              radius: const Radius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0x0CD9D9D9),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    _infoRow('Nama Polis:', 'Asuransi Kendaraan A'),
-                    const SizedBox(height: 12),
-                    _infoRow('Nomor Polis:', '#PL-2025-001'),
-                    const SizedBox(height: 12),
-                    _infoRow('Nama Pemegang Polis:', 'Andi Wijaya'),
-                    const SizedBox(height: 12),
-                    _infoRow('Tanggal Klaim:', '15 October 2025'),
-                    const SizedBox(height: 12),
-                    _infoRow(
-                      'Status Pengajuan:',
-                      'Diajukan',
-                      color: Colors.orange,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+
+          // Tombol Kembali di bawah
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -241,11 +251,8 @@ class _PengajuanKlaimBerhasilScreenState
               ),
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Kembali ke halaman sebelumnya'),
-                    ),
-                  );
+                  // Kembali ke home atau menu klaim
+                  Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
@@ -257,7 +264,7 @@ class _PengajuanKlaimBerhasilScreenState
                   elevation: 0,
                 ),
                 child: const Text(
-                  'Kembali',
+                  'Kembali ke Beranda',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -265,6 +272,39 @@ class _PengajuanKlaimBerhasilScreenState
           ),
         ],
       ),
+    );
+  }
+
+  Widget _infoRow(
+    String label,
+    String value, {
+    Color? color,
+    int maxLines = 1,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: color ?? Colors.black87,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
