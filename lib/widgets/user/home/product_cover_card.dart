@@ -42,7 +42,7 @@ class ProductCoverCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Shadow agak gelap
+              color: Colors.black.withValues(alpha:0.1), // Shadow agak gelap
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -72,8 +72,8 @@ class ProductCoverCard extends StatelessWidget {
                     colors: [
                       Colors.transparent,
                       Colors.transparent,
-                      Colors.black.withOpacity(0.7), // Gelap di bawah
-                      Colors.black.withOpacity(0.9),
+                      Colors.black.withValues(alpha:0.7), // Gelap di bawah
+                      Colors.black.withValues(alpha:0.9),
                     ],
                     stops: const [0.0, 0.4, 0.8, 1.0],
                   ),
@@ -145,7 +145,7 @@ class ProductCoverCard extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onTap,
-                  splashColor: Colors.white.withOpacity(0.2),
+                  splashColor: Colors.white.withValues(alpha:0.2),
                 ),
               ),
             ),

@@ -5,9 +5,7 @@ import 'package:intl/intl.dart';
 class DetailKlaimScreen extends StatelessWidget {
   final Map<String, dynamic> klaimData;
 
-  // HAPUS 'const' di sini
-  const DetailKlaimScreen({Key? key, required this.klaimData})
-    : super(key: key);
+  const DetailKlaimScreen({super.key, required this.klaimData});
 
   // Pindahkan currency ke dalam build (atau jadi getter)
   String formatRupiah(double amount) {

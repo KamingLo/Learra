@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -127,15 +126,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
     setState(() => _isLoading = true);
 
     try {
-      print('=== Sending Payment Request ===');
-      print('Policy ID: ${widget.policyId}');
-      print('Amount: ${widget.product.premiDasar}');
-      print('Method: $_selectedPaymentMethod');
-      print('User Input Policy Number: $policyNumber');
-      print(
-        'Type: ${widget.isPerpanjangan ? "Perpanjangan" : "Pembayaran Pertama"}',
-      );
-
       // Pilih endpoint berdasarkan jenis pembayaran
       final String endpoint = widget.isPerpanjangan
           ? '/payment/perpanjangan'
@@ -149,9 +139,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
           'method': _selectedPaymentMethod,
         },
       );
-
-      print('=== Response Received ===');
-      print(response);
 
       setState(() => _isLoading = false);
 
@@ -175,9 +162,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
           ).format(DateTime.now()),
         };
 
-        print('=== Navigating to PaymentDone ===');
-        print(policyData);
-
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -191,9 +175,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-
-      print('=== Error Occurred ===');
-      print(e.toString());
 
       String errorMessage = 'Terjadi kesalahan';
       if (e.toString().contains('Exception:')) {
@@ -337,7 +318,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
                     description: method['description'],
                     color: method['color'],
                   );
-                }).toList(),
+                }),
                 const SizedBox(height: 24.0),
 
                 // Detail Transfer Bank
@@ -485,7 +466,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.green : color.withOpacity(0.1),
+                color: isSelected ? Colors.green : color.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -662,7 +643,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha:0.1),
               blurRadius: 20.0,
               offset: const Offset(0, -2),
             ),

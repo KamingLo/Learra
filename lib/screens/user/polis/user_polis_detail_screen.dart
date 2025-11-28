@@ -61,7 +61,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
         }
       }
     } catch (e) {
-      print('Error checking pending payment: $e');
+      debugPrint('Error checking pending payment: $e');
     }
   }
 
@@ -102,7 +102,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
               );
             }
           } catch (e) {
-            print("Gagal mengambil detail produk: $e");
+            debugPrint("Gagal mengambil detail produk: $e");
           }
         }
 
@@ -256,7 +256,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
     );
 
     if (confirm != true) return;
-
+    if(!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,

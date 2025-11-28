@@ -84,6 +84,24 @@ class _ClientScreenState extends State<ClientScreen> {
     }
   }
 
+  void _handleSaveUser(Map<String, dynamic> data, String userId) async {
+    await _apiService.put('/users/$userId', body: data);
+
+    if (!mounted) return;
+
+    await _fetchUsers(query: _searchQuery);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Data pengguna diperbarui"),
+        backgroundColor: _kPrimary,
+      ),
+    );
+  }
+
+
   void _onSearchChanged(String query) {
     _searchQuery = query;
     if (_debounce?.isActive ?? false) _debounce!.cancel();
@@ -105,6 +123,7 @@ class _ClientScreenState extends State<ClientScreen> {
       Navigator.pop(context); // Close dialog
       Navigator.pop(context); // Close bottom sheet
       await _fetchUsers(query: _searchQuery);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Pengguna berhasil dihapus"),
@@ -183,19 +202,7 @@ class _ClientScreenState extends State<ClientScreen> {
       builder: (context) {
         return ClientEditSheet(
           user: user,
-          onSave: (data) async {
-            await _apiService.put('/users/${user.id}', body: data);
-            if (!mounted) return;
-            // Refresh data
-            await _fetchUsers(query: _searchQuery);
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Data pengguna diperbarui"),
-                backgroundColor: _kPrimary,
-              ),
-            );
-          },
+          onSave: (data) async => _handleSaveUser(data, user.id),
         );
       },
     );

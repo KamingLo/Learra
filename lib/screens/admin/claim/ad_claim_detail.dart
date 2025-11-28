@@ -8,8 +8,7 @@ import 'package:intl/intl.dart';
 class DetailKlaimScreen extends StatelessWidget {
   final Map<String, dynamic> klaimData;
 
-  const DetailKlaimScreen({Key? key, required this.klaimData})
-    : super(key: key);
+  const DetailKlaimScreen({ super.key, required this.klaimData});
 
   @override
   Widget build(BuildContext context) {

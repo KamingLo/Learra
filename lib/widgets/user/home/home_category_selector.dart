@@ -23,7 +23,7 @@ class HomeCategorySelector extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha:0.2),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -84,7 +84,7 @@ class _CategoryItem extends StatelessWidget {
             width: 54,
             decoration: BoxDecoration(
               // Menggunakan warna background hijau sangat muda agar kontras dengan card putih
-              color: Colors.green.shade800.withOpacity(0.08), 
+              color: Colors.green.shade800.withValues(alpha:0.08), 
               borderRadius: BorderRadius.circular(16),
               // Kita hilangkan border/shadow individu agar tidak terlalu "ramai"
             ),

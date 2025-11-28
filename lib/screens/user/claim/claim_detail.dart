@@ -1,6 +1,5 @@
 // lib/screens/user/claim/claim_detail.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../../services/api_service.dart';
 import 'claim_wait.dart';
@@ -59,7 +58,7 @@ class _ClaimDetailState extends State<ClaimDetail> {
   Future<void> _fetchUserPolis() async {
     try {
       final res = await api.get('/user/polis');
-      print("Response polis: $res");
+      debugPrint("Response polis: $res");
 
       List<dynamic> rawList = [];
       if (res is Map) {
@@ -79,7 +78,7 @@ class _ClaimDetailState extends State<ClaimDetail> {
         return s == 'aktif';
       }).toList();
 
-      print("Polis aktif: ${active.length}");
+      debugPrint("Polis aktif: ${active.length}");
 
       setState(() {
         _polisList = active;
@@ -96,7 +95,7 @@ class _ClaimDetailState extends State<ClaimDetail> {
         }
       });
     } catch (e) {
-      print("Error fetching polis: $e");
+      debugPrint("Error fetching polis: $e");
       setState(() => _loadingPolis = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,8 +166,7 @@ class _ClaimDetailState extends State<ClaimDetail> {
     };
 
     try {
-      // Submit ke backend
-      final response = await api.post(
+      await api.post(
         '/klaim',
         body: klaimData,
       ); // Changed to '/klaim' as per previous analysis
@@ -462,7 +460,7 @@ class _ClaimDetailState extends State<ClaimDetail> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha:0.1),
               blurRadius: 20.0,
               offset: const Offset(0, -2),
             ),

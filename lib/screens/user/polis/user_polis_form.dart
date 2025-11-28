@@ -47,7 +47,7 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
         });
       }
     } catch (e) {
-      print("Gagal mengambil premi dasar: $e");
+      debugPrint("Gagal mengambil premi dasar: $e");
     }
   }
 

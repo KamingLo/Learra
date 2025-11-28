@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../models/polis_model.dart';
 import '../../../services/api_service.dart';
 
@@ -335,7 +334,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha:0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -383,7 +382,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: _policy!.statusColor.withOpacity(0.1),
+                                color: _policy!.statusColor.withValues(alpha:0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -535,7 +534,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha:0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -603,7 +602,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
         ),
         _isEditing
             ? DropdownButtonFormField<String>(
-                value: _maritalStatus,
+                initialValue: _maritalStatus,
                 decoration: const InputDecoration(
                   labelText: "Status Pernikahan",
                 ),
@@ -719,7 +718,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha:0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

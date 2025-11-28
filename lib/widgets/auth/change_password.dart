@@ -120,7 +120,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha:0.08),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -268,7 +268,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha:0.08),
                                     blurRadius: 30,
                                     offset: const Offset(0, 20),
                                     spreadRadius: -10,
@@ -307,8 +307,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                       decoration: BoxDecoration(
                                         // Ubah warna background berdasarkan status sukses/gagal
                                         color: isSuccessMessage
-                                            ? _successColor.withOpacity(0.1)
-                                            : Colors.red.withOpacity(0.1),
+                                            ? _successColor.withValues(alpha:0.1)
+                                            : Colors.red.withValues(alpha:0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(

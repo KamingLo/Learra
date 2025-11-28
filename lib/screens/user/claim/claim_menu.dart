@@ -8,7 +8,7 @@ import 'claim_cancel.dart';
 import 'succes_detail.dart';
 
 class KlaimSayaScreen extends StatefulWidget {
-  const KlaimSayaScreen({Key? key}) : super(key: key);
+  const KlaimSayaScreen({super.key});
 
   @override
   State<KlaimSayaScreen> createState() => _KlaimSayaScreenState();

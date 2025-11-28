@@ -22,11 +22,6 @@ class _KesehatanPolisFormState extends BasePolisFormState<KesehatanPolisForm> {
   double _estimatedPremium = 0;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void disposeControllers() {}
 
   void _calculateEstimation() {

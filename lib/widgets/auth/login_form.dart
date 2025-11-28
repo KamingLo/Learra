@@ -161,7 +161,7 @@ class _LoginFormState extends State<LoginForm> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha:0.08),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -286,7 +286,7 @@ class _LoginFormState extends State<LoginForm> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha:0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 20),
                     spreadRadius: -10,
@@ -313,8 +313,8 @@ class _LoginFormState extends State<LoginForm> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: _errorMessage == 'Berhasil masuk.'
-                            ? _successColor.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
+                            ? _successColor.withValues(alpha:0.1)
+                            : Colors.red.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

@@ -6,8 +6,7 @@ import 'package:intl/intl.dart';
 class DetailPembayaranScreen extends StatelessWidget {
   final Map<String, dynamic> paymentData;
 
-  const DetailPembayaranScreen({Key? key, required this.paymentData})
-    : super(key: key);
+  const DetailPembayaranScreen({super.key, required this.paymentData});
 
   @override
   Widget build(BuildContext context) {

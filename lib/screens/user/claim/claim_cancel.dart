@@ -5,8 +5,7 @@ import '../../../services/api_service.dart';
 
 class ClaimCancelScreen extends StatefulWidget {
   final Map<String, dynamic> klaimData;
-  const ClaimCancelScreen({Key? key, required this.klaimData})
-    : super(key: key);
+  const ClaimCancelScreen({super.key, required this.klaimData});
 
   @override
   State<ClaimCancelScreen> createState() => _ClaimCancelScreenState();
@@ -21,6 +20,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
     setState(() => _isLoading = true);
     try {
       await api.delete('/klaim/${widget.klaimData['_id']}');
+      if(!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pengajuan klaim berhasil dibatalkan'),
@@ -29,6 +29,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
       );
       Navigator.pop(context, true); // Kembali & refresh list
     } catch (e) {
+      if(!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal membatalkan: $e'),

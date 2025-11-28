@@ -6,7 +6,7 @@ import '../../../services/api_service.dart';
 import 'ad_claim_detail.dart'; // Nanti dibuat di langkah 2
 
 class AdminKlaimScreen extends StatefulWidget {
-  const AdminKlaimScreen({Key? key}) : super(key: key);
+  const AdminKlaimScreen({super.key});
 
   @override
   State<AdminKlaimScreen> createState() => _AdminKlaimScreenState();
@@ -276,6 +276,8 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
       try {
         await api.put('/klaim/$id', body: {'status': newStatus});
         loadData();
+        
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -287,6 +289,8 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
           ),
         );
       } catch (e) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
         );
@@ -315,7 +319,7 @@ class KlaimCardAdmin extends StatelessWidget {
   final Map<String, dynamic> klaimData;
 
   const KlaimCardAdmin({
-    Key? key,
+    super.key,
     required this.name,
     required this.email,
     required this.polisId,
@@ -326,7 +330,7 @@ class KlaimCardAdmin extends StatelessWidget {
     required this.onConfirm,
     required this.onReject,
     required this.klaimData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -337,7 +341,7 @@ class KlaimCardAdmin extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

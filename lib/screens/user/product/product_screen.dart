@@ -10,7 +10,7 @@ import 'product_detail_screen.dart';
 
 class UserProductScreen extends StatefulWidget {
   // Tambahkan key di constructor agar bisa dikontrol Navbar
-  const UserProductScreen({Key? key}) : super(key: key);
+  const UserProductScreen({super.key});
 
   @override
   // Perhatikan: Return type adalah UserProductScreenState (Tanpa underscore)

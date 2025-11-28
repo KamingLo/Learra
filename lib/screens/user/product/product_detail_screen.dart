@@ -159,10 +159,10 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha:0.9),
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
+              BoxShadow(color: Colors.black.withValues(alpha:0.1), blurRadius: 8),
             ],
           ),
           child: IconButton(
@@ -319,7 +319,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),

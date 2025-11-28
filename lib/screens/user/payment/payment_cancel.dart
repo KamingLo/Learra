@@ -162,8 +162,8 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => !_isLoading,
+    return PopScope(
+      canPop: !_isLoading,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -362,7 +362,7 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha:0.08),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),

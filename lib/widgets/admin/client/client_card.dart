@@ -26,7 +26,7 @@ class ClientCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha:0.05),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -36,7 +36,7 @@ class ClientCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: _kPrimary.withOpacity(0.12),
+                backgroundColor: _kPrimary.withValues(alpha:0.12),
                 child: const Icon(Icons.person, color: _kPrimary),
               ),
               const SizedBox(width: 16),
@@ -56,7 +56,7 @@ class ClientCard extends StatelessWidget {
                     Text(
                       user.email,
                       style: TextStyle(
-                        color: _kTextSecondary.withOpacity(0.8),
+                        color: _kTextSecondary.withValues(alpha:0.8),
                         fontSize: 13,
                       ),
                     ),
@@ -98,12 +98,12 @@ class ClientCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: _kTextSecondary.withOpacity(0.8)),
+          Icon(icon, size: 14, color: _kTextSecondary.withValues(alpha:0.8)),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: _kTextSecondary.withOpacity(0.8),
+              color: _kTextSecondary.withValues(alpha:0.8),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),

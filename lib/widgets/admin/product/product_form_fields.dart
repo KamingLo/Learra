@@ -49,8 +49,8 @@ class ProductFormFields extends StatelessWidget {
       prefixIcon: icon != null 
           ? Icon(icon, color: kTextLabel, size: 22) 
           : null,
-      prefixIconColor: MaterialStateColor.resolveWith((states) => 
-          states.contains(MaterialState.focused) ? kPrimaryGreen : kTextLabel
+      prefixIconColor: WidgetStateColor.resolveWith((states) => 
+          states.contains(WidgetState.focused) ? kPrimaryGreen : kTextLabel
       ),
 
       filled: true,
@@ -108,7 +108,7 @@ class ProductFormFields extends StatelessWidget {
 
         // 2. Tipe Asuransi
         DropdownButtonFormField<String>(
-          value: selectedType,
+          initialValue: selectedType,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: kTextLabel),
           style: const TextStyle(color: Colors.black87, fontSize: 15),
           decoration: _whiteDecoration(

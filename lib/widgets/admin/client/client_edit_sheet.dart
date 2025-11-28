@@ -62,7 +62,6 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
         maxChildSize: 0.95,
         builder: (context, scrollController) => Column(
           children: [
-            // Handle Bar
             Center(
               child: Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 12),
@@ -74,7 +73,6 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
                 ),
               ),
             ),
-            // Title
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -96,7 +94,6 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
               ),
             ),
             const Divider(height: 1),
-            // Form Content
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
@@ -161,15 +158,21 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
                                       "rentangGaji": _gajiController.text,
                                       "birthDate": _birthDateController.text,
                                     });
-                                    if (!mounted) return;
+
+                                    if (!context.mounted) return;
+
                                     Navigator.pop(context);
                                   } catch (e) {
-                                    if (!mounted) return;
+                                    if (!context.mounted) return;
+
                                     setState(() => _isSaving = false);
+
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text("Gagal menyimpan: $e"),
-                                        backgroundColor: Colors.red.shade700,
+                                        content:
+                                            Text("Gagal menyimpan: $e"),
+                                        backgroundColor:
+                                            Colors.red.shade700,
                                       ),
                                     );
                                   }
@@ -261,9 +264,8 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
               );
 
               if (picked != null) {
-                String formatted =
+                controller.text =
                     "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                controller.text = formatted;
               }
             },
             borderRadius: BorderRadius.circular(14),
@@ -289,7 +291,7 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
                           : controller.text,
                       style: TextStyle(
                         color: controller.text.isEmpty
-                            ? _kTextSecondary.withOpacity(0.5)
+                            ? _kTextSecondary.withValues(alpha: 0.5)
                             : _kTextPrimary,
                         fontSize: 15,
                       ),
@@ -337,7 +339,7 @@ class _ClientEditSheetState extends State<ClientEditSheet> {
               prefixIcon: icon != null
                   ? Icon(
                       icon,
-                      color: _kTextSecondary.withOpacity(0.6),
+                      color: _kTextSecondary.withValues(alpha: 0.6),
                       size: 20,
                     )
                   : null,
