@@ -28,31 +28,130 @@ class _LoginFormState extends State<LoginForm> {
   bool _obscurePassword = true;
 
   static const Color _fieldFillColor = Color(0xFFF8F8FA);
+  static const Color _iconColor = Color(0xFF6B6B6B);
+  static const LinearGradient _primaryGradient = LinearGradient(
+    colors: [Color(0xFF1ED760), Color(0xFF0EAD3C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  bool _containsAll(String source, List<String> tokens) {
+    final lower = source.toLowerCase();
+    return tokens.every(lower.contains);
+  }
+
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback? onPressed,
+    required bool isLoading,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: _primaryGradient,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text(
+                    'Masuk',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _friendlyErrorMessage(Object error) {
+    final raw = error.toString().replaceAll('Exception: ', '').trim();
+    final cleaned = raw
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final lower = cleaned.toLowerCase();
+
+    if (lower.isEmpty) return 'Terjadi kesalahan, silakan coba lagi.';
+    if (_containsAll(lower, ['email', 'empty']) ||
+        _containsAll(lower, ['email', 'required']) ||
+        _containsAll(lower, ['email', 'kosong'])) {
+      return 'Silakan isi email.';
+    }
+    if (_containsAll(lower, ['password', 'empty']) ||
+        _containsAll(lower, ['password', 'required']) ||
+        _containsAll(lower, ['password', 'kosong'])) {
+      return 'Silakan isi password.';
+    }
+    if (_containsAll(lower, ['email', 'not', 'registered']) ||
+        _containsAll(lower, ['email', 'belum', 'terdaftar'])) {
+      return 'Email belum terdaftar.';
+    }
+    if (_containsAll(lower, ['email', 'used']) ||
+        _containsAll(lower, ['email', 'sudah', 'digunakan']) ||
+        _containsAll(lower, ['email', 'already'])) {
+      return 'Email sudah digunakan.';
+    }
+    if (_containsAll(lower, ['email', 'invalid']) ||
+        _containsAll(lower, ['email', 'not valid'])) {
+      return 'Email tidak valid.';
+    }
+    if (_containsAll(lower, ['password', 'invalid']) ||
+        _containsAll(lower, ['password', 'not valid'])) {
+      return 'Password tidak valid.';
+    }
+    if (lower.contains('credential') ||
+        lower.contains('unauthorized') ||
+        lower.contains('user tidak ditemukan') ||
+        lower.contains('user not found')) {
+      return 'Email atau password tidak valid.';
+    }
+    return cleaned;
+  }
 
   Widget _buildBackButton(ThemeData theme) {
     return InkWell(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(16),
       onTap: () => Navigator.of(context).maybePop(),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.black12),
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
-            padding: const EdgeInsets.all(6),
-            child: const Icon(Icons.arrow_back, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'Kembali',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+          ],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black87),
       ),
     );
   }
@@ -87,6 +186,18 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> _handleLogin() async {
+    final email = _loginEmailController.text.trim();
+    final password = _loginPasswordController.text;
+
+    if (email.isEmpty) {
+      setState(() => _errorMessage = 'Silakan isi email.');
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() => _errorMessage = 'Silakan isi password.');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -123,7 +234,7 @@ class _LoginFormState extends State<LoginForm> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceAll("Exception: ", "");
+          _errorMessage = _friendlyErrorMessage(e);
         });
       }
     } finally {
@@ -207,6 +318,7 @@ class _LoginFormState extends State<LoginForm> {
                           _obscurePassword
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
+                          color: _iconColor,
                         ),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
@@ -232,36 +344,10 @@ class _LoginFormState extends State<LoginForm> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1ABC75),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text(
-                              'Masuk',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
+                  _buildPrimaryButton(
+                    label: 'Masuk',
+                    onPressed: _handleLogin,
+                    isLoading: _isLoading,
                   ),
                   const SizedBox(height: 24),
                   Center(

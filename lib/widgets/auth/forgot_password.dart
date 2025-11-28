@@ -16,6 +16,117 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   static const Color _fieldFillColor = Color(0xFFF8F8FA);
+  static const LinearGradient _primaryGradient = LinearGradient(
+    colors: [Color(0xFF1ED760), Color(0xFF0EAD3C)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  bool _containsAll(String source, List<String> tokens) {
+    final lower = source.toLowerCase();
+    return tokens.every(lower.contains);
+  }
+
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback? onPressed,
+    required bool isLoading,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.zero,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: _primaryGradient,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _friendlyErrorMessage(Object error) {
+    final raw = error.toString().replaceAll('Exception: ', '').trim();
+    final cleaned = raw
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final lower = cleaned.toLowerCase();
+
+    if (lower.isEmpty) return 'Terjadi kesalahan, silakan coba lagi.';
+    if (_containsAll(lower, ['email', 'used']) ||
+        _containsAll(lower, ['email', 'sudah', 'digunakan']) ||
+        _containsAll(lower, ['email', 'already'])) {
+      return 'Email sudah digunakan.';
+    }
+    if (_containsAll(lower, ['email', 'not', 'registered']) ||
+        _containsAll(lower, ['email', 'belum', 'terdaftar'])) {
+      return 'Email tidak terdaftar.';
+    }
+    if (_containsAll(lower, ['email', 'empty']) ||
+        _containsAll(lower, ['email', 'required']) ||
+        _containsAll(lower, ['email', 'kosong'])) {
+      return 'Silakan isi email.';
+    }
+    if (_containsAll(lower, ['email', 'invalid']) ||
+        _containsAll(lower, ['email', 'not valid'])) {
+      return 'Email tidak valid.';
+    }
+    return cleaned;
+  }
+
+  Widget _buildBackButton(ThemeData theme) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black87),
+      ),
+    );
+  }
 
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
@@ -37,17 +148,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _handleSendCode() async {
-    if (_emailController.text.isEmpty) {
-      setState(() => _errorMessage = "Email tidak boleh kosong");
+    if (_emailController.text.trim().isEmpty) {
+      setState(() => _errorMessage = 'Silakan isi email.');
       return;
     }
 
     setState(() { _isLoading = true; _errorMessage = null; });
 
     try {
-      // TODO: API CALL
-      // await _apiService.post('/auth/forgot-password', body: {'email': _emailController.text});
-      await Future.delayed(const Duration(seconds: 1)); 
+      final response = await _apiService.post(
+        '/auth/forgot-password',
+        body: {'email': _emailController.text.trim()},
+      );
+
+      if (response['error'] != null) {
+        throw Exception(response['message'] ?? 'Gagal mengirim kode reset');
+      }
 
       if (!mounted) return;
       
@@ -61,7 +177,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
       );
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      setState(() => _errorMessage = _friendlyErrorMessage(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -69,46 +185,116 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 30, offset: const Offset(0, 20), spreadRadius: -10),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Lupa Password', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 12),
-                  const Text('Masukkan email Anda yang terdaftar.', textAlign: TextAlign.center, style: TextStyle(color: Colors.black54)),
-                  const SizedBox(height: 32),
-                  if (_errorMessage != null) Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                  TextField(controller: _emailController, decoration: _inputDecoration('Email')),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity, height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleSendCode,
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1ABC75), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                      child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Kirim Kode', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      backgroundColor: const Color(0xFFEFF1F5),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildBackButton(theme),
+                          const SizedBox(height: 20),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 520),
+                            child: Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 20),
+                                    spreadRadius: -10,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Center(
+                                    child: Text(
+                                      'Lupa Password',
+                                      style:
+                                          theme.textTheme.headlineMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Center(
+                                    child: Text(
+                                      'Masukkan email Anda yang terdaftar',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  if (_errorMessage != null) ...[
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                  ],
+                                  TextField(
+                                    controller: _emailController,
+                                    decoration: _inputDecoration('Email'),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  _buildPrimaryButton(
+                                    label: 'Kirim Kode',
+                                    onPressed: _handleSendCode,
+                                    isLoading: _isLoading,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Center(
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: const Color(0xFF156E2F),
+                                      ),
+                                      child: const Text(
+                                        'Kembali ke Login',
+                                        style:
+                                            TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  InkWell(onTap: () => Navigator.pop(context), child: const Text("Kembali ke Login", style: TextStyle(fontWeight: FontWeight.bold)))
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

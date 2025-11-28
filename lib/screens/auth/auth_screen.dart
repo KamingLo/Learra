@@ -16,48 +16,43 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => isLoginMode = !isLoginMode);
   }
 
- // File: auth_screen.dart
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    // AppBar transparan (opsional)
-    appBar: AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: 0,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-    ),
-    // Gunakan LayoutBuilder untuk mendapatkan tinggi layar
-    body: LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          // ConstrainedBox memaksa konten minimal setinggi layar
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
-            // IntrinsicHeight membantu menjaga layout tetap rapi
-            child: IntrinsicHeight(
-              child: Center( // Center ini yang membuat Vertikal & Horizontal
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: isLoginMode
-                      ? LoginForm(
-                          isLoginMode: true,
-                          onSwitchToRegister: _toggleAuthMode,
-                        )
-                      : RegisterForm(
-                          onSwitchToLogin: _toggleAuthMode,
-                        ),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEFF1F5),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        toolbarHeight: 0,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+      ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: isLoginMode
+                          ? LoginForm(
+                              isLoginMode: true,
+                              onSwitchToRegister: _toggleAuthMode,
+                            )
+                          : RegisterForm(
+                              onSwitchToLogin: _toggleAuthMode,
+                            ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
-    ),
-  );
-}
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
