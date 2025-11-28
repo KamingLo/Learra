@@ -9,6 +9,14 @@ class AdminPolicyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String getInitial() {
+      final name = policy.ownerName;
+      if (name != null && name.isNotEmpty) {
+        return name[0].toUpperCase();
+      }
+      return '?';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -20,7 +28,7 @@ class AdminPolicyCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -59,7 +67,7 @@ class AdminPolicyCard extends StatelessWidget {
                       ),
                       child: Center(
                         child: Text(
-                          policy.ownerName[0].toUpperCase(),
+                          getInitial(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -74,7 +82,7 @@ class AdminPolicyCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            policy.ownerName,
+                            policy.ownerName ?? 'Tanpa Nama',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -84,13 +92,13 @@ class AdminPolicyCard extends StatelessWidget {
                           Row(
                             children: [
                               Icon(
-                                policy.vehicleIcon,
+                                policy.icon,
                                 size: 14,
                                 color: Colors.grey.shade600,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                "${policy.productName} • ${policy.vehicleBrand}",
+                                "${policy.productName} • ${policy.summaryTitle}",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
@@ -107,10 +115,10 @@ class AdminPolicyCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: policy.statusColor.withValues(alpha: 0.1),
+                        color: policy.statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: policy.statusColor.withValues(alpha: 0.3),
+                          color: policy.statusColor.withOpacity(0.3),
                           width: 1,
                         ),
                       ),
@@ -173,9 +181,11 @@ class AdminPolicyCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: _buildInfoItem(
-                        Icons.directions_car_outlined,
-                        "No. Polisi",
-                        policy.plateNumber,
+                        policy.category == 'kendaraan'
+                            ? Icons.directions_car_outlined
+                            : Icons.info_outline,
+                        policy.primaryDetailLabel,
+                        policy.primaryDetailValue,
                       ),
                     ),
                   ],
@@ -273,7 +283,7 @@ class AdminPolicyCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.green.withValues(alpha: 0.3),
+                              color: Colors.green.withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
