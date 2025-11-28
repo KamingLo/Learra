@@ -93,6 +93,62 @@ class _ClientScreenState extends State<ClientScreen> {
     await _fetchUsers(query: _searchQuery);
   }
 
+  void _deleteUser(AdminUser user) async {
+    try {
+      await _apiService.delete('/users/${user.id}');
+      if (!mounted) return;
+      Navigator.pop(context); // Close dialog
+      Navigator.pop(context); // Close bottom sheet
+      await _fetchUsers(query: _searchQuery);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Pengguna berhasil dihapus"),
+          backgroundColor: _kPrimary,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Gagal menghapus pengguna: $e"),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+  }
+
+  void _showDeleteConfirmation(AdminUser user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Hapus Pengguna"),
+        content: Text(
+          "Apakah Anda yakin ingin menghapus pengguna '${user.name}'? Tindakan ini tidak dapat dibatalkan.",
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
+          FilledButton(
+            onPressed: () => _deleteUser(user),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text("Hapus"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showUserDetail(AdminUser user) {
     showModalBottomSheet(
       context: context,
@@ -103,11 +159,12 @@ class _ClientScreenState extends State<ClientScreen> {
       ),
       builder: (context) {
         return Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: DraggableScrollableSheet(
             expand: false,
-            initialChildSize: 0.6,
+            initialChildSize: 0.65,
             minChildSize: 0.45,
             maxChildSize: 0.85,
             builder: (context, scrollController) => SingleChildScrollView(
@@ -187,6 +244,30 @@ class _ClientScreenState extends State<ClientScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        _showDeleteConfirmation(user);
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(
+                            color: Colors.redAccent.withOpacity(0.2),
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text(
+                        "Hapus Pengguna",
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -239,94 +320,320 @@ class _ClientScreenState extends State<ClientScreen> {
     final addressController = TextEditingController(text: user.address);
     final pekerjaanController = TextEditingController(text: user.pekerjaan);
     final gajiController = TextEditingController(text: user.rentangGaji);
+    final birthDateController = TextEditingController(text: user.birthDate);
 
     bool isSaving = false;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text(
-            "Edit Data Pengguna",
-            style: TextStyle(fontWeight: FontWeight.bold),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.75,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => StatefulBuilder(
+              builder: (context, setStateSheet) {
+                return Column(
+                  children: [
+                    // Handle Bar
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 12),
+                        width: 60,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          const Text(
+                            "Edit Data Pengguna",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: _kTextPrimary,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(
+                              Icons.close,
+                              color: _kTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // Form Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _editField(
+                                "Nama Lengkap",
+                                nameController,
+                                icon: Icons.person_outline,
+                              ),
+                              _editField(
+                                "No. Telepon",
+                                phoneController,
+                                keyboardType: TextInputType.phone,
+                                icon: Icons.phone_outlined,
+                              ),
+                              _editField(
+                                "Alamat",
+                                addressController,
+                                maxLines: 3,
+                                icon: Icons.location_on_outlined,
+                              ),
+                              _editField(
+                                "Pekerjaan",
+                                pekerjaanController,
+                                icon: Icons.work_outline,
+                              ),
+                              _editField(
+                                "Rentang Gaji",
+                                gajiController,
+                                icon: Icons.attach_money,
+                              ),
+                              _buildDatePicker(
+                                context,
+                                "Tanggal Lahir",
+                                birthDateController,
+                              ),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: isSaving
+                                      ? null
+                                      : () async {
+                                          if (!formKey.currentState!
+                                              .validate()) {
+                                            return;
+                                          }
+                                          // Tutup keyboard agar tidak lag/freeze
+                                          FocusScope.of(context).unfocus();
+
+                                          setStateSheet(() => isSaving = true);
+
+                                          // Beri jeda sedikit agar UI sempat update (spinner muncul)
+                                          await Future.delayed(
+                                            const Duration(milliseconds: 200),
+                                          );
+
+                                          try {
+                                            await _apiService.put(
+                                              '/users/${user.id}',
+                                              body: {
+                                                "name": nameController.text,
+                                                "phone": phoneController.text,
+                                                "address":
+                                                    addressController.text,
+                                                "pekerjaan":
+                                                    pekerjaanController.text,
+                                                "rentangGaji":
+                                                    gajiController.text,
+                                                "birthDate":
+                                                    birthDateController.text,
+                                              },
+                                            );
+
+                                            if (!mounted) return;
+                                            Navigator.pop(
+                                              context,
+                                            ); // Close sheet
+
+                                            // Refresh data
+                                            await _fetchUsers(
+                                              query: _searchQuery,
+                                            );
+
+                                            if (!mounted) return;
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "Data pengguna diperbarui",
+                                                ),
+                                                backgroundColor: _kPrimary,
+                                              ),
+                                            );
+                                          } catch (e) {
+                                            if (!mounted) return;
+                                            setStateSheet(
+                                              () => isSaving = false,
+                                            );
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  "Gagal menyimpan: $e",
+                                                ),
+                                                backgroundColor:
+                                                    Colors.red.shade700,
+                                              ),
+                                            );
+                                          }
+                                        },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _kPrimary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: isSaving
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text(
+                                          "Simpan Perubahan",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDatePicker(
+    BuildContext context,
+    String label,
+    TextEditingController controller,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: _kTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          InkWell(
+            onTap: () async {
+              DateTime initialDate = DateTime.now();
+              if (controller.text.isNotEmpty) {
+                try {
+                  initialDate = DateTime.parse(controller.text);
+                } catch (_) {}
+              }
+
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: initialDate,
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.light(
+                        primary: _kPrimary,
+                        onPrimary: Colors.white,
+                        onSurface: _kTextPrimary,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+
+              if (picked != null) {
+                // Format YYYY-MM-DD
+                String formatted =
+                    "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                controller.text = formatted;
+              }
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: _kBackground,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.transparent),
+              ),
+              child: Row(
                 children: [
-                  _editField("Nama Lengkap", nameController),
-                  _editField("No. Telepon", phoneController,
-                      keyboardType: TextInputType.phone),
-                  _editField("Alamat", addressController, maxLines: 3),
-                  _editField("Pekerjaan", pekerjaanController),
-                  _editField("Rentang Gaji", gajiController),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    color: _kTextSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      controller.text.isEmpty
+                          ? "Pilih Tanggal Lahir"
+                          : controller.text,
+                      style: TextStyle(
+                        color: controller.text.isEmpty
+                            ? _kTextSecondary.withOpacity(0.5)
+                            : _kTextPrimary,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text("Batal"),
-            ),
-            FilledButton(
-              onPressed: isSaving
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-                      setStateDialog(() => isSaving = true);
-                      try {
-                        await _apiService.put('/users/${user.id}', body: {
-                          "name": nameController.text,
-                          "phone": phoneController.text,
-                          "address": addressController.text,
-                          "pekerjaan": pekerjaanController.text,
-                          "rentangGaji": gajiController.text,
-                        });
-
-                        if (!mounted) return;
-                        Navigator.pop(dialogContext);
-                        await _fetchUsers(query: _searchQuery);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text("Data pengguna diperbarui"),
-                            backgroundColor: _kPrimary,
-                          ),
-                        );
-                      } catch (e) {
-                        if (!mounted) return;
-                        setStateDialog(() => isSaving = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Gagal menyimpan: $e"),
-                            backgroundColor: Colors.red.shade700,
-                          ),
-                        );
-                      }
-                    },
-              style: FilledButton.styleFrom(
-                backgroundColor: _kPrimary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: isSaving
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text("Simpan"),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -336,24 +643,51 @@ class _ClientScreenState extends State<ClientScreen> {
     TextEditingController controller, {
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
+    IconData? icon,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        validator: (value) =>
-            value == null || value.trim().isEmpty ? "$label tidak boleh kosong" : null,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: _kBackground,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: _kTextPrimary,
+            ),
           ),
-        ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            validator: (value) => value == null || value.trim().isEmpty
+                ? "$label tidak boleh kosong"
+                : null,
+            decoration: InputDecoration(
+              hintText: "Masukkan $label",
+              prefixIcon: icon != null
+                  ? Icon(
+                      icon,
+                      color: _kTextSecondary.withOpacity(0.6),
+                      size: 20,
+                    )
+                  : null,
+              filled: true,
+              fillColor: _kBackground,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -387,18 +721,16 @@ class _ClientScreenState extends State<ClientScreen> {
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 0,
+                ),
               ),
             ),
           ),
           Expanded(
             child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: _kPrimary,
-                    ),
-                  )
+                ? Center(child: CircularProgressIndicator(color: _kPrimary))
                 : RefreshIndicator(
                     color: _kPrimary,
                     onRefresh: _onRefresh,
@@ -406,7 +738,9 @@ class _ClientScreenState extends State<ClientScreen> {
                         ? _buildEmptyState()
                         : ListView.builder(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
                             itemCount: _users.length,
                             itemBuilder: (context, index) {
                               final user = _users[index];
@@ -438,8 +772,11 @@ class _ClientScreenState extends State<ClientScreen> {
                   color: _kPrimary.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.groups_outlined,
-                    size: 60, color: _kPrimary),
+                child: const Icon(
+                  Icons.groups_outlined,
+                  size: 60,
+                  color: _kPrimary,
+                ),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -454,9 +791,7 @@ class _ClientScreenState extends State<ClientScreen> {
               Text(
                 "Gunakan form registrasi atau impor data untuk menambahkan pengguna.",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _kTextSecondary.withOpacity(0.7),
-                ),
+                style: TextStyle(color: _kTextSecondary.withOpacity(0.7)),
               ),
             ],
           ),
@@ -470,10 +805,7 @@ class _UserCard extends StatelessWidget {
   final AdminUser user;
   final VoidCallback onTap;
 
-  const _UserCard({
-    required this.user,
-    required this.onTap,
-  });
+  const _UserCard({required this.user, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -529,9 +861,16 @@ class _UserCard extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 4,
                       children: [
-                        _infoChip(Icons.phone, user.phone.isEmpty ? "-" : user.phone),
-                        _infoChip(Icons.badge_outlined,
-                            user.nomorIdentitas.isEmpty ? "-" : user.nomorIdentitas),
+                        _infoChip(
+                          Icons.phone,
+                          user.phone.isEmpty ? "-" : user.phone,
+                        ),
+                        _infoChip(
+                          Icons.badge_outlined,
+                          user.nomorIdentitas.isEmpty
+                              ? "-"
+                              : user.nomorIdentitas,
+                        ),
                       ],
                     ),
                   ],
@@ -598,8 +937,9 @@ class AdminUser {
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
     final birthRaw = json['birthDate']?.toString() ?? '';
-    final trimmedBirth =
-        birthRaw.length >= 10 ? birthRaw.substring(0, 10) : birthRaw;
+    final trimmedBirth = birthRaw.length >= 10
+        ? birthRaw.substring(0, 10)
+        : birthRaw;
 
     return AdminUser(
       id: json['_id']?.toString() ?? '',
