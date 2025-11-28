@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../services/session_service.dart';
-import '../../main.dart';
+import '../../screens/auth/auth_screen.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;
@@ -18,27 +18,30 @@ class ChangePasswordScreen extends StatefulWidget {
 }
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final ApiService _apiService = ApiService();
+
   bool _isLoading = false;
+  bool _isNewPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
   String? _errorMessage;
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
+
+  // Style constants
   static const Color _fieldFillColor = Color(0xFFF8F8FA);
-  static const Color _iconColor = Color(0xFF6B6B6B);
+  static const Color _successColor = Color(0xFF1ED760); // Warna sukses (Hijau)
   static const LinearGradient _primaryGradient = LinearGradient(
     colors: [Color(0xFF1ED760), Color(0xFF0EAD3C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  static const Color _successColor = Color(0xFF1ED760);
 
   bool _containsAll(String source, List<String> tokens) {
     final lower = source.toLowerCase();
     return tokens.every(lower.contains);
   }
 
+  // Helper untuk membersihkan pesan error dari backend
   String _friendlyErrorMessage(Object error) {
     final raw = error.toString().replaceAll('Exception: ', '').trim();
     final cleaned = raw
@@ -46,9 +49,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
 
-    // Simple logic untuk mapping error umum
     final lower = cleaned.toLowerCase();
-
     if (lower.isEmpty) return 'Terjadi kesalahan, silakan coba lagi.';
 
     if (_containsAll(lower, ['password', 'match']) ||
@@ -57,68 +58,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     return cleaned;
-  }
-
-  Widget _buildBackButton(ThemeData theme) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.of(context).maybePop(),
-      child: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: const Icon(Icons.arrow_back, color: Colors.black87),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(
-    String label, {
-    required bool obscureValue,
-    required VoidCallback onToggle,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(fontSize: 16, color: Colors.black54),
-      floatingLabelStyle: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Colors.black87,
-        backgroundColor: _fieldFillColor,
-      ),
-      filled: true,
-      fillColor: _fieldFillColor,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFDCDDE4), width: 1.4),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFFDCDDE4), width: 1.4),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Color(0xFF1ABC75), width: 1.6),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      suffixIcon: IconButton(
-        icon: Icon(
-          obscureValue ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          color: _iconColor,
-        ),
-        onPressed: onToggle,
-      ),
-    );
   }
 
   Widget _buildPrimaryButton({
@@ -169,24 +108,68 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  void _showSuccessMessage(String message) {
-    setState(() => _errorMessage = message);
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && _errorMessage == message) {
-        setState(() => _errorMessage = null);
-      }
-    });
+  Widget _buildBackButton(ThemeData theme) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black87),
+      ),
+    );
   }
-  Future<void> _handleChange() async {
-    final password = _passwordController.text;
-    final confirm = _confirmController.text;
 
-    if (password.isEmpty) {
-      setState(() => _errorMessage = 'Silakan isi password baru.');
-      return;
-    }
-    if (confirm.isEmpty) {
-      setState(() => _errorMessage = 'Silakan isi konfirmasi password.');
+  InputDecoration _inputDecoration({
+    required String label,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(fontSize: 16, color: Colors.black54),
+      floatingLabelStyle: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+        backgroundColor: _fieldFillColor,
+      ),
+      filled: true,
+      fillColor: _fieldFillColor,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFFDCDDE4), width: 1.4),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFFDCDDE4), width: 1.4),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: const BorderSide(color: Color(0xFF1ABC75), width: 1.6),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      suffixIcon: suffixIcon,
+    );
+  }
+
+  Future<void> _handleSubmit() async {
+    final newPass = _newPasswordController.text;
+    final confirmPass = _confirmPasswordController.text;
+
+    // --- Validasi Client Side ---
+    if (newPass.isEmpty || confirmPass.isEmpty) {
+      setState(() => _errorMessage = 'Silakan lengkapi semua kolom.');
       return;
     }
 
@@ -194,21 +177,25 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() => _errorMessage = 'Password minimal 8 karakter.');
       return;
     }
-    if (password != confirm) {
-      setState(() => _errorMessage = 'Password tidak sama.');
+
+    if (newPass != confirmPass) {
+      setState(() => _errorMessage = 'Konfirmasi password tidak cocok.');
       return;
     }
 
-    setState(() { _isLoading = true; _errorMessage = null; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-    bool poppedDueToToken = false;
     try {
+      // Endpoint API Reset Password
       final response = await _apiService.post(
         '/auth/reset-password',
         body: {
-          'token': widget.resetToken,
-          'password': _passwordController.text,
-          'confirmPassword': _confirmController.text,
+          'resetToken': widget.resetToken,
+          'newPassword': newPass,
+          'confirmNewPassword': confirmPass,
         },
       );
 
@@ -216,66 +203,43 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         throw Exception(response['message'] ?? 'Gagal mengubah password');
       }
 
-      await SessionService.clearSession();
+      if (!mounted) return;
+
+      // --- SUKSES ---
+      // 1. Tampilkan pesan sukses di box notifikasi (Hijau)
+      setState(() {
+        _errorMessage = 'Password berhasil diubah.';
+      });
+
+      // 2. Beri jeda waktu 2 detik agar user membaca notifikasi
+      await Future.delayed(const Duration(seconds: 2));
 
       if (!mounted) return;
 
-      // Sukses: Tampilkan snackbar lalu kembali ke Login (bersihkan route stack)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password berhasil diubah. Silakan login.'),
-          backgroundColor: Colors.green,
-        ),
+      // 3. Bersihkan sesi (Logout) dan redirect ke Halaman Login
+      await SessionService.clearSession();
+      
+      if (!mounted) return;
+      
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false, // Hapus semua route sebelumnya agar tidak bisa back
       );
 
-      // Logout dan kembali ke halaman login
-      if (mounted) _performLogout(context);
     } catch (e) {
-      final lower = e.toString().toLowerCase();
-      final tokenError = lower.contains('invalid or expired token') ||
-          (lower.contains('token') && lower.contains('expired'));
-
-      if (tokenError) {
-        poppedDueToToken = true;
-        if (mounted) {
-          Navigator.pop(context, 'Kode OTP sudah kadaluarsa, silakan kirim ulang kode.');
-        }
-        return;
-      }
-
-      if (mounted) {
-        setState(() => _errorMessage = _friendlyErrorMessage(e));
-      }
+      setState(() => _errorMessage = _friendlyErrorMessage(e));
     } finally {
-      if (mounted && !poppedDueToToken) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _performLogout(BuildContext context) async {
-    await SessionService.clearSession();
-    if (!context.mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const AuthCheck()),
-      (route) => false,
-    );
-  }
-
-  void _performLogout(BuildContext context) async {
-    await SessionService.clearSession();
-    if (!context.mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const AuthCheck()),
-      (route) => false,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    // Cek apakah pesan saat ini adalah pesan sukses
+    final isSuccessMessage = _errorMessage == 'Password berhasil diubah.';
 
     return Scaffold(
       backgroundColor: const Color(0xFFEFF1F5),
@@ -325,30 +289,46 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                           ),
                                     ),
                                   ),
+                                  const SizedBox(height: 12),
+                                  const Center(
+                                    child: Text(
+                                      'Masukkan password baru Anda yang aman\ndan mudah diingat.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: Colors.black54),
+                                    ),
+                                  ),
                                   const SizedBox(height: 32),
 
+                                  // --- NOTIFIKASI ERROR / SUKSES ---
                                   if (_errorMessage != null) ...[
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: _errorMessage == 'Password berhasil diubah, silakan login.'
+                                        // Ubah warna background berdasarkan status sukses/gagal
+                                        color: isSuccessMessage
                                             ? _successColor.withOpacity(0.1)
                                             : Colors.red.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         _errorMessage!,
-                                        style: const TextStyle(
-                                          color: Colors.red,
+                                        style: TextStyle(
+                                          // Ubah warna teks berdasarkan status sukses/gagal
+                                          color: isSuccessMessage
+                                              ? _successColor
+                                              : Colors.red,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
                                     const SizedBox(height: 18),
                                   ],
+
+                                  // Field Password Baru
                                   TextField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
+                                    controller: _newPasswordController,
+                                    obscureText: !_isNewPasswordVisible,
                                     decoration: _inputDecoration(
                                       label: 'Password Baru',
                                       suffixIcon: IconButton(
@@ -367,10 +347,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 16),
+
+                                  // Field Konfirmasi Password
                                   TextField(
-                                    controller: _confirmController,
-                                    obscureText: _obscureConfirm,
+                                    controller: _confirmPasswordController,
+                                    obscureText: !_isConfirmPasswordVisible,
                                     decoration: _inputDecoration(
                                       label: 'Konfirmasi Password',
                                       suffixIcon: IconButton(
@@ -392,8 +374,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
                                   const SizedBox(height: 24),
                                   _buildPrimaryButton(
-                                    label: 'Ubah Password',
-                                    onPressed: _handleChange,
+                                    label: 'Simpan Password',
+                                    onPressed: _handleSubmit,
                                     isLoading: _isLoading,
                                   ),
                                 ],
