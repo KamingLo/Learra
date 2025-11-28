@@ -102,7 +102,7 @@ class UserProductScreenState extends State<UserProductScreen> {
           "Belanja Produk", 
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 22)
         ),
-        backgroundColor: const Color(0xFFF4F7F6),
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
       ),

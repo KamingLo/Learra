@@ -42,7 +42,7 @@ class ProductCoverCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15), // Shadow agak gelap
+              color: Colors.black.withOpacity(0.1), // Shadow agak gelap
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
