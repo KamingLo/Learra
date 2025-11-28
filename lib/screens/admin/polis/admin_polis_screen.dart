@@ -19,6 +19,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String _filterStatus = 'Semua';
+  String _sortOrder = 'desc';
 
   @override
   void initState() {
@@ -66,6 +67,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
 
       setState(() {
         _policies = data.map((json) => PolicyModel.fromJson(json)).toList();
+        _sortPolicyList(_policies);
         _applyFilters();
         _isLoading = false;
       });
@@ -88,254 +90,309 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
             searchQuery.isEmpty ||
             (policy.ownerName ?? '').toLowerCase().contains(searchQuery) ||
             policy.policyNumber.toLowerCase().contains(searchQuery) ||
-            policy.productName.toLowerCase().contains(searchQuery);
+            policy.productName.toLowerCase().contains(searchQuery) ||
+            (policy.ownerEmail ?? '').toLowerCase().contains(searchQuery);
 
+        final selectedFilter = _filterStatus.toLowerCase();
         final matchesStatus =
-            _filterStatus == 'Semua' || policy.status == _filterStatus;
+            selectedFilter == 'semua' ||
+            _normalizeStatus(policy.status) == selectedFilter;
 
         return matchesSearch && matchesStatus;
       }).toList();
+      _sortPolicyList(_filteredPolicies);
     });
   }
+
+  Future<void> _refreshPolicies() async {
+    final currentQuery = _searchController.text.trim();
+    await _fetchPolicies(
+      searchQuery: currentQuery.isNotEmpty ? currentQuery : null,
+    );
+  }
+
+  void _sortPolicyList(List<PolicyModel> list) {
+    list.sort((a, b) {
+      final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final comparison = aDate.compareTo(bDate);
+      return _sortOrder == 'asc' ? comparison : -comparison;
+    });
+  }
+
+  void _changeSortOrder(String order) {
+    if (_sortOrder == order) return;
+    setState(() {
+      _sortOrder = order;
+      _sortPolicyList(_policies);
+      _applyFilters();
+    });
+  }
+
+  String get _sortLabel => _sortOrder == 'desc' ? 'Terbaru' : 'Terlama';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 140,
-            floating: false,
-            pinned: true,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new,
-                color: Colors.green.shade700,
-                size: 20,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.filter_list, color: Colors.green.shade700),
-                onPressed: () {
-                  _showFilterBottomSheet(context);
-                },
-              ),
-              const SizedBox(width: 8),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-              title: const Text(
-                "Polis Pengguna",
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _refreshPolicies,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                backgroundColor: Colors.grey[50],
+                elevation: 0,
+                pinned: false,
+                floating: true,
+                automaticallyImplyLeading: false,
+                titleSpacing: 0,
+                title: Row(
+                  children: [
+                    if (_shouldShowBack(context))
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        color: Colors.black87,
+                      ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        "Polis Pengguna",
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 22,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.green.shade50, Colors.white],
-                  ),
-                ),
-              ),
-            ),
-          ),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onSubmitted: (value) {
-                        _fetchPolicies(searchQuery: value);
-                      },
-                      decoration: InputDecoration(
-                        hintText: "Cari nama pemilik atau produk...",
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 14,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: Colors.green.shade600,
-                          size: 22,
-                        ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: Colors.grey.shade400,
-                                  size: 20,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _fetchPolicies();
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickStatCard(
-                          "Total Polis",
-                          "${_policies.length}",
-                          Icons.description_outlined,
-                          Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildQuickStatCard(
-                          "Aktif",
-                          "${_policies.where((p) => p.status.toLowerCase() == 'aktif').length}",
-                          Icons.verified_outlined,
-                          Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFilterChip('Semua'),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('Aktif'),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('Tidak Aktif'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          if (_isLoading)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            )
-          else if (_errorMessage != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Center(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => _fetchPolicies(),
-                        child: const Text("Coba Lagi"),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              sliver: _filteredPolicies.isEmpty
-                  ? SliverToBoxAdapter(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 40),
-                            Icon(
-                              Icons.search_off,
-                              size: 64,
-                              color: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              "Tidak ada polis ditemukan",
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 16,
-                              ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
+                        child: TextField(
+                          controller: _searchController,
+                          onSubmitted: (value) =>
+                              _fetchPolicies(searchQuery: value),
+                          decoration: InputDecoration(
+                            hintText: "Cari nama, no. polis, produk...",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.green.shade600,
+                              size: 22,
+                            ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: Colors.grey.shade400,
+                                      size: 20,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      _fetchPolicies();
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
+                        ),
                       ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            AdminPolicyCard(policy: _filteredPolicies[index]),
-                        childCount: _filteredPolicies.length,
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildQuickStatCard(
+                              "Total Polis",
+                              "${_policies.length}",
+                              Icons.description_outlined,
+                              Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildQuickStatCard(
+                              "Polis Aktif",
+                              "${_policies.where((p) => p.status.toLowerCase() == 'aktif').length}",
+                              Icons.verified_outlined,
+                              Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildFilterChip('Semua'),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('Aktif'),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('Inaktif'),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('Dibatalkan'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            _changeSortOrder(
+                              _sortOrder == 'desc' ? 'asc' : 'desc',
+                            );
+                          },
+                          icon: Icon(
+                            _sortOrder == 'desc'
+                                ? Icons.arrow_downward
+                                : Icons.arrow_upward,
+                            size: 16,
+                            color: Colors.green.shade700,
+                          ),
+                          label: Text(
+                            "Urutkan $_sortLabel",
+                            style: TextStyle(
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              if (_isLoading)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.green),
+                  ),
+                )
+              else if (_errorMessage != null)
+                SliverFillRemaining(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.cloud_off,
+                            size: 64,
+                            color: Colors.red.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => _fetchPolicies(),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text("Coba Lagi"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade700,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-            ),
-        ],
-      ),
-
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        backgroundColor: Colors.green.shade700,
-        elevation: 4,
-        icon: const Icon(Icons.add),
-        label: const Text(
-          "Tambah Polis",
-          style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                )
+              else if (_filteredPolicies.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 72,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Tidak ada polis ditemukan",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: AdminPolicyCard(
+                          policy: _filteredPolicies[index],
+                          onRefresh: _refreshPolicies,
+                        ),
+                      ),
+                      childCount: _filteredPolicies.length,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -395,7 +452,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
   }
 
   Widget _buildFilterChip(String label) {
-    final isSelected = _filterStatus == label;
+    final isSelected = _filterStatus.toLowerCase() == label.toLowerCase();
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -420,55 +477,20 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     );
   }
 
-  void _showFilterBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Filter Polis",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.all_inclusive),
-              title: const Text("Semua Polis"),
-              onTap: () {
-                setState(() => _filterStatus = 'Semua');
-                _applyFilters();
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.check_circle, color: Colors.green.shade600),
-              title: const Text("Polis Aktif"),
-              onTap: () {
-                setState(() => _filterStatus = 'Aktif');
-                _applyFilters();
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.cancel, color: Colors.red.shade600),
-              title: const Text("Polis Tidak Aktif"),
-              onTap: () {
-                setState(() => _filterStatus = 'Tidak Aktif');
-                _applyFilters();
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+  String _normalizeStatus(String value) {
+    final lower = value.toLowerCase();
+    if (lower.contains('batal')) return 'dibatalkan';
+    if (lower.contains('inaktif') ||
+        lower.contains('tidak aktif') ||
+        lower.contains('nonaktif')) {
+      return 'inaktif';
+    }
+    return 'aktif';
+  }
+
+  bool _shouldShowBack(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route == null) return false;
+    return route.canPop;
   }
 }
