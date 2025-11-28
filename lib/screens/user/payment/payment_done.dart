@@ -102,7 +102,6 @@ class PaymentDone extends StatelessWidget {
   }
 
   Widget _buildPaymentDetails() {
-    // Filter out 'Status' field from data
     final filteredData = Map<String, String>.from(data)..remove('Status');
 
     return DottedBorder(
@@ -208,7 +207,7 @@ class PaymentDone extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -217,7 +216,6 @@ class PaymentDone extends StatelessWidget {
         child: SafeArea(
           child: ElevatedButton(
             onPressed: () {
-              // Navigate back to home or policy list
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(

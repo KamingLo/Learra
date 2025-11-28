@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../screens/user/profile/edit_profile_screen.dart';
+import '../../../screens/user/bantuan/helpfaq.dart';
 import '../../../services/session_service.dart';
 import '../../../services/api_service.dart';
 import '../../../main.dart'; // Untuk AuthCheck
@@ -199,7 +200,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.help_center_outlined,
                       title: "Pusat Bantuan",
                       subtitle: "Temukan jawaban dan panduan",
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const FAQPage()),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
                     _buildMenuItem(

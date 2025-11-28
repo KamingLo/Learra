@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
+import 'dart:math';
 
 class BatalkanPembayaranScreen extends StatefulWidget {
   final Map<String, String> paymentData;
@@ -42,7 +43,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
       return;
     }
 
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -146,18 +146,16 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
   }
 
   String _getBannerAsset() {
-    final produk = widget.paymentData['Produk'] ?? '';
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
 
-    if (produk.toLowerCase().contains('kesehatan')) {
-      return 'assets/PayKlaim/AsuransiKesehatan.png';
-    } else if (produk.toLowerCase().contains('jiwa')) {
-      return 'assets/PayKlaim/AsuransiJiwa.png';
-    } else if (produk.toLowerCase().contains('kendaraan') ||
-        produk.toLowerCase().contains('mobil')) {
-      return 'assets/PayKlaim/AsuransiMobil.png';
-    }
+    final random = Random();
+    final int randomIndex = random.nextInt(availableAssets.length);
 
-    return 'assets/PayKlaim/AsuransiMobil.png';
+    return availableAssets[randomIndex];
   }
 
   @override
@@ -190,7 +188,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner Image - FIXED
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
@@ -219,7 +216,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Payment Details Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -268,7 +264,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Reason Input
                   const Text(
                     'Alasan Membatalkan Pembayaran',
                     style: TextStyle(
@@ -316,7 +311,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Warning Card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -352,7 +346,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
               ),
             ),
 
-            // Bottom Button
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
@@ -362,7 +355,7 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha:0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),

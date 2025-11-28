@@ -1,4 +1,3 @@
-// lib/screens/admin/payment_menu.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -20,9 +19,11 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
   late DateFormat dateFmt;
   bool _isInitialized = false;
 
-  // Filter status
   String?
-  _selectedStatus; // null = semua, 'menunggu_konfirmasi', 'berhasil', 'gagal'
+  _selectedStatus;
+
+  List<dynamic> _allPaymentData = [];
+  List<dynamic> _filteredPaymentData = [];
 
   @override
   void initState() {
@@ -42,13 +43,62 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
   void loadData() {
     if (!_isInitialized) return;
     setState(() {
-      String query = '/payment?limit=100';
-      final search = searchCtrl.text.trim();
-      if (search.isNotEmpty) query += '&search=$search';
-      if (_selectedStatus != null) query += '&status=$_selectedStatus';
-
-      futurePayments = api.get(query).then((res) => res as List<dynamic>);
+      futurePayments = api.get('/payment?limit=100').then((res) {
+        _allPaymentData = res as List<dynamic>;
+        _applyFilters();
+        return _filteredPaymentData;
+      });
     });
+  }
+
+  void _applyFilters() {
+    List<dynamic> filtered = List.from(_allPaymentData);
+
+    if (_selectedStatus != null) {
+      filtered = filtered.where((p) {
+        final status = val(p['status'], 'menunggu_konfirmasi').toLowerCase();
+        return status == _selectedStatus!.toLowerCase();
+      }).toList();
+    }
+
+    final searchQuery = searchCtrl.text.trim().toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((p) {
+        final userName = val(
+          p['policyId']?['userId']?['name'],
+          '',
+        ).toLowerCase();
+
+        final userEmail = val(
+          p['policyId']?['userId']?['email'],
+          '',
+        ).toLowerCase();
+
+        final policyNumber = val(
+          p['policyId']?['policyNumber'],
+          '',
+        ).toLowerCase();
+
+        final createdAt = DateTime.tryParse(val(p['createdAt']));
+
+        final dateString = createdAt != null
+            ? dateFmt.format(createdAt).toLowerCase()
+            : '';
+
+        final amount = (p['amount'] is int
+            ? p['amount'].toDouble()
+            : p['amount'] ?? 0.0);
+        final amountString = currency.format(amount).toLowerCase();
+
+        return userName.contains(searchQuery) ||
+            userEmail.contains(searchQuery) ||
+            policyNumber.contains(searchQuery) ||
+            dateString.contains(searchQuery) ||
+            amountString.contains(searchQuery);
+      }).toList();
+    }
+
+    _filteredPaymentData = filtered;
   }
 
   String val(dynamic value, [String fallback = '-']) {
@@ -78,14 +128,21 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
   Widget _filterOption(String label, String? value) {
     final isSelected = _selectedStatus == value;
     return ListTile(
-      title: Text(label),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
       trailing: isSelected
           ? const Icon(Icons.check, color: Colors.green)
           : null,
       onTap: () {
-        setState(() => _selectedStatus = value);
         Navigator.pop(context);
-        loadData();
+        setState(() {
+          _selectedStatus = value;
+          _applyFilters();
+        });
       },
     );
   }
@@ -110,11 +167,9 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        // Icon tanda tanya dihapus
       ),
       body: Column(
         children: [
-          // Search + Filter Bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16),
@@ -129,16 +184,38 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                     child: TextField(
                       controller: searchCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Cari nama pengguna...',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        hintText:
+                            'Cari nama, email, polis, jumlah, atau tanggal...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                        ),
                         prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                        suffixIcon: searchCtrl.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Colors.grey[600],
+                                ),
+                                onPressed: () {
+                                  searchCtrl.clear();
+                                  setState(() {
+                                    _applyFilters();
+                                  });
+                                },
+                              )
+                            : null,
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
                         ),
                       ),
-                      onSubmitted: (_) => loadData(),
+                      onChanged: (_) {
+                        setState(() {
+                          _applyFilters();
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -149,6 +226,9 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                         ? Colors.indigo[50]
                         : Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
+                    border: _selectedStatus != null
+                        ? Border.all(color: Colors.indigo, width: 2)
+                        : null,
                   ),
                   child: IconButton(
                     icon: Icon(
@@ -164,7 +244,45 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
             ),
           ),
 
-          // Daftar Pembayaran
+          if (_selectedStatus != null)
+            Container(
+              width: double.infinity,
+              color: Colors.indigo[50],
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.filter_alt, size: 16, color: Colors.indigo[700]),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Filter: ${_getStatusLabel(_selectedStatus!)}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.indigo[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedStatus = null;
+                        _applyFilters();
+                      });
+                    },
+                    child: Text(
+                      'Hapus Filter',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.indigo[700],
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => loadData(),
@@ -178,12 +296,41 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
 
-                  final data = snapshot.data ?? [];
+                  final data = _filteredPaymentData;
                   if (data.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Belum ada pembayaran',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.payment_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            searchCtrl.text.isNotEmpty ||
+                                    _selectedStatus != null
+                                ? 'Tidak ada hasil yang ditemukan'
+                                : 'Belum ada pembayaran',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          if (searchCtrl.text.isNotEmpty ||
+                              _selectedStatus != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                'Coba kata kunci atau filter lain',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     );
                   }
@@ -216,12 +363,16 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                         'Belum ada polis',
                       );
 
-                      final isPending = status == 'menunggu_konfirmasi';
+                      final isPending =
+                          status.toLowerCase() == 'menunggu_konfirmasi';
+                      final isCompleted =
+                          status.toLowerCase() == 'berhasil' ||
+                          status.toLowerCase() == 'gagal';
                       final statusLabel = isPending
                           ? 'MENUNGGU'
-                          : status == 'berhasil'
+                          : status.toLowerCase() == 'berhasil'
                           ? 'BERHASIL'
-                          : 'DITOLAK'; // GAGAL → DITOLAK
+                          : 'DITOLAK';
 
                       return PaymentCardAdmin(
                         name: userName,
@@ -231,10 +382,10 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                         date: dateFmt.format(createdAt),
                         status: statusLabel,
                         isPending: isPending,
+                        isCompleted: isCompleted,
                         onConfirm: () => _confirmPayment(id, true),
                         onReject: () => _confirmPayment(id, false),
-                        paymentData:
-                            p, // Tambahkan ini untuk pass p ke PaymentCardAdmin
+                        paymentData: p,
                       );
                     },
                   );
@@ -245,6 +396,19 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
         ],
       ),
     );
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status) {
+      case 'menunggu_konfirmasi':
+        return 'Menunggu';
+      case 'berhasil':
+        return 'Berhasil';
+      case 'gagal':
+        return 'Ditolak';
+      default:
+        return status;
+    }
   }
 
   Future<void> _confirmPayment(String id, bool approve) async {
@@ -279,8 +443,8 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
           '/payment/$id/confirm',
           body: {'action': approve ? 'confirm' : 'tolak'},
         );
-        loadData();
         if (!mounted) return;
+        loadData();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -305,7 +469,6 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
   }
 }
 
-// Card dengan email + teks "Konfirmasi" putih + status "DITOLAK"
 class PaymentCardAdmin extends StatelessWidget {
   final String name;
   final String email;
@@ -314,9 +477,10 @@ class PaymentCardAdmin extends StatelessWidget {
   final String date;
   final String status;
   final bool isPending;
+  final bool isCompleted;
   final VoidCallback onConfirm;
   final VoidCallback onReject;
-  final Map<String, dynamic> paymentData; // Tambahkan prop ini
+  final Map<String, dynamic> paymentData;
 
   const PaymentCardAdmin({
     super.key,
@@ -327,9 +491,10 @@ class PaymentCardAdmin extends StatelessWidget {
     required this.date,
     required this.status,
     required this.isPending,
+    required this.isCompleted,
     required this.onConfirm,
     required this.onReject,
-    required this.paymentData, // Required baru
+    required this.paymentData,
   });
 
   @override
@@ -341,7 +506,7 @@ class PaymentCardAdmin extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -427,45 +592,14 @@ class PaymentCardAdmin extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (isPending)
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: onReject,
-                        child: const Text(
-                          'Tolak',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: onConfirm,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Konfirmasi',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  )
-                else
+                if (isCompleted)
                   TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => DetailPembayaranScreen(
-                            paymentData: paymentData,
-                          ), // Gunakan paymentData
+                          builder: (_) =>
+                              DetailPembayaranScreen(paymentData: paymentData),
                         ),
                       );
                     },
@@ -483,6 +617,33 @@ class PaymentCardAdmin extends StatelessWidget {
                       ],
                     ),
                   ),
+                if (isPending) ...[
+                  TextButton(
+                    onPressed: onReject,
+                    child: const Text(
+                      'Tolak',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Konfirmasi',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

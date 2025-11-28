@@ -1,8 +1,9 @@
-// lib/screens/user/claim/claim_detail.dart
 import 'package:flutter/material.dart';
+
 import 'package:intl/date_symbol_data_local.dart';
 import '../../../services/api_service.dart';
 import 'claim_wait.dart';
+import 'dart:math';
 
 class ClaimDetail extends StatefulWidget {
   final dynamic initialData;
@@ -58,7 +59,6 @@ class _ClaimDetailState extends State<ClaimDetail> {
   Future<void> _fetchUserPolis() async {
     try {
       final res = await api.get('/user/polis');
-      debugPrint("Response polis: $res");
 
       List<dynamic> rawList = [];
       if (res is Map) {
@@ -71,14 +71,11 @@ class _ClaimDetailState extends State<ClaimDetail> {
         rawList = res;
       }
 
-      // Filter hanya polis yang aktif
       final active = rawList.where((p) {
         if (p is! Map) return false;
         final s = p['status']?.toString().toLowerCase().trim() ?? '';
         return s == 'aktif';
       }).toList();
-
-      debugPrint("Polis aktif: ${active.length}");
 
       setState(() {
         _polisList = active;
@@ -95,17 +92,24 @@ class _ClaimDetailState extends State<ClaimDetail> {
         }
       });
     } catch (e) {
-      debugPrint("Error fetching polis: $e");
       setState(() => _loadingPolis = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat polis: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showSnackBar('Gagal memuat polis: $e', Colors.red);
       }
     }
+  }
+
+  String _getBannerAsset() {
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
+
+    final random = Random();
+    final int randomIndex = random.nextInt(availableAssets.length);
+
+    return availableAssets[randomIndex];
   }
 
   String _getPolisNumber(dynamic polis) {
@@ -166,27 +170,21 @@ class _ClaimDetailState extends State<ClaimDetail> {
     };
 
     try {
-      await api.post(
-        '/klaim',
-        body: klaimData,
-      ); // Changed to '/klaim' as per previous analysis
+      await api.post('/klaim', body: klaimData);
 
       setState(() => _isSubmitting = false);
 
-      // Cari data polis yang dipilih
       final selectedPolis = _polisList.firstWhere(
         (p) => p['_id'] == _selectedPolisId,
         orElse: () => null,
       );
 
-      // Siapkan data untuk ditampilkan di halaman wait
       final dataForWaitScreen = {
         'jumlahKlaim': jumlahKlaim,
         'deskripsi': _deskripsiController.text,
         'polis': selectedPolis,
       };
 
-      // Navigate ke ClaimWaitScreen
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -202,9 +200,14 @@ class _ClaimDetailState extends State<ClaimDetail> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: color,
+      ),
+    );
   }
 
   @override
@@ -218,29 +221,102 @@ class _ClaimDetailState extends State<ClaimDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final randomBannerPath = _getBannerAsset();
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Ajukan Klaim'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Ajukan Klaim',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 16.0,
+          ),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.white,
         elevation: 0,
-        backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20.0, 0, 20.0, 200.0),
+            padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 180.0),
             child: _loadingPolis
                 ? const Center(child: CircularProgressIndicator())
                 : _polisList.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Tidak ada polis aktif yang tersedia untuk klaim.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16.0),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 64,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Tidak ada polis aktif',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Polis Anda tidak tersedia untuk mengajukan klaim',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
                     ),
                   )
-                : _buildForm(),
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            randomBannerPath,
+                            fit: BoxFit.cover,
+                            height: 90.0,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 90.0,
+                                color: const Color(0xFFE8F5E9),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+
+                      _buildForm(),
+                    ],
+                  ),
           ),
           _buildBottomBar(),
         ],
@@ -254,16 +330,13 @@ class _ClaimDetailState extends State<ClaimDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Pilih Polis',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8.0),
+          _buildSectionTitle("Pilih Polis"),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(12.0),
+              color: Colors.white,
             ),
             child: DropdownButton<String>(
               value: _selectedPolisId,
@@ -278,18 +351,44 @@ class _ClaimDetailState extends State<ClaimDetail> {
                   value: polis['_id'],
                   child: Text(
                     '${_getProductName(polis)} - ${_getPolisNumber(polis)}',
-                    style: const TextStyle(fontSize: 14.0),
+                    style: const TextStyle(fontSize: 13.0),
                   ),
                 );
               }).toList(),
             ),
           ),
           const SizedBox(height: 24.0),
-          const Text(
-            'Jumlah Klaim',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8.0),
+
+          if (_selectedPolisId != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle("Informasi Polis"),
+                _buildInfoCard([
+                  {
+                    'label': 'Produk',
+                    'value': _getProductName(
+                      _polisList.firstWhere(
+                        (p) => p['_id'] == _selectedPolisId,
+                        orElse: () => {},
+                      ),
+                    ),
+                  },
+                  {
+                    'label': 'Nomor Polis',
+                    'value': _getPolisNumber(
+                      _polisList.firstWhere(
+                        (p) => p['_id'] == _selectedPolisId,
+                        orElse: () => {},
+                      ),
+                    ),
+                  },
+                ]),
+                const SizedBox(height: 24.0),
+              ],
+            ),
+
+          _buildSectionTitle("Jumlah Klaim"),
           TextFormField(
             controller: _jumlahKlaimController,
             keyboardType: TextInputType.number,
@@ -300,11 +399,15 @@ class _ClaimDetailState extends State<ClaimDetail> {
                 color: Colors.green.shade700,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.green, width: 2),
               ),
               filled: true,
@@ -322,11 +425,8 @@ class _ClaimDetailState extends State<ClaimDetail> {
             },
           ),
           const SizedBox(height: 24.0),
-          const Text(
-            'Nama Pemilik Rekening',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8.0),
+
+          _buildSectionTitle("Nama Pemilik Rekening"),
           TextFormField(
             controller: _namaRekeningController,
             keyboardType: TextInputType.text,
@@ -337,11 +437,15 @@ class _ClaimDetailState extends State<ClaimDetail> {
                 color: Colors.green.shade700,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.green, width: 2),
               ),
               filled: true,
@@ -358,11 +462,8 @@ class _ClaimDetailState extends State<ClaimDetail> {
             },
           ),
           const SizedBox(height: 24.0),
-          const Text(
-            'Nomor Rekening',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8.0),
+
+          _buildSectionTitle("Nomor Rekening"),
           TextFormField(
             controller: _noRekeningController,
             keyboardType: TextInputType.number,
@@ -373,11 +474,15 @@ class _ClaimDetailState extends State<ClaimDetail> {
                 color: Colors.green.shade700,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.green, width: 2),
               ),
               filled: true,
@@ -397,11 +502,8 @@ class _ClaimDetailState extends State<ClaimDetail> {
             },
           ),
           const SizedBox(height: 24.0),
-          const Text(
-            'Deskripsi Kejadian',
-            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8.0),
+
+          _buildSectionTitle("Deskripsi Kejadian"),
           TextFormField(
             controller: _deskripsiController,
             maxLines: 5,
@@ -412,11 +514,15 @@ class _ClaimDetailState extends State<ClaimDetail> {
                 color: Colors.green.shade700,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: Colors.grey.shade300),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.green, width: 2),
               ),
               filled: true,
@@ -445,7 +551,70 @@ class _ClaimDetailState extends State<ClaimDetail> {
               ),
             ],
           ),
+          const SizedBox(height: 32.0),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(List<Map<String, String>> items) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: items.map((item) {
+          final isLast = item == items.last;
+          return Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    item['label']!,
+                    style: const TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      item['value']!,
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+              if (!isLast) ...[
+                const SizedBox(height: 12),
+                Divider(color: Colors.grey.shade300, height: 1),
+                const SizedBox(height: 12),
+              ],
+            ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -460,7 +629,7 @@ class _ClaimDetailState extends State<ClaimDetail> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20.0,
               offset: const Offset(0, -2),
             ),
