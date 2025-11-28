@@ -45,7 +45,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
       try {
         print("DEBUG: Mencoba Percobaan 1 -> GET /polis/user");
-        response = await _apiService.get('/polis/user');
+        response = await _apiService.get('/polisuser');
 
         success = true;
       } catch (e) {
