@@ -35,10 +35,20 @@ class _RegisterFormState extends State<RegisterForm> {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+  static const Color _successColor = Color(0xFF1ED760);
 
   bool _containsAll(String source, List<String> tokens) {
     final lower = source.toLowerCase();
     return tokens.every(lower.contains);
+  }
+
+  void _showSuccessMessage(String message) {
+    setState(() => _errorMessage = message);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _errorMessage == message) {
+        setState(() => _errorMessage = null);
+      }
+    });
   }
 
   Widget _buildPrimaryButton({
@@ -291,9 +301,9 @@ class _RegisterFormState extends State<RegisterForm> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi berhasil, silakan login.')),
-      );
+      _showSuccessMessage('Registrasi berhasil, silakan login.');
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
       widget.onSwitchToLogin?.call();
 
     } catch (e) {
@@ -354,12 +364,19 @@ class _RegisterFormState extends State<RegisterForm> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: _errorMessage == 'Registrasi berhasil, silakan login.'
+                            ? _successColor.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(
+                          color: _errorMessage == 'Registrasi berhasil, silakan login.'
+                              ? _successColor
+                              : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 18),

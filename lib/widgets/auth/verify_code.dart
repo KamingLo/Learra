@@ -23,6 +23,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+  static const Color _successColor = Color(0xFF1ED760);
   bool _containsAll(String source, List<String> tokens) {
     final lower = source.toLowerCase();
     return tokens.every(lower.contains);
@@ -167,6 +168,15 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
     );
   }
 
+  void _showSuccessMessage(String message) {
+    setState(() => _errorMessage = message);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _errorMessage == message) {
+        setState(() => _errorMessage = null);
+      }
+    });
+  }
+
   Future<void> _handleVerify() async {
     if (_codeController.text.isEmpty) {
       setState(() => _errorMessage = 'Silakan isi kode OTP.');
@@ -196,6 +206,10 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
         throw Exception('Kode OTP tidak ditemukan.');
       }
 
+      if (!mounted) return;
+
+      _showSuccessMessage('Berhasil verifikasi kode.');
+      await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
 
       // Ke Halaman Ubah Password (Bawa Token Reset)
@@ -237,9 +251,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kode OTP berhasil dikirim ulang.')),
-      );
+      _showSuccessMessage('Kode OTP berhasil dikirim ulang.');
     } catch (e) {
       setState(() => _errorMessage = _friendlyErrorMessage(e));
     } finally {
@@ -313,12 +325,19 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(0.1),
+                                        color: _errorMessage!.toLowerCase().contains('berhasil')
+                                            ? _successColor.withOpacity(0.1)
+                                            : Colors.red.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         _errorMessage!,
-                                        style: const TextStyle(color: Colors.red),
+                                        style: TextStyle(
+                                          color: _errorMessage!.toLowerCase().contains('berhasil')
+                                              ? _successColor
+                                              : Colors.red,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 18),

@@ -34,10 +34,22 @@ class _LoginFormState extends State<LoginForm> {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+  static const Color _successColor = Color(0xFF1ED760);
 
   bool _containsAll(String source, List<String> tokens) {
     final lower = source.toLowerCase();
     return tokens.every(lower.contains);
+  }
+
+  void _showSuccessMessage(String message) {
+    setState(() {
+      _errorMessage = message;
+    });
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _errorMessage == message) {
+        setState(() => _errorMessage = null);
+      }
+    });
   }
 
   Widget _buildPrimaryButton({
@@ -90,7 +102,10 @@ class _LoginFormState extends State<LoginForm> {
 
   String _friendlyErrorMessage(Object error) {
     final raw = error.toString().replaceAll('Exception: ', '').trim();
-    final cleaned = raw
+    final sanitized = raw.replaceFirst(RegExp(r'^Error\s\d+:\s*'), '');
+    final jsonMatch = RegExp(r'"message"\s*:\s*"([^"]+)"').firstMatch(sanitized);
+    final extracted = jsonMatch != null ? jsonMatch.group(1)! : sanitized;
+    final cleaned = extracted
         .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
@@ -121,8 +136,9 @@ class _LoginFormState extends State<LoginForm> {
       return 'Email tidak valid.';
     }
     if (_containsAll(lower, ['password', 'invalid']) ||
-        _containsAll(lower, ['password', 'not valid'])) {
-      return 'Password tidak valid.';
+        _containsAll(lower, ['password', 'not valid']) ||
+        _containsAll(lower, ['password', 'salah'])) {
+      return 'Password salah.';
     }
     if (lower.contains('credential') ||
         lower.contains('unauthorized') ||
@@ -223,6 +239,10 @@ class _LoginFormState extends State<LoginForm> {
 
         if (!mounted) return;
 
+        _showSuccessMessage('Berhasil masuk.');
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (!mounted) return;
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const AuthCheck()),
@@ -292,12 +312,19 @@ class _LoginFormState extends State<LoginForm> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: _errorMessage == 'Berhasil masuk.'
+                            ? _successColor.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(
+                          color: _errorMessage == 'Berhasil masuk.'
+                              ? _successColor
+                              : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 18),

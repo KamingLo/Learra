@@ -21,6 +21,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+  static const Color _successColor = Color(0xFF1ED760);
 
   bool _containsAll(String source, List<String> tokens) {
     final lower = source.toLowerCase();
@@ -147,6 +148,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
+  void _showSuccessMessage(String message) {
+    setState(() => _errorMessage = message);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _errorMessage == message) {
+        setState(() => _errorMessage = null);
+      }
+    });
+  }
+
   Future<void> _handleSendCode() async {
     if (_emailController.text.trim().isEmpty) {
       setState(() => _errorMessage = 'Silakan isi email.');
@@ -165,6 +175,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         throw Exception(response['message'] ?? 'Gagal mengirim kode reset');
       }
 
+      if (!mounted) return;
+      _showSuccessMessage('Kode OTP berhasil dikirim.');
+      await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
       
       // Ke halaman Verifikasi (Kirim Parameter Email)
@@ -249,12 +262,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(0.1),
+                                        color: _errorMessage == 'Kode OTP berhasil dikirim.'
+                                            ? _successColor.withOpacity(0.1)
+                                            : Colors.red.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         _errorMessage!,
-                                        style: const TextStyle(color: Colors.red),
+                                        style: TextStyle(
+                                          color: _errorMessage == 'Kode OTP berhasil dikirim.'
+                                              ? _successColor
+                                              : Colors.red,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 18),
