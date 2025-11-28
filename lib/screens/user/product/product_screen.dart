@@ -3,25 +3,31 @@ import 'dart:async';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
 import '../../../widgets/admin/product/product_search_bar.dart';
-import '../../../utils/product_helper.dart'; // Import helper warna
-// Import Widget Baru
+import '../../../utils/product_helper.dart'; 
 import '../../../widgets/user/product/product_card.dart';
 import '../../../widgets/user/product/product_skeleton.dart';
 import 'product_detail_screen.dart';
 
 class UserProductScreen extends StatefulWidget {
-  const UserProductScreen({super.key});
+  // Tambahkan key di constructor agar bisa dikontrol Navbar
+  const UserProductScreen({Key? key}) : super(key: key);
 
   @override
-  State<UserProductScreen> createState() => _UserProductScreenState();
+  // Perhatikan: Return type adalah UserProductScreenState (Tanpa underscore)
+  UserProductScreenState createState() => UserProductScreenState();
 }
 
-class _UserProductScreenState extends State<UserProductScreen> {
+// HAPUS underscore (_) pada nama class agar PUBLIC
+class UserProductScreenState extends State<UserProductScreen> {
   final ApiService _apiService = ApiService();
   List<ProductModel> _products = [];
   bool _isLoading = true;
   String _searchQuery = "";
   Timer? _debounce;
+
+  // Controller text untuk mengisi Search Bar secara otomatis
+  // (Pastikan ProductSearchBar-mu support controller, jika tidak, field ini opsional)
+  // Tapi untuk logika search, _searchQuery sudah cukup.
 
   @override
   void initState() {
@@ -29,10 +35,29 @@ class _UserProductScreenState extends State<UserProductScreen> {
     _fetchProducts();
   }
 
+  /// METHOD BARU: Bisa dipanggil dari Navbar
+  /// Menerima keyword (bisa nama produk ATAU kategori/tipe)
+  void performSearch(String keyword) {
+    if (!mounted) return;
+    
+    setState(() {
+      _searchQuery = keyword; // Set keyword
+      _isLoading = true;      // Mulai loading
+    });
+
+    // Panggil fetch langsung (tanpa debounce karena ini aksi klik)
+    _fetchProducts(query: keyword);
+  }
+
   Future<void> _fetchProducts({String query = ""}) async {
-    if (mounted) setState(() => _isLoading = true);
+    if (!mounted) return;
+    // Logika aman: Jika query kosong -> Default list
+    // Jika ada query -> Search endpoint
+    final endpoint = query.isEmpty 
+        ? '/produk?limit=8' 
+        : '/produk?search=$query&limit=6';
+
     try {
-      final endpoint = query.isEmpty ? '/produk?limit=8' : '/produk?search=$query&limit=6';
       final response = await _apiService.get(endpoint);
 
       if (!mounted) return;
@@ -59,12 +84,7 @@ class _UserProductScreenState extends State<UserProductScreen> {
   }
 
   void _goToDetail(String productId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => UserProductDetailScreen(productId: productId),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => UserProductDetailScreen(productId: productId)));
   }
 
   @override
@@ -76,7 +96,7 @@ class _UserProductScreenState extends State<UserProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F6), // Background abu-abu sangat muda
+      backgroundColor: const Color(0xFFF4F7F6),
       appBar: AppBar(
         title: const Text(
           "Belanja Produk", 
@@ -91,13 +111,34 @@ class _UserProductScreenState extends State<UserProductScreen> {
           // SEARCH BAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: ProductSearchBar(onChanged: _onSearchChanged),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tampilkan info jika sedang memfilter berdasarkan kategori
+                if (_searchQuery.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0, left: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("Hasil pencarian: \"$_searchQuery\"", style: TextStyle(color: ProductHelper.primaryGreen, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => performSearch(""), // Reset search
+                          child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                        )
+                      ],
+                    ),
+                  ),
+                ProductSearchBar(onChanged: _onSearchChanged),
+              ],
+            ),
           ),
 
           // GRID PRODUCTS
           Expanded(
             child: _isLoading
-                ? const ProductSkeleton() // Panggil Widget Skeleton
+                ? const ProductSkeleton() 
                 : _products.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
@@ -113,7 +154,6 @@ class _UserProductScreenState extends State<UserProductScreen> {
                           ),
                           itemCount: _products.length,
                           itemBuilder: (context, index) {
-                            // Panggil Widget Card
                             return ProductCard(
                               product: _products[index],
                               onTap: () => _goToDetail(_products[index].id),
@@ -134,7 +174,12 @@ class _UserProductScreenState extends State<UserProductScreen> {
         children: [
           Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade300),
           const SizedBox(height: 16),
-          Text("Produk tidak ditemukan", style: TextStyle(color: Colors.grey.shade500)),
+          Text("Produk \"$_searchQuery\" tidak ditemukan", style: TextStyle(color: Colors.grey.shade500)),
+          if (_searchQuery.isNotEmpty)
+            TextButton(
+              onPressed: () => performSearch(""), 
+              child: const Text("Tampilkan Semua Produk")
+            )
         ],
       ),
     );

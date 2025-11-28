@@ -3,15 +3,22 @@ import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
 import '../product/product_detail_screen.dart';
 import '../../auth/auth_screen.dart';
-
-// Import Widget Carousel Baru (Pastikan path-nya benar)
-import '../../../widgets/user/home/product_carousel.dart';
+import '../../../widgets/user/home/product_carousel.dart'; 
+import '../../../widgets/user/home/home_category_selector.dart';
+// 1. Import SessionService
+import '../../../services/session_service.dart'; 
 
 class UserHomeScreen extends StatefulWidget {
   final String role;
-  final Function(int)? onSwitchTab;
+  final Function(int)? onSwitchTab; 
+  final Function(String)? onCategoryTap;
 
-  const UserHomeScreen({super.key, required this.role, this.onSwitchTab});
+  const UserHomeScreen({
+    super.key, 
+    required this.role, 
+    this.onSwitchTab,
+    this.onCategoryTap,
+  });
 
   @override
   State<UserHomeScreen> createState() => _UserHomeScreenState();
@@ -24,26 +31,51 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   final Color _primaryColor = const Color(0xFF0FA958);
 
+  // 2. Variabel Nama (Default null atau string kosong)
+  String? _userName; 
+
   bool get _isLoggedIn => widget.role == 'user';
 
   @override
   void initState() {
     super.initState();
     _fetchProducts();
+    // 3. Panggil load data saat pertama kali dibuka
+    _loadUserData(); 
+  }
+
+  // 4. PENTING: Deteksi perubahan Role (Misal dari Guest -> Login jadi User)
+  @override
+  void didUpdateWidget(UserHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Jika role berubah (atau parent merebuild widget ini), kita cek nama lagi
+    if (widget.role != oldWidget.role || widget.role == 'user') {
+      _loadUserData();
+    }
+  }
+
+  // 5. Fungsi Load Data (Sama persis dengan ProfileScreen Anda)
+  Future<void> _loadUserData() async {
+    // Ambil nama dari SessionService
+    final name = await SessionService.getCurrentName();
+    
+    // Pastikan widget masih aktif sebelum setState
+    if (mounted) {
+      setState(() {
+        _userName = name; // Isi variabel _userName
+      });
+    }
   }
 
   Future<void> _fetchProducts() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-
     try {
       final response = await _apiService.get('/produk?limit=5');
       if (!mounted) return;
-
-      final data = (response is Map && response.containsKey('data'))
-          ? response['data'] as List
+      final data = (response is Map && response.containsKey('data')) 
+          ? response['data'] as List 
           : (response is List ? response : []);
-
       setState(() {
         _products = data.map((json) => ProductModel.fromJson(json)).toList();
         _isLoading = false;
@@ -55,12 +87,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   void _goToDetail(ProductModel product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => UserProductDetailScreen(productId: product.id),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => UserProductDetailScreen(productId: product.id)));
   }
 
   @override
@@ -68,12 +95,15 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: RefreshIndicator(
-        onRefresh: _fetchProducts,
+        onRefresh: () async {
+          await _fetchProducts();
+          await _loadUserData(); // Bisa refresh manual tarik layar
+        },
         color: _primaryColor,
         child: ListView(
           padding: const EdgeInsets.only(top: 20, bottom: 40),
           children: [
-            // 1. HEADER (Dengan Padding Horizontal)
+            // HEADER
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildHeader(),
@@ -81,25 +111,16 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
             const SizedBox(height: 24),
 
-            // 2. CAROUSEL PRODUK (Full Width / Tanpa Padding Horizontal Parent)
-            // Ini sekarang ada di posisi KEDUA (di bawah header)
+            // CAROUSEL
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Judul Kecil di atas Carousel (Opsional, agar user tau ini apa)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "Rekomendasi Terbaik",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      // Tombol Lihat Semua
+                      const Text("Rekomendasi Terbaik", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       TextButton(
                         onPressed: () => widget.onSwitchTab?.call(1),
                         child: Text(
@@ -111,8 +132,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Widget Carousel 16:9
                 ProductCarousel(
                   products: _products,
                   isLoading: _isLoading,
@@ -122,29 +141,30 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
 
             const SizedBox(height: 30),
+            // KATEGORI
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: HomeCategorySelector(
+                onCategorySelected: (category) {
+                  widget.onCategoryTap?.call(category);
+                },
+              ),
+            ),
 
-            // 3. POLIS YANG DIMILIKI (Hero Section)
-            // Ini sekarang ada di posisi KETIGA (di bawah carousel)
+            const SizedBox(height: 24),
+
+            // POLIS HERO SECTION
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Judul Section Polis
-                  const Text(
-                    "Polis Anda",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
+                  const Text("Polis Anda", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
                   const SizedBox(height: 10),
                   _buildHeroSection(),
                 ],
               ),
             ),
-
             const SizedBox(height: 40),
           ],
         ),
@@ -152,36 +172,34 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // --- WIDGET HELPER (Header & Hero) TETAP SAMA ---
-
   Widget _buildHeader() {
+    // Tentukan teks nama. 
+    // Jika _userName ada isinya, pakai itu. Jika null, pakai "User".
+    final displayName = _userName ?? "User";
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft, // Mulai dari Kiri
+          end: Alignment.centerRight,   // Berakhir di Kanan
+          colors: [
+            Colors.green.shade800,      // Hijau lebih gelap
+            Colors.green.shade700,      // Hijau sedikit lebih terang
+          ],
+        ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 24, offset: const Offset(0, 8))],
       ),
       child: Row(
         children: [
           Container(
-            height: 54,
-            width: 54,
+            height: 48, width: 48,
             decoration: BoxDecoration(
-              color: _primaryColor.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              _isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded,
-              color: _primaryColor,
-              size: 28,
-            ),
+            child: Icon(_isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded, color: _primaryColor, size: 36),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -189,34 +207,16 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _isLoggedIn ? "Halo!" : "Selamat Datang!",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  _isLoggedIn ? "Halo, $displayName!" : "Selamat Datang!", // <--- Pakai displayName
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _isLoggedIn
-                      ? "Semoga harimu menyenangkan"
-                      : "Temukan perlindunganmu",
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  _isLoggedIn ? "Semoga harimu menyenangkan" : "Temukan perlindunganmu", 
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade300)
                 ),
               ],
-            ),
-          ),
-          // Tombol Notif
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F7FA),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Icon(
-              Icons.notifications_outlined,
-              size: 22,
-              color: Colors.grey.shade600,
             ),
           ),
         ],
