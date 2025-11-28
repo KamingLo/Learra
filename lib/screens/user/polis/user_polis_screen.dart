@@ -41,44 +41,12 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
       List<PolicyModel> myPolicies = [];
       dynamic response;
-      bool success = false;
 
       try {
-        print("DEBUG: Mencoba Percobaan 1 -> GET /user/polis");
         response = await _apiService.get('/user/polis');
-
-        success = true;
       } catch (e) {
         print("Percobaan 1 Gagal: $e");
       }
-
-      if (!success) {
-        try {
-          print("DEBUG: Mencoba Percobaan 2 -> GET /polis?search=$sessionId");
-          response = await _apiService.get('/polis/search=$sessionId');
-          success = true;
-        } catch (e) {
-          print("Percobaan 2 Gagal: $e");
-        }
-      }
-
-      if (!success) {
-        try {
-          print("DEBUG: Mencoba Percobaan 3 -> GET /api/user/me");
-          response = await _apiService.get('/api/user/me');
-          success = true;
-        } catch (e) {
-          print("Percobaan 3 Gagal: $e");
-        }
-      }
-
-      if (!success) {
-        throw Exception(
-          "Gagal mengambil data polis dari semua jalur yang mungkin. Silakan hubungi admin (Bug Backend Routing).",
-        );
-      }
-
-      print("DEBUG: Response Berhasil didapat: $response");
 
       List<dynamic> rawList = [];
       if (response is Map) {

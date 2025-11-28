@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
+import '../../../models/product_model.dart';
 import '../../../services/api_service.dart';
+import '../payment/payment_detail.dart';
 
 class PolicyDetailScreen extends StatefulWidget {
   final PolicyModel policy;
@@ -398,22 +400,56 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                final bool isInactive =
+                                    policy.status.toLowerCase() != 'aktif';
+                                if (isInactive) {
+                                  // Konversi PolicyModel ke ProductModel
+                                  final productModel = ProductModel(
+                                    id: policy.id,
+                                    namaProduk: policy.productName,
+                                    tipe: policy.category,
+                                    premiDasar:
+                                        double.tryParse(
+                                          policy.formattedPrice.replaceAll(
+                                            RegExp(r'[^\d]'),
+                                            '',
+                                          ),
+                                        )?.toInt() ??
+                                        0,
+                                    description: policy.summarySubtitle,
+                                  );
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PaymentDetail(product: productModel),
+                                    ),
+                                  );
+                                }
+                              },
                               borderRadius: BorderRadius.circular(16),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 18),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.refresh,
+                                      policy.status.toLowerCase() != 'aktif'
+                                          ? Icons.payment
+                                          : Icons.refresh,
                                       color: Colors.white,
                                       size: 20,
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      "Perpanjang Polis",
-                                      style: TextStyle(
+                                      policy.status.toLowerCase() != 'aktif'
+                                          ? "Bayar Sekarang"
+                                          : "Perpanjang Polis",
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
