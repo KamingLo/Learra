@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class ProductHelper {
-  // Warna Utama (Hijau)
   static const Color primaryGreen = Color(0xFF00C853);
   static const Color lightGreen = Color(0xFFE8F5E9); // Hijau sangat muda untuk background
   static const Color darkGreen = Color(0xFF1B5E20);

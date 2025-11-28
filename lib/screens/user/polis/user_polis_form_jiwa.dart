@@ -18,10 +18,34 @@ class JiwaPolisForm extends BasePolisForm {
 class _JiwaPolisFormState extends BasePolisFormState<JiwaPolisForm> {
   final _jumlahTanggunganController = TextEditingController();
   String _statusPernikahan = 'belum menikah';
+  double _estimatedPremium = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _jumlahTanggunganController.addListener(_calculateEstimation);
+  }
 
   @override
   void disposeControllers() {
     _jumlahTanggunganController.dispose();
+  }
+
+  void _calculateEstimation() {
+    if (!isPremiumLoaded) return;
+
+    double base = basePremium;
+    int tanggungan = int.tryParse(_jumlahTanggunganController.text) ?? 0;
+
+    double extra = tanggungan * (base * 0.05);
+
+    if (_statusPernikahan == 'menikah') {
+      extra += base * 0.02;
+    }
+
+    setState(() {
+      _estimatedPremium = base + extra;
+    });
   }
 
   @override
@@ -39,34 +63,46 @@ class _JiwaPolisFormState extends BasePolisFormState<JiwaPolisForm> {
 
   @override
   List<Widget> buildFormFields() {
+    if (isPremiumLoaded && _estimatedPremium == 0 && basePremium > 0) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _calculateEstimation(),
+      );
+    }
+
     return [
-      const Divider(height: 32),
+      const SizedBox(height: 8),
 
       Text(
         "Informasi Keluarga",
         style: TextStyle(
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: Colors.green.shade800,
+          color: Colors.grey.shade900,
+          letterSpacing: -0.5,
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 6),
       Text(
         "Data ini diperlukan untuk menentukan besaran perlindungan",
-        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        style: TextStyle(
+          fontSize: 13,
+          color: Colors.grey.shade600,
+          height: 1.4,
+        ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 24),
 
       MaritalStatusSelector(
         value: _statusPernikahan,
         onChanged: (value) {
           setState(() {
             _statusPernikahan = value!;
+            _calculateEstimation();
           });
         },
       ),
 
-      const SizedBox(height: 16),
+      const SizedBox(height: 20),
 
       CustomTextField(
         controller: _jumlahTanggunganController,
@@ -84,21 +120,11 @@ class _JiwaPolisFormState extends BasePolisFormState<JiwaPolisForm> {
           if (value == null || value.isEmpty) {
             return 'Masukkan jumlah tanggungan';
           }
-          final count = int.tryParse(value);
-          if (count == null) {
-            return 'Masukkan angka yang valid';
-          }
-          if (count < 0) {
-            return 'Jumlah tidak boleh negatif';
-          }
-          if (count > 20) {
-            return 'Jumlah tanggungan maksimal 20 orang';
-          }
           return null;
         },
       ),
 
-      const SizedBox(height: 20),
+      const SizedBox(height: 24),
 
       const InfoCard.tip(
         title: "Tentang Tanggungan",
@@ -106,9 +132,13 @@ class _JiwaPolisFormState extends BasePolisFormState<JiwaPolisForm> {
             "Tanggungan adalah anggota keluarga yang bergantung pada penghasilan Anda, seperti pasangan, anak, atau orang tua yang Anda tanggung.",
       ),
 
-      const SizedBox(height: 16),
+      const SizedBox(height: 20),
 
       MaritalStatusInfoCard(status: _statusPernikahan),
+
+      const SizedBox(height: 24),
+
+      EstimationCard(amount: _estimatedPremium),
     ];
   }
 }

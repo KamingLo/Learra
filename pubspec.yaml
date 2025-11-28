@@ -118,7 +118,7 @@ flutter_native_splash:
   ios_content_mode: scaleAspectFit
   android: true
   ios: true
-  branding: assets/IconApp/ico.png
+  branding: assets/IconApp/LearraFull.png
   branding_mode: bottom
 
 # ==========================================
