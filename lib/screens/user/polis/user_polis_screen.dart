@@ -44,8 +44,8 @@ class _PolicyScreenState extends State<PolicyScreen> {
       bool success = false;
 
       try {
-        print("DEBUG: Mencoba Percobaan 1 -> GET /polis/user");
-        response = await _apiService.get('/polisuser');
+        print("DEBUG: Mencoba Percobaan 1 -> GET /user/polis");
+        response = await _apiService.get('/user/polis');
 
         success = true;
       } catch (e) {
@@ -55,7 +55,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
       if (!success) {
         try {
           print("DEBUG: Mencoba Percobaan 2 -> GET /polis?search=$sessionId");
-          response = await _apiService.get('/polis?search=$sessionId');
+          response = await _apiService.get('/polis/search=$sessionId');
           success = true;
         } catch (e) {
           print("Percobaan 2 Gagal: $e");
