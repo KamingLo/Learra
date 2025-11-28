@@ -1,85 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 
-// 1. Ubah ke StatefulWidget
-class PaymentDone extends StatefulWidget {
+class PaymentDone extends StatelessWidget {
   final Map<String, String> data;
 
   const PaymentDone({super.key, required this.data});
-
-  @override
-  State<PaymentDone> createState() => _PaymentDoneState();
-}
-
-// 2. Tambahkan SingleTickerProviderStateMixin untuk animasi pulsing
-class _PaymentDoneState extends State<PaymentDone>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    // Animation Controller untuk efek denyutan (pulsing)
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000), // Durasi denyutan 1 detik
-    );
-
-    // Animasi Skala dari 1.0 ke 1.05 untuk efek membesar-mengecil
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut, // Denyutan mulus
-      ),
-    );
-
-    // Membuat animasi berulang: membesar lalu mengecil (reverse: true)
-    _controller.repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    // Wajib dispose controller
-    _controller.dispose();
-    super.dispose();
-  }
-
-  // Widget _infoRow dipindahkan ke State class
-  Widget _infoRow(String label, String value, {Color? color}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 140,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: color ?? Colors.black,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: const SizedBox(),
+        automaticallyImplyLeading: false,
         title: const Text(
-          'Pembayaran',
+          'Pembayaran Berhasil',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -89,161 +23,218 @@ class _PaymentDoneState extends State<PaymentDone>
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.help_outline, color: Colors.black),
-          ),
-        ],
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 300),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             child: Column(
               children: [
-                const SizedBox(height: 60),
-                Center(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Lingkaran Terluar: Diberi ScaleTransition untuk pulsing
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.green.withOpacity(0.1),
-                          ),
-                        ),
-                      ),
-                      // Lingkaran Tengah: Tetap statis
-                      Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.green.withOpacity(0.2),
-                        ),
-                      ),
-                      // Ikon Check: Tetap dengan TweenAnimationBuilder (sudah ada animasi)
-                      Container(
-                        width: 130,
-                        height: 130,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.green,
-                        ),
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(milliseconds: 800),
-                          curve: Curves.elasticOut,
-                          builder: (context, value, child) {
-                            return Transform.scale(scale: value, child: child);
-                          },
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 80,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-                const Text(
-                  'Pembayaran Berhasil!',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                const SizedBox(height: 20),
+                _buildSuccessIcon(),
+                const SizedBox(height: 32),
+                _buildTitle(),
                 const SizedBox(height: 8),
-                const Text(
-                  'Detail pembelian telah dikirim ke email anda',
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                  textAlign: TextAlign.center,
-                ),
+                _buildSubtitle(),
                 const SizedBox(height: 40),
-                DottedBorder(
-                  color: const Color(0xFFDEDEDE),
-                  strokeWidth: 1.5,
-                  dashPattern: const [5, 3],
-                  borderType: BorderType.RRect,
-                  radius: const Radius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0x0CD9D9D9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        // Akses data dari widget
-                        ...widget.data.entries.map((entry) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _infoRow(entry.key, entry.value),
-                          );
-                        }),
-                        const SizedBox(height: 12),
-                        _infoRow(
-                          'Status Pembayaran:',
-                          'BERHASIL',
-                          color: Colors.green,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 100),
+                _buildPaymentDetails(),
+                const SizedBox(height: 24),
+                _buildInfoCard(),
+                const SizedBox(height: 20),
               ],
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Kembali ke Beranda',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+          _buildBottomButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessIcon() {
+    return Center(
+      child: Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.green.shade50,
+        ),
+        child: Center(
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.green,
+            ),
+            child: const Icon(
+              Icons.check_rounded,
+              color: Colors.white,
+              size: 60,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitle() {
+    return const Text(
+      'Pembayaran Berhasil!',
+      style: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 32),
+      child: Text(
+        'Pembayaran Anda telah diterima dan sedang diproses oleh admin',
+        style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildPaymentDetails() {
+    // Filter out 'Status' field from data
+    final filteredData = Map<String, String>.from(data)..remove('Status');
+
+    return DottedBorder(
+      color: const Color(0xFFDEDEDE),
+      strokeWidth: 1.5,
+      dashPattern: const [5, 3],
+      borderType: BorderType.RRect,
+      radius: const Radius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(children: _buildDetailRows(filteredData)),
+      ),
+    );
+  }
+
+  List<Widget> _buildDetailRows(Map<String, String> filteredData) {
+    final entries = filteredData.entries.toList();
+    List<Widget> rows = [];
+
+    for (int i = 0; i < entries.length; i++) {
+      rows.add(_buildInfoRow(entries[i].key, entries[i].value));
+
+      if (i < entries.length - 1) {
+        rows.add(const SizedBox(height: 12));
+        rows.add(Divider(color: Colors.grey.shade300, height: 1));
+        rows.add(const SizedBox(height: 12));
+      }
+    }
+
+    return rows;
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 140,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: Colors.blue.shade700, size: 24),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Admin akan memverifikasi pembayaran Anda dalam 1x24 jam. Anda akan mendapat notifikasi setelah pembayaran dikonfirmasi.',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                height: 1.5,
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBottomButton(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: ElevatedButton(
+            onPressed: () {
+              // Navigate back to home or policy list
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Kembali ke Beranda',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
       ),
     );
   }

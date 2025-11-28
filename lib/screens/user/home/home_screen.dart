@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
-import '../product/product_detail_screen.dart'; 
+import '../product/product_detail_screen.dart';
 import '../../auth/auth_screen.dart';
 
 // Import Widget Carousel Baru (Pastikan path-nya benar)
-import '../../../widgets/user/home/product_carousel.dart'; 
+import '../../../widgets/user/home/product_carousel.dart';
 
 class UserHomeScreen extends StatefulWidget {
   final String role;
-  final Function(int)? onSwitchTab; 
+  final Function(int)? onSwitchTab;
 
   const UserHomeScreen({super.key, required this.role, this.onSwitchTab});
 
@@ -21,7 +21,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   final ApiService _apiService = ApiService();
   List<ProductModel> _products = [];
   bool _isLoading = true;
-  
+
   final Color _primaryColor = const Color(0xFF0FA958);
 
   bool get _isLoggedIn => widget.role == 'user';
@@ -40,8 +40,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       final response = await _apiService.get('/produk?limit=5');
       if (!mounted) return;
 
-      final data = (response is Map && response.containsKey('data')) 
-          ? response['data'] as List 
+      final data = (response is Map && response.containsKey('data'))
+          ? response['data'] as List
           : (response is List ? response : []);
 
       setState(() {
@@ -56,8 +56,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   void _goToDetail(ProductModel product) {
     Navigator.push(
-      context, 
-      MaterialPageRoute(builder: (_) => UserProductDetailScreen(productId: product.id))
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProductDetailScreen(productId: product.id),
+      ),
     );
   }
 
@@ -92,27 +94,33 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     children: [
                       const Text(
                         "Rekomendasi Terbaik",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       // Tombol Lihat Semua
                       TextButton(
                         onPressed: () => widget.onSwitchTab?.call(1),
-                        child: Text("Lihat Semua", style: TextStyle(color: _primaryColor)),
-                      )
+                        child: Text(
+                          "Lihat Semua",
+                          style: TextStyle(color: _primaryColor),
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Widget Carousel 16:9
                 ProductCarousel(
-                  products: _products, 
-                  isLoading: _isLoading, 
+                  products: _products,
+                  isLoading: _isLoading,
                   onTap: _goToDetail,
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 30),
 
             // 3. POLIS YANG DIMILIKI (Hero Section)
@@ -124,8 +132,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 children: [
                   // Judul Section Polis
                   const Text(
-                    "Polis Anda", 
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                    "Polis Anda",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   _buildHeroSection(),
@@ -141,7 +153,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   // --- WIDGET HELPER (Header & Hero) TETAP SAMA ---
-  
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -149,18 +161,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 24, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            height: 54, width: 54,
+            height: 54,
+            width: 54,
             decoration: BoxDecoration(
               color: _primaryColor.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(_isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded, color: _primaryColor, size: 28),
+            child: Icon(
+              _isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded,
+              color: _primaryColor,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -168,13 +189,18 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _isLoggedIn ? "Halo!" : "Selamat Datang!", 
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)
+                  _isLoggedIn ? "Halo!" : "Selamat Datang!",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _isLoggedIn ? "Semoga harimu menyenangkan" : "Temukan perlindunganmu", 
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500)
+                  _isLoggedIn
+                      ? "Semoga harimu menyenangkan"
+                      : "Temukan perlindunganmu",
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -187,7 +213,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.grey.shade100),
             ),
-            child: Icon(Icons.notifications_outlined, size: 22, color: Colors.grey.shade600),
+            child: Icon(
+              Icons.notifications_outlined,
+              size: 22,
+              color: Colors.grey.shade600,
+            ),
           ),
         ],
       ),
@@ -201,7 +231,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         decoration: BoxDecoration(
           color: _primaryColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: _primaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+          boxShadow: [
+            BoxShadow(
+              color: _primaryColor.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -209,17 +245,33 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Akses Penuh", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    "Akses Penuh",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   SizedBox(height: 4),
-                  Text("Masuk untuk melihat polis Anda.", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(
+                    "Masuk untuk melihat polis Anda.",
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen())),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: _primaryColor),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AuthScreen()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: _primaryColor,
+              ),
               child: const Text("Masuk"),
-            )
+            ),
           ],
         ),
       );
@@ -236,27 +288,53 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: _primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                  child: Text("POLIS AKTIF", style: TextStyle(color: _primaryColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    "POLIS AKTIF",
+                    style: TextStyle(
+                      color: _primaryColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: Colors.grey,
+                ),
               ],
             ),
             const SizedBox(height: 12),
             const Row(
               children: [
-                 Icon(Icons.health_and_safety, size: 40, color: Colors.orange),
-                 SizedBox(width: 12),
-                 Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     Text("Kesehatan Plus", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                     Text("Berlaku s/d Des 2024", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                   ],
-                 )
+                Icon(Icons.health_and_safety, size: 40, color: Colors.orange),
+                SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Kesehatan Plus",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "Berlaku s/d Des 2024",
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),

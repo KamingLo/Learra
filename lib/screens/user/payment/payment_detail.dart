@@ -1,365 +1,231 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../models/product_model.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'payment_wait.dart';
+import '../../../models/product_model.dart';
+import '../../../services/api_service.dart';
+import 'payment_done.dart';
 
 class PaymentDetail extends StatefulWidget {
   final ProductModel product;
+  final String? policyId;
+  final String? userId;
+  final String? policyNumber;
 
-  const PaymentDetail({super.key, required this.product});
+  const PaymentDetail({
+    super.key,
+    required this.product,
+    this.policyId,
+    this.userId,
+    this.policyNumber,
+  });
 
   @override
   State<PaymentDetail> createState() => _PaymentDetailState();
 }
 
 class _PaymentDetailState extends State<PaymentDetail> {
-  // --- Common State ---
   bool _isChecked = false;
-  final _formKey = GlobalKey<FormState>();
-  double _totalBiayaTambahan = 0.0;
-
-  // --- Kesehatan State ---
-  late TextEditingController _namaPemegangController;
-  String? _limitTahunanValue;
-  String? _limitPerKejadianValue;
-  String? _kamarPerawatanValue;
-  Map<String, Map<String, dynamic>> _coverageKesehatan = {
-    'Rawat Inap': {'status': false, 'harga': 700000},
-    'Rawat Jalan': {'status': false, 'harga': 50000},
-    'Emergency': {'status': false, 'harga': 250000},
-    'Operasi / Bedah': {'status': false, 'harga': 10000000},
-    'ICU': {'status': false, 'harga': 150000},
-    'Medical Check Up': {'status': false, 'harga': 75000},
-  };
-  Map<String, Map<String, dynamic>> _benefitTambahanKesehatan = {
-    'Ambulance': {'status': false, 'harga': 25000},
-    'Reimbursement': {'status': false, 'harga': 100000},
-    'Telemedicine': {'status': false, 'harga': 35000},
-    'Cashless di RS Rekanan': {'status': true, 'harga': 0},
-  };
-
-  // --- Jiwa State ---
-  late TextEditingController _namaTertanggungController;
-  late TextEditingController _umurController;
-  String? _jenisPolisValue;
-  String? _masaKontrakValue;
-  String? _totalUpValue;
-  String? _penerimaManfaatValue;
-  Map<String, Map<String, dynamic>> _benefitJiwa = {
-    'Manfaat Cacat Total Permanen': {'status': false, 'harga': 100000},
-    'Manfaat Penyakit Kritis': {'status': true, 'harga': 200000},
-    'Waiver Premi': {'status': false, 'harga': 50000},
-  };
-
-  // --- Mobil State ---
-  late TextEditingController _platNomorController;
-  late TextEditingController _nomorRangkaController;
-  late TextEditingController _nomorMesinController;
-  String? _merkValue;
-  String? _modelValue;
-  String? _tahunValue;
-  String? _jenisPerlindunganValue;
-  String? _nilaiPertanggunganValue;
-  String? _mobilPenggantiValue;
-  List<String> _bengkelRekananValues = [];
-  Map<String, Map<String, dynamic>> _coverageMobil = {
-    'Tabrakan / Benturan': {'status': false, 'harga': 1000000},
-    'Pencurian': {'status': false, 'harga': 500000},
-    'Kebakaran': {'status': false, 'harga': 563140},
-    'Banjir': {'status': false, 'harga': 75000},
-    'Kerusakan Kecil (Baret, penyok)': {'status': false, 'harga': 45000},
-    'Kerusakan Besar (tabrakan parah)': {'status': false, 'harga': 2000000},
-  };
-  Map<String, Map<String, dynamic>> _benefitMobil = {
-    'Derek Gratis': {'status': true, 'harga': 0},
-    'Perluasan Jaminan Banjir & Gempa': {'status': false, 'harga': 120000},
-    'Layanan Darurat 24 Jam': {'status': true, 'harga': 0},
-    'Towing & Roadside Assistance': {'status': false, 'harga': 85000},
-  };
-
-  // --- Dropdown & Options Data ---
-  final List<String> _limitTahunanOptions = [
-    '50000000',
-    '100000000',
-    '150000000',
-    '200000000',
-    '250000000',
-    '300000000',
-    '500000000',
-    '750000000',
-    '1000000000',
-    '2000000000',
-  ];
-  final List<String> _limitPerKejadianOptions = [
-    '5000000',
-    '10000000',
-    '25000000',
-    '50000000',
-    '75000000',
-    '100000000',
-  ];
-  final List<String> _kamarPerawatanOptions = [
-    'VIP',
-    'Kelas 1',
-    'Kelas 2',
-    'Kelas 3',
-  ];
-  final List<String> _jenisPolisOptions = [
-    'Jiwa Berjangka',
-    'Jiwa Seumur Hidup',
-    'Dwiguna',
-  ];
-  final List<String> _masaKontrakOptions = [
-    '5 Tahun',
-    '10 Tahun',
-    '15 Tahun',
-    '20 Tahun',
-  ];
-  final List<String> _totalUpOptions = [
-    '100000000',
-    '250000000',
-    '500000000',
-    '1000000000',
-    '2000000000',
-  ];
-  final List<String> _penerimaManfaatOptions = [
-    'Istri',
-    'Anak',
-    'Orang Tua',
-    'Saudara Kandung',
-  ];
-  final Map<String, List<String>> _modelOptions = {
-    'Honda': ['HRV', 'CRV', 'Brio', 'Civic', 'Accord'],
-    'Toyota': ['Avanza', 'Innova', 'Fortuner', 'Rush', 'Yaris'],
-    'Suzuki': ['Ertiga', 'XL7', 'Jimny', 'Baleno'],
-    'Mitsubishi': ['Pajero Sport', 'Xpander', 'Triton'],
-  };
-  final List<String> _tahunOptions = List.generate(
-    15,
-    (i) => (DateTime.now().year - i).toString(),
-  );
-  final List<String> _jenisPerlindunganOptions = [
-    'All Risk (Comprehensive)',
-    'Total Loss Only (TLO)',
-  ];
-  final List<String> _nilaiPertanggunganOptions = List.generate(
-    10,
-    (i) => ((i + 1) * 50000000).toString(),
-  );
-  final List<String> _bengkelOptions = [
-    'Honda Astra',
-    'Mitra Garage',
-    'Auto2000',
-    'Tunas Toyota',
-    'Sun Motor',
-  ];
-  final List<String> _mobilPenggantiOptions = [
-    'Tidak Ada',
-    '3 Hari',
-    '5 Hari',
-    '7 Hari',
-  ];
+  bool _isLoading = false;
+  String _selectedPaymentMethod = 'bca';
+  final TextEditingController _policyNumberController = TextEditingController();
+  final FocusNode _policyNumberFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _initializeDateFormatting();
-    _initializeFormState();
-    _hitungTotalBiayaTambahan();
+    // Pre-fill nomor polis jika ada
+    if (widget.policyNumber != null && widget.policyNumber!.isNotEmpty) {
+      _policyNumberController.text = widget.policyNumber!;
+    }
   }
 
   Future<void> _initializeDateFormatting() async {
     await initializeDateFormatting('id_ID', null);
   }
 
-  void _initializeFormState() {
-    String tipe = widget.product.tipe.toLowerCase();
-    if (tipe == 'kesehatan') {
-      _namaPemegangController = TextEditingController();
-      _limitTahunanValue = '250000000';
-      _limitPerKejadianValue = '50000000';
-      _kamarPerawatanValue = 'VIP';
-    } else if (tipe == 'jiwa') {
-      _namaTertanggungController = TextEditingController();
-      _umurController = TextEditingController();
-      _jenisPolisValue = 'Jiwa Berjangka';
-      _masaKontrakValue = '10 Tahun';
-      _totalUpValue = '500000000';
-      _penerimaManfaatValue = 'Istri';
-    } else if (tipe == 'kendaraan') {
-      _platNomorController = TextEditingController();
-      _nomorRangkaController = TextEditingController();
-      _nomorMesinController = TextEditingController();
-      _merkValue = 'Honda';
-      _modelValue = 'HRV';
-      _tahunValue = DateTime.now().year.toString();
-      _jenisPerlindunganValue = 'All Risk (Comprehensive)';
-      _nilaiPertanggunganValue = '250000000';
-      _mobilPenggantiValue = '3 Hari';
-      _bengkelRekananValues = ['Honda Astra'];
-    }
-  }
-
   @override
   void dispose() {
-    String tipe = widget.product.tipe.toLowerCase();
-    if (tipe == 'kesehatan') {
-      _namaPemegangController.dispose();
-    } else if (tipe == 'jiwa') {
-      _namaTertanggungController.dispose();
-      _umurController.dispose();
-    } else if (tipe == 'kendaraan') {
-      _platNomorController.dispose();
-      _nomorRangkaController.dispose();
-      _nomorMesinController.dispose();
-    }
+    _policyNumberController.dispose();
+    _policyNumberFocusNode.dispose();
     super.dispose();
   }
 
-  void _hitungTotalBiayaTambahan() {
-    double total = 0.0;
+  final ApiService _apiService = ApiService();
 
-    // Hitung biaya tambahan berdasarkan tipe produk
-    switch (widget.product.tipe.toLowerCase()) {
-      case 'kesehatan':
-        _coverageKesehatan.forEach((key, value) {
-          if (value['status'] == true)
-            total += (value['harga'] as int).toDouble();
-        });
-        _benefitTambahanKesehatan.forEach((key, value) {
-          if (value['status'] == true)
-            total += (value['harga'] as int).toDouble();
-        });
-        break;
-      case 'jiwa':
-        _benefitJiwa.forEach((key, value) {
-          if (value['status'] == true)
-            total += (value['harga'] as int).toDouble();
-        });
-        break;
-      case 'kendaraan':
-        _coverageMobil.forEach((key, value) {
-          if (value['status'] == true)
-            total += (value['harga'] as int).toDouble();
-        });
-        _benefitMobil.forEach((key, value) {
-          if (value['status'] == true)
-            total += (value['harga'] as int).toDouble();
-        });
-        break;
+  final List<Map<String, dynamic>> _paymentMethods = [
+    {
+      'id': 'bca',
+      'name': 'Bank BCA',
+      'icon': Icons.account_balance,
+      'description': 'Transfer via Bank Central Asia',
+      'color': const Color(0xFF003D79),
+      'accountNumber': '1234567890',
+      'accountName': 'PT Learra Insurance',
+    },
+    {
+      'id': 'mandiri',
+      'name': 'Bank Mandiri',
+      'icon': Icons.account_balance,
+      'description': 'Transfer via Bank Mandiri',
+      'color': const Color(0xFF003D79),
+      'accountNumber': '9876543210',
+      'accountName': 'PT Learra Insurance',
+    },
+    {
+      'id': 'bni',
+      'name': 'Bank BNI',
+      'icon': Icons.account_balance,
+      'description': 'Transfer via Bank Negara Indonesia',
+      'color': const Color(0xFFE67E22),
+      'accountNumber': '5555666677',
+      'accountName': 'PT Learra Insurance',
+    },
+    {
+      'id': 'bri',
+      'name': 'Bank BRI',
+      'icon': Icons.account_balance,
+      'description': 'Transfer via Bank Rakyat Indonesia',
+      'color': const Color(0xFF0066AE),
+      'accountNumber': '1111222233',
+      'accountName': 'PT Learra Insurance',
+    },
+    {
+      'id': 'cimb',
+      'name': 'Bank CIMB Niaga',
+      'icon': Icons.account_balance,
+      'description': 'Transfer via CIMB Niaga',
+      'color': const Color(0xFFB71C1C),
+      'accountNumber': '7777888899',
+      'accountName': 'PT Learra Insurance',
+    },
+  ];
+
+  Future<void> _createPembayaran() async {
+    if (!_isChecked) {
+      _showSnackBar('Harap centang persetujuan terlebih dahulu', Colors.orange);
+      return;
     }
 
-    setState(() {
-      _totalBiayaTambahan = total;
-    });
-  }
+    // Validasi nomor polis
+    final policyNumber = _policyNumberController.text.trim();
+    if (policyNumber.isEmpty) {
+      _showSnackBar('Harap masukkan nomor polis Anda', Colors.orange);
+      return;
+    }
 
-  Map<String, String> _getPolicyData() {
-    final Map<String, String> data = {};
-    final dateFormat = DateFormat('d MMMM yyyy', 'id_ID');
-    final now = DateTime.now();
-    final oneYearLater = DateTime(now.year + 1, now.month, now.day);
-    final masaAktif =
-        "${dateFormat.format(now)} - ${dateFormat.format(oneYearLater)}";
+    // Validasi policyId
+    if (widget.policyId == null || widget.policyId!.isEmpty) {
+      _showSnackBar('Data polis tidak lengkap', Colors.red);
+      return;
+    }
 
-    // Common Data
-    data['Nomor Polis'] = _generateNomorPolis(widget.product.tipe);
-    data['Masa Aktif'] = masaAktif;
+    setState(() => _isLoading = true);
 
-    switch (widget.product.tipe.toLowerCase()) {
-      case 'kesehatan':
-        data['Nama Pemegang'] = _namaPemegangController.text;
-        if (_limitTahunanValue != null) {
-          data['Limit Tahunan'] = _formatCurrency(_limitTahunanValue!);
-        }
-        if (_limitPerKejadianValue != null) {
-          data['Limit Per Kejadian'] = _formatCurrency(_limitPerKejadianValue!);
-        }
-        if (_kamarPerawatanValue != null) {
-          data['Kamar Perawatan'] = _kamarPerawatanValue!;
-        }
-        break;
+    try {
+      print('=== Sending Payment Request ===');
+      print('Policy ID: ${widget.policyId}');
+      print('Amount: ${widget.product.premiDasar}');
+      print('Method: $_selectedPaymentMethod');
+      print('User Input Policy Number: $policyNumber');
 
-      case 'jiwa':
-        data['Nama Tertanggung'] = _namaTertanggungController.text;
-        data['Umur'] = _umurController.text;
-        if (_jenisPolisValue != null) {
-          data['Jenis Polis'] = _jenisPolisValue!;
-        }
-        if (_masaKontrakValue != null) {
-          data['Masa Kontrak'] = _masaKontrakValue!;
-        }
-        if (_totalUpValue != null) {
-          data['Total UP'] = _formatCurrency(_totalUpValue!);
-        }
-        if (_penerimaManfaatValue != null) {
-          data['Penerima Manfaat'] = _penerimaManfaatValue!;
-        }
-        break;
+      final response = await _apiService.post(
+        '/payment',
+        body: {
+          'policyId': widget.policyId!,
+          'amount': widget.product.premiDasar,
+          'method': _selectedPaymentMethod,
+        },
+      );
 
-      case 'kendaraan':
-        data['Plat Nomor'] = _platNomorController.text;
-        if (_merkValue != null && _modelValue != null) {
-          data['Kendaraan'] = "$_merkValue - $_modelValue";
-        }
-        if (_tahunValue != null) {
-          data['Tahun'] = _tahunValue!;
-        }
-        data['Nomor Rangka'] = _nomorRangkaController.text;
-        data['Nomor Mesin'] = _nomorMesinController.text;
-        if (_jenisPerlindunganValue != null) {
-          data['Jenis Perlindungan'] = _jenisPerlindunganValue!;
-        }
-        if (_nilaiPertanggunganValue != null) {
-          data['Nilai Pertanggungan'] = _formatCurrency(
-            _nilaiPertanggunganValue!,
+      print('=== Response Received ===');
+      print(response);
+
+      setState(() => _isLoading = false);
+
+      if (response != null) {
+        final pembayaran = response['pembayaran'];
+
+        // Prepare data untuk PaymentDone (langsung ke done, tidak ke wait)
+        final Map<String, String> policyData = {
+          'Nomor Pembayaran':
+              pembayaran?['_id']?.toString() ??
+              'PY${DateTime.now().millisecondsSinceEpoch}',
+          'Nomor Polis': policyNumber, // Gunakan input user
+          'Produk': widget.product.namaProduk,
+          'Metode Pembayaran': _getPaymentMethodName(_selectedPaymentMethod),
+          'Total Pembayaran': _formatCurrency(
+            widget.product.premiDasar.toString(),
+          ),
+          'Tanggal': DateFormat(
+            'd MMMM yyyy HH:mm',
+            'id_ID',
+          ).format(DateTime.now()),
+        };
+
+        print('=== Navigating to PaymentDone ===');
+        print(policyData);
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentDone(data: policyData),
+            ),
           );
         }
-        if (_bengkelRekananValues.isNotEmpty) {
-          data['Bengkel Rekanan'] = _bengkelRekananValues.join(', ');
-        }
-        if (_mobilPenggantiValue != null) {
-          data['Mobil Pengganti'] = _mobilPenggantiValue!;
-        }
-        break;
-    }
+      } else {
+        _showSnackBar('Format response tidak valid', Colors.red);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
 
-    // Financial Data
-    data['Premi Dasar'] = _formatCurrency(widget.product.premiDasar.toString());
-    if (_totalBiayaTambahan > 0) {
-      data['Biaya Tambahan'] = _formatCurrencyFromInt(
-        _totalBiayaTambahan.toInt(),
-      );
-    }
-    final total = widget.product.premiDasar + _totalBiayaTambahan;
-    data['Total Pembayaran'] = _formatCurrency(total.toString());
+      print('=== Error Occurred ===');
+      print(e.toString());
 
-    return data;
+      String errorMessage = 'Terjadi kesalahan';
+      if (e.toString().contains('Exception:')) {
+        errorMessage = e.toString().replaceAll('Exception: ', '');
+      }
+
+      _showSnackBar(errorMessage, Colors.red);
+    }
   }
 
-  void _prosesPembayaran() {
-    if (_formKey.currentState?.validate() ?? false) {
-      if (_isChecked) {
-        final data = _getPolicyData();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PaymentWait(data: data)),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Harap centang persetujuan terlebih dahulu'),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    }
+  String _getPaymentMethodName(String id) {
+    final method = _paymentMethods.firstWhere(
+      (m) => m['id'] == id,
+      orElse: () => {'name': 'Bank BCA'},
+    );
+    return method['name'];
+  }
+
+  Map<String, dynamic> _getSelectedMethod() {
+    return _paymentMethods.firstWhere(
+      (m) => m['id'] == _selectedPaymentMethod,
+      orElse: () => _paymentMethods[0],
+    );
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: color,
+      ),
+    );
+  }
+
+  String _formatCurrency(String value) {
+    final number = double.tryParse(value) ?? 0.0;
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(number);
   }
 
   String _getBannerAsset(String tipe) {
@@ -375,145 +241,8 @@ class _PaymentDetailState extends State<PaymentDetail> {
     }
   }
 
-  String _generateNomorPolis(String tipe) {
-    final random = Random();
-    final number = random.nextInt(900000) + 100000;
-    String prefix = "POL";
-    switch (tipe.toLowerCase()) {
-      case 'kesehatan':
-        prefix = "POL-KES";
-        break;
-      case 'jiwa':
-        prefix = "POL-JW";
-        break;
-      case 'kendaraan':
-        prefix = "POL-MBL";
-        break;
-    }
-    return "$prefix-$number";
-  }
-
-  String _formatCurrency(String value) {
-    final number = double.tryParse(value) ?? 0.0;
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(number);
-  }
-
-  String _formatCurrencyFromInt(int value) {
-    return NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    ).format(value);
-  }
-
-  // ==================== BOTTOM SHEET METHODS ====================
-  void _showBottomSheet({
-    required String title,
-    required List<String> options,
-    required String? currentValue,
-    required ValueChanged<String> onSelected,
-    bool isCurrency = false,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  itemBuilder: (context, index) {
-                    final option = options[index];
-                    final isSelected = currentValue == option;
-                    final isLastItem = index == options.length - 1;
-
-                    return Column(
-                      children: [
-                        ListTile(
-                          title: Text(
-                            isCurrency ? _formatCurrency(option) : option,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              color: isSelected ? Colors.green : Colors.black87,
-                            ),
-                          ),
-                          trailing: isSelected
-                              ? const Icon(
-                                  Icons.check_circle_rounded,
-                                  color: Colors.green,
-                                  size: 24,
-                                )
-                              : null,
-                          onTap: () {
-                            Navigator.pop(context);
-                            onSelected(option);
-                          },
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 0,
-                            vertical: 12,
-                          ),
-                        ),
-                        if (!isLastItem)
-                          Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: Colors.grey[300],
-                            indent: 0,
-                            endIndent: 0,
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final totalPembayaran = widget.product.premiDasar + _totalBiayaTambahan;
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -534,460 +263,153 @@ class _PaymentDetailState extends State<PaymentDetail> {
         elevation: 0,
         foregroundColor: Colors.black,
       ),
-      body: Form(
-        key: _formKey,
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 180.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 140,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      image: DecorationImage(
-                        image: AssetImage(_getBannerAsset(widget.product.tipe)),
-                        fit: BoxFit.cover,
-                      ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20.0, 16.0, 20.0, 180.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Banner Produk
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      _getBannerAsset(widget.product.tipe),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 150,
+                          color: const Color(0xFFE8F5E9),
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 24.0),
-                  _buildFormContent(),
-                  const SizedBox(height: 24.0),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FA),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Premi Dasar:',
-                              style: TextStyle(
-                                fontSize: 14.0,
-                                color: Colors.black54,
-                              ),
+                ),
+                const SizedBox(height: 24.0),
+
+                // Informasi Polis
+                _buildSectionTitle("Informasi Polis"),
+                _buildInfoCard([
+                  {
+                    'label': 'Nomor Polis',
+                    'value':
+                        widget.policyNumber ??
+                        widget.policyId ??
+                        'Tidak tersedia',
+                  },
+                  {'label': 'Produk', 'value': widget.product.namaProduk},
+                  {'label': 'Tipe', 'value': widget.product.tipe},
+                ]),
+                const SizedBox(height: 24.0),
+
+                // Metode Pembayaran
+                _buildSectionTitle("Pilih Bank Transfer"),
+                ..._paymentMethods.map((method) {
+                  return _buildPaymentMethodCard(
+                    id: method['id'],
+                    name: method['name'],
+                    icon: method['icon'],
+                    description: method['description'],
+                    color: method['color'],
+                  );
+                }).toList(),
+                const SizedBox(height: 24.0),
+
+                // Detail Transfer Bank
+                _buildSectionTitle("Detail Transfer"),
+                _buildTransferDetail(),
+                const SizedBox(height: 24.0),
+
+                // Input Nomor Polis User - CHANGED
+                _buildSectionTitle("Konfirmasi Nomor Polis"),
+                _buildPolicyNumberInput(),
+                const SizedBox(height: 24.0),
+
+                // Ringkasan Pembayaran
+                _buildSectionTitle("Ringkasan Pembayaran"),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Premi Dasar:',
+                            style: TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.black54,
                             ),
-                            Text(
-                              _formatCurrency(
-                                widget.product.premiDasar.toString(),
-                              ),
-                              style: const TextStyle(
-                                fontSize: 14.0,
-                                color: Colors.black87,
-                              ),
+                          ),
+                          Text(
+                            _formatCurrency(
+                              widget.product.premiDasar.toString(),
                             ),
-                          ],
-                        ),
-                        if (_totalBiayaTambahan > 0) ...[
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Biaya Tambahan:',
-                                style: TextStyle(
-                                  fontSize: 14.0,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              Text(
-                                _formatCurrencyFromInt(
-                                  _totalBiayaTambahan.toInt(),
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 14.0,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.black87,
+                            ),
                           ),
                         ],
-                        const SizedBox(height: 8),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Total Pembayaran:',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500,
-                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total Pembayaran:',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
                             ),
-                            Text(
-                              _formatCurrency(totalPembayaran.toString()),
-                              style: const TextStyle(
-                                fontSize: 18.0,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF06A900),
-                              ),
+                          ),
+                          Text(
+                            _formatCurrency(
+                              widget.product.premiDasar.toString(),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF06A900),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 32.0),
-                ],
-              ),
+                ),
+                const SizedBox(height: 32.0),
+              ],
             ),
-            _buildBottomBar(totalPembayaran),
-          ],
-        ),
+          ),
+          _buildBottomBar(),
+        ],
       ),
     );
   }
 
-  Widget _buildFormContent() {
-    switch (widget.product.tipe.toLowerCase()) {
-      case 'kesehatan':
-        return _buildKesehatanForm();
-      case 'jiwa':
-        return _buildJiwaForm();
-      case 'kendaraan':
-        return _buildMobilForm();
-      default:
-        return Text('Unsupported product type: ${widget.product.tipe}');
-    }
-  }
-
-  // ==================== KESEHATAN FORM ====================
-  Widget _buildKesehatanForm() {
-    final now = DateTime.now();
-    final oneYearLater = DateTime(now.year + 1, now.month, now.day);
-    final dateFormat = DateFormat('d MMMM yyyy', 'id_ID');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle("Data Polis"),
-        _buildReadOnlyField(
-          "Nomor Polis",
-          _generateNomorPolis(widget.product.tipe),
-        ),
-        const SizedBox(height: 16),
-        _buildTextFormField(
-          "Nama Pemegang",
-          _namaPemegangController,
-          "Masukkan nama lengkap",
-        ),
-        const SizedBox(height: 16),
-        _buildReadOnlyField(
-          "Masa Aktif",
-          "${dateFormat.format(now)} - ${dateFormat.format(oneYearLater)}",
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Limit Tahunan",
-          value: _limitTahunanValue != null
-              ? _formatCurrency(_limitTahunanValue!)
-              : "Pilih Limit Tahunan",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Limit Tahunan",
-            options: _limitTahunanOptions,
-            currentValue: _limitTahunanValue,
-            onSelected: (value) {
-              setState(() => _limitTahunanValue = value);
-            },
-            isCurrency: true,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Limit Per Kejadian",
-          value: _limitPerKejadianValue != null
-              ? _formatCurrency(_limitPerKejadianValue!)
-              : "Pilih Limit Per Kejadian",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Limit Per Kejadian",
-            options: _limitPerKejadianOptions,
-            currentValue: _limitPerKejadianValue,
-            onSelected: (value) {
-              setState(() => _limitPerKejadianValue = value);
-            },
-            isCurrency: true,
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildSectionTitle("Coverage"),
-        _buildCheckboxListWithPrice(_coverageKesehatan),
-        const SizedBox(height: 24),
-        _buildSectionTitle("Benefit Tambahan"),
-        _buildBottomSheetField(
-          label: "Kamar Perawatan",
-          value: _kamarPerawatanValue ?? "Pilih Kamar Perawatan",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Kamar Perawatan",
-            options: _kamarPerawatanOptions,
-            currentValue: _kamarPerawatanValue,
-            onSelected: (value) {
-              setState(() => _kamarPerawatanValue = value);
-            },
-          ),
-        ),
-        _buildCheckboxListWithPrice(_benefitTambahanKesehatan),
-      ],
-    );
-  }
-
-  // ==================== JIWA FORM ====================
-  Widget _buildJiwaForm() {
-    final now = DateTime.now();
-    final oneYearLater = DateTime(now.year + 1, now.month, now.day);
-    final dateFormat = DateFormat('d MMMM yyyy', 'id_ID');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle("Data Polis"),
-        _buildReadOnlyField(
-          "Nomor Polis",
-          _generateNomorPolis(widget.product.tipe),
-        ),
-        const SizedBox(height: 16),
-        _buildTextFormField(
-          "Nama Tertanggung",
-          _namaTertanggungController,
-          "Masukkan nama lengkap",
-        ),
-        const SizedBox(height: 16),
-        _buildTextFormField(
-          "Umur",
-          _umurController,
-          "Contoh: 30",
-          keyboardType: TextInputType.number,
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Jenis Polis",
-          value: _jenisPolisValue ?? "Pilih Jenis Polis",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Jenis Polis",
-            options: _jenisPolisOptions,
-            currentValue: _jenisPolisValue,
-            onSelected: (value) {
-              setState(() => _jenisPolisValue = value);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Masa Kontrak",
-          value: _masaKontrakValue ?? "Pilih Masa Kontrak",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Masa Kontrak",
-            options: _masaKontrakOptions,
-            currentValue: _masaKontrakValue,
-            onSelected: (value) {
-              setState(() => _masaKontrakValue = value);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildReadOnlyField(
-          "Masa Aktif",
-          "${dateFormat.format(now)} - ${dateFormat.format(oneYearLater)}",
-        ),
-        const SizedBox(height: 24),
-        _buildSectionTitle("Uang Pertanggungan"),
-        _buildBottomSheetField(
-          label: "Total UP",
-          value: _totalUpValue != null
-              ? _formatCurrency(_totalUpValue!)
-              : "Pilih Total UP",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Total UP",
-            options: _totalUpOptions,
-            currentValue: _totalUpValue,
-            onSelected: (value) {
-              setState(() => _totalUpValue = value);
-            },
-            isCurrency: true,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Penerima Manfaat",
-          value: _penerimaManfaatValue ?? "Pilih Penerima Manfaat",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Penerima Manfaat",
-            options: _penerimaManfaatOptions,
-            currentValue: _penerimaManfaatValue,
-            onSelected: (value) {
-              setState(() => _penerimaManfaatValue = value);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildReadOnlyField(
-          "Ketentuan",
-          "Dibayarkan jika tertanggung meninggal dunia dalam masa polis.",
-        ),
-        const SizedBox(height: 24),
-        _buildSectionTitle("Benefit Tambahan"),
-        _buildCheckboxListWithPrice(_benefitJiwa),
-      ],
-    );
-  }
-
-  // ==================== MOBIL FORM ====================
-  Widget _buildMobilForm() {
-    final now = DateTime.now();
-    final oneYearLater = DateTime(now.year + 1, now.month, now.day);
-    final dateFormat = DateFormat('d MMMM yyyy', 'id_ID');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle("Data Kendaraan"),
-        _buildTextFormField(
-          "Plat Nomor",
-          _platNomorController,
-          "Contoh: B 1234 XYZ",
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Merk Kendaraan",
-          value: _merkValue ?? "Pilih Merk Kendaraan",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Merk Kendaraan",
-            options: _modelOptions.keys.toList(),
-            currentValue: _merkValue,
-            onSelected: (value) {
-              setState(() {
-                _merkValue = value;
-                _modelValue = null;
-              });
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (_merkValue != null)
-          _buildBottomSheetField(
-            label: "Model",
-            value: _modelValue ?? "Pilih Model",
-            onTap: () => _showBottomSheet(
-              title: "Pilih Model",
-              options: _modelOptions[_merkValue]!,
-              currentValue: _modelValue,
-              onSelected: (value) {
-                setState(() => _modelValue = value);
-              },
-            ),
-          ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Tahun",
-          value: _tahunValue ?? "Pilih Tahun",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Tahun",
-            options: _tahunOptions,
-            currentValue: _tahunValue,
-            onSelected: (value) {
-              setState(() => _tahunValue = value);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildTextFormField(
-          "Nomor Rangka",
-          _nomorRangkaController,
-          "Masukkan nomor rangka",
-        ),
-        const SizedBox(height: 16),
-        _buildTextFormField(
-          "Nomor Mesin",
-          _nomorMesinController,
-          "Masukkan nomor mesin",
-        ),
-        const SizedBox(height: 24),
-
-        _buildSectionTitle("Data Polis"),
-        _buildReadOnlyField(
-          "Nomor Polis",
-          _generateNomorPolis(widget.product.tipe),
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Jenis Perlindungan",
-          value: _jenisPerlindunganValue ?? "Pilih Jenis Perlindungan",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Jenis Perlindungan",
-            options: _jenisPerlindunganOptions,
-            currentValue: _jenisPerlindunganValue,
-            onSelected: (value) {
-              setState(() => _jenisPerlindunganValue = value);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildReadOnlyField(
-          "Masa Aktif",
-          "${dateFormat.format(now)} - ${dateFormat.format(oneYearLater)}",
-        ),
-        const SizedBox(height: 16),
-        _buildBottomSheetField(
-          label: "Nilai Pertanggungan",
-          value: _nilaiPertanggunganValue != null
-              ? _formatCurrency(_nilaiPertanggunganValue!)
-              : "Pilih Nilai Pertanggungan",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Nilai Pertanggungan",
-            options: _nilaiPertanggunganOptions,
-            currentValue: _nilaiPertanggunganValue,
-            onSelected: (value) {
-              setState(() => _nilaiPertanggunganValue = value);
-            },
-            isCurrency: true,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildMultiSelectChip(
-          "Bengkel Rekanan",
-          _bengkelOptions,
-          _bengkelRekananValues,
-          (selected) {
-            setState(() => _bengkelRekananValues = selected);
-          },
-        ),
-        const SizedBox(height: 24),
-
-        _buildSectionTitle("Coverage"),
-        _buildCheckboxListWithPrice(_coverageMobil),
-        const SizedBox(height: 24),
-
-        _buildSectionTitle("Benefit Tambahan"),
-        _buildBottomSheetField(
-          label: "Mobil Pengganti",
-          value: _mobilPenggantiValue ?? "Pilih Mobil Pengganti",
-          onTap: () => _showBottomSheet(
-            title: "Pilih Mobil Pengganti",
-            options: _mobilPenggantiOptions,
-            currentValue: _mobilPenggantiValue,
-            onSelected: (value) {
-              setState(() => _mobilPenggantiValue = value);
-            },
-          ),
-        ),
-        _buildCheckboxListWithPrice(_benefitMobil),
-      ],
-    );
-  }
-
-  // ==================== COMMON WIDGETS ====================
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0, top: 8.0),
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: Text(
         title,
         style: const TextStyle(
@@ -999,248 +421,249 @@ class _PaymentDetailState extends State<PaymentDetail> {
     );
   }
 
-  Widget _buildReadOnlyField(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14.0,
-            color: Colors.black54,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8.0),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16.0, color: Colors.black87),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextFormField(
-    String label,
-    TextEditingController controller,
-    String hint, {
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14.0,
-            color: Colors.black54,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8.0),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: Colors.green),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 14.0,
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return '$label tidak boleh kosong';
-            }
-            return null;
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomSheetField({
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14.0,
-            color: Colors.black54,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8.0),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 14.0,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value,
+  Widget _buildInfoCard(List<Map<String, String>> items) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        children: items.map((item) {
+          final isLast = item == items.last;
+          return Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    item['label']!,
                     style: const TextStyle(
-                      fontSize: 16.0,
-                      color: Colors.black87,
+                      fontSize: 14.0,
+                      color: Colors.black54,
                     ),
                   ),
-                ),
-                const Icon(
-                  Icons.arrow_drop_down_rounded,
-                  color: Colors.grey,
-                  size: 24,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCheckboxListWithPrice(Map<String, Map<String, dynamic>> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: items.entries.map((entry) {
-        final key = entry.key;
-        final value = entry.value;
-        final harga = value['harga'] as int;
-        final isSelected = value['status'] as bool;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: CheckboxListTile(
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(key, style: const TextStyle(fontSize: 14)),
-                  ),
-                  if (harga > 0)
-                    Text(
-                      _formatCurrencyFromInt(harga),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isSelected ? Colors.green : Colors.grey[600],
+                  Flexible(
+                    child: Text(
+                      item['value']!,
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        color: Colors.black87,
                         fontWeight: FontWeight.w500,
                       ),
+                      textAlign: TextAlign.right,
                     ),
+                  ),
                 ],
               ),
-              value: isSelected,
-              onChanged: (selected) {
-                setState(() {
-                  value['status'] = selected ?? false;
-                  _hitungTotalBiayaTambahan();
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-              activeColor: Colors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
+              if (!isLast) ...[
+                const SizedBox(height: 12),
+                Divider(color: Colors.grey.shade300, height: 1),
+                const SizedBox(height: 12),
+              ],
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
-  Widget _buildMultiSelectChip(
-    String label,
-    List<String> allOptions,
-    List<String> selectedOptions,
-    ValueChanged<List<String>> onSelectionChanged,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildPaymentMethodCard({
+    required String id,
+    required String name,
+    required IconData icon,
+    required String description,
+    required Color color,
+  }) {
+    final isSelected = _selectedPaymentMethod == id;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPaymentMethod = id),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE8F5E9) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.green : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.green : color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.green[900] : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isSelected ? Colors.green[700] : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 24,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransferDetail() {
+    final selectedMethod = _getSelectedMethod();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Transfer ke rekening berikut:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildDetailRow('Bank', selectedMethod['name']),
+          const SizedBox(height: 12),
+          _buildDetailRow('Nomor Rekening', selectedMethod['accountNumber']),
+          const SizedBox(height: 12),
+          _buildDetailRow('Atas Nama', selectedMethod['accountName']),
+          const SizedBox(height: 12),
+          _buildDetailRow(
+            'Jumlah Transfer',
+            _formatCurrency(widget.product.premiDasar.toString()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14.0,
-            color: Colors.black54,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 13, color: Colors.black54),
         ),
-        const SizedBox(height: 8.0),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 8.0,
-          children: allOptions.map((option) {
-            final isSelected = selectedOptions.contains(option);
-            return ChoiceChip(
-              label: Text(
-                option,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black87,
-                  fontSize: 13,
-                ),
-              ),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    selectedOptions.add(option);
-                  } else {
-                    selectedOptions.remove(option);
-                  }
-                  onSelectionChanged(selectedOptions);
-                });
-              },
-              selectedColor: Colors.green,
-              backgroundColor: Colors.grey[200],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            );
-          }).toList(),
+        Flexible(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.right,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildBottomBar(double totalPembayaran) {
+  Widget _buildPolicyNumberInput() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Masukkan nomor polis Anda untuk konfirmasi',
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _policyNumberController,
+            focusNode: _policyNumberFocusNode,
+            keyboardType: TextInputType.text,
+            decoration: InputDecoration(
+              hintText: 'Contoh: PL-2025-001',
+              prefixIcon: Icon(
+                Icons.description_outlined,
+                color: Colors.green.shade700,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.green, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 14, color: Colors.grey.shade600),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Pastikan nomor polis yang Anda masukkan sesuai',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -1263,7 +686,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Agreement Checkbox - Diperbaiki alignment
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -1299,28 +721,37 @@ class _PaymentDetailState extends State<PaymentDetail> {
               ],
             ),
             const SizedBox(height: 16.0),
-
-            // Tombol Beli - Sekali Klik
             SizedBox(
               width: double.infinity,
               height: 56.0,
               child: ElevatedButton(
-                onPressed: _prosesPembayaran,
+                onPressed: _isLoading ? null : _createPembayaran,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isChecked ? Colors.green : Colors.grey[300],
+                  backgroundColor: _isChecked && !_isLoading
+                      ? Colors.green
+                      : Colors.grey[300],
                   foregroundColor: Colors.white,
-                  elevation: _isChecked ? 4 : 0,
+                  elevation: _isChecked && !_isLoading ? 4 : 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.0),
                   ),
                 ),
-                child: Text(
-                  'Beli - ${_formatCurrency(totalPembayaran.toString())}',
-                  style: const TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Bayar - ${_formatCurrency(widget.product.premiDasar.toString())}',
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ],
