@@ -3,6 +3,7 @@ import '../../../models/polis_model.dart';
 import '../../../models/product_model.dart';
 import '../../../services/api_service.dart';
 import '../payment/payment_detail.dart';
+import '../payment/payment_wait.dart';
 
 class PolicyDetailScreen extends StatefulWidget {
   final PolicyModel policy;
@@ -18,12 +19,40 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
   PolicyModel? _policy;
   bool _isLoading = true;
   String? _errorMessage;
+  Map<String, dynamic>? _pendingPayment;
 
   @override
   void initState() {
     super.initState();
     _policy = widget.policy;
     _fetchPolicyDetail();
+    _checkPendingPayment();
+  }
+
+  Future<void> _checkPendingPayment() async {
+    try {
+      final response = await _apiService.get('/user/payment');
+
+      if (response != null && response['pembayaran'] is List) {
+        final payments = response['pembayaran'] as List;
+
+        // Cari pembayaran yang masih pending untuk polis ini
+        final pending = payments.firstWhere(
+          (p) =>
+              p['policyId']?['_id'] == widget.policy.id &&
+              p['status'] == 'menunggu_konfirmasi',
+          orElse: () => null,
+        );
+
+        if (mounted && pending != null) {
+          setState(() {
+            _pendingPayment = pending;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error checking pending payment: $e');
+    }
   }
 
   Future<void> _fetchPolicyDetail() async {
@@ -52,6 +81,162 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
         _errorMessage =
             "Gagal memuat detail polis. ${e.toString().replaceAll('Exception: ', '')}";
       });
+    }
+  }
+
+  String _getButtonText() {
+    if (_pendingPayment != null) {
+      return "Cek Status Pembayaran";
+    }
+    return _policy?.status.toLowerCase() != 'aktif'
+        ? "Bayar Sekarang"
+        : "Perpanjang Polis";
+  }
+
+  IconData _getButtonIcon() {
+    if (_pendingPayment != null) {
+      return Icons.pending_actions;
+    }
+    return _policy?.status.toLowerCase() != 'aktif'
+        ? Icons.payment
+        : Icons.refresh;
+  }
+
+  void _handlePaymentAction() {
+    if (_pendingPayment != null) {
+      // Navigasi ke payment_wait jika ada pembayaran pending
+      final Map<String, String> paymentData = {
+        'Nomor Pembayaran': _pendingPayment!['_id']?.toString() ?? 'N/A',
+        'Nomor Polis': _policy?.policyNumber ?? 'N/A',
+        'Produk': _policy?.productName ?? 'N/A',
+        'Metode Pembayaran': _getPaymentMethodName(
+          _pendingPayment!['method'] ?? 'bca',
+        ),
+        'Total Pembayaran': _formatCurrency(
+          _pendingPayment!['amount']?.toString() ?? '0',
+        ),
+        'Tanggal': _formatDate(_pendingPayment!['createdAt']),
+      };
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentWait(
+            data: paymentData,
+            paymentId: _pendingPayment!['_id']?.toString(),
+            onPaymentCancelled: () {
+              setState(() {
+                _pendingPayment = null;
+              });
+            },
+          ),
+        ),
+      ).then((_) {
+        // Refresh data setelah kembali
+        _checkPendingPayment();
+        _fetchPolicyDetail();
+      });
+    } else {
+      // Navigasi ke payment_detail untuk pembayaran baru
+      final productModel = ProductModel(
+        id: _policy!.id,
+        namaProduk: _policy!.productName,
+        tipe: _policy!.category,
+        premiDasar:
+            double.tryParse(
+              _policy!.formattedPrice.replaceAll(RegExp(r'[^\d]'), ''),
+            )?.toInt() ??
+            0,
+        description: _policy!.summarySubtitle,
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentDetail(
+            product: productModel,
+            policyId: _policy!.id,
+            policyNumber: _policy!.policyNumber,
+            userId: _policy!.ownerId,
+          ),
+        ),
+      ).then((_) {
+        _checkPendingPayment();
+        _fetchPolicyDetail();
+      });
+    }
+  }
+
+  String _getPaymentMethodName(String id) {
+    final methods = {
+      'bca': 'Bank BCA',
+      'mandiri': 'Bank Mandiri',
+      'bni': 'Bank BNI',
+      'bri': 'Bank BRI',
+      'cimb': 'Bank CIMB Niaga',
+    };
+    return methods[id] ?? 'Bank BCA';
+  }
+
+  String _formatCurrency(String value) {
+    final number = double.tryParse(value) ?? 0.0;
+    return 'Rp ${number.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return 'N/A';
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  Future<void> _handleDeletePolicy() async {
+    if (_policy == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Konfirmasi'),
+        content: const Text(
+          'Akhiri polis ini? Tindakan ini akan menghapus polis dan tidak bisa dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Akhiri'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    // tampilkan loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await _apiService.delete('/polis/${_policy!.id}');
+      Navigator.of(context).pop(); // tutup loading
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Polis berhasil diakhiri')));
+      Navigator.of(context).pop(true); // kembali dan beri sinyal refresh
+    } catch (e) {
+      Navigator.of(context).pop(); // tutup loading
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal mengakhiri polis: $e')));
     }
   }
 
@@ -159,7 +344,6 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +371,6 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                                 ],
                               ),
                             ),
-
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
@@ -229,7 +412,6 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
               ),
             ),
           ),
-
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -343,9 +525,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   Text(
                     policy.category == 'kendaraan'
                         ? "Informasi Kendaraan"
@@ -358,7 +538,6 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -371,12 +550,9 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                         ),
                       ],
                     ),
-
                     child: Column(children: _buildSpecificDetails(policy)),
                   ),
-
                   const SizedBox(height: 24),
-
                   Row(
                     children: [
                       Expanded(
@@ -384,14 +560,22 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.green.shade600,
-                                Colors.green.shade700,
+                                _pendingPayment != null
+                                    ? Colors.orange.shade600
+                                    : Colors.green.shade600,
+                                _pendingPayment != null
+                                    ? Colors.orange.shade700
+                                    : Colors.green.shade700,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.green.withValues(alpha: 0.3),
+                                color:
+                                    (_pendingPayment != null
+                                            ? Colors.orange
+                                            : Colors.green)
+                                        .withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -400,35 +584,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {
-                                final bool isInactive =
-                                    policy.status.toLowerCase() != 'aktif';
-                                if (isInactive) {
-                                  // Konversi PolicyModel ke ProductModel
-                                  final productModel = ProductModel(
-                                    id: policy.id,
-                                    namaProduk: policy.productName,
-                                    tipe: policy.category,
-                                    premiDasar:
-                                        double.tryParse(
-                                          policy.formattedPrice.replaceAll(
-                                            RegExp(r'[^\d]'),
-                                            '',
-                                          ),
-                                        )?.toInt() ??
-                                        0,
-                                    description: policy.summarySubtitle,
-                                  );
-
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          PaymentDetail(product: productModel),
-                                    ),
-                                  );
-                                }
-                              },
+                              onTap: _handlePaymentAction,
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -438,17 +594,13 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      policy.status.toLowerCase() != 'aktif'
-                                          ? Icons.payment
-                                          : Icons.refresh,
+                                      _getButtonIcon(),
                                       color: Colors.white,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      policy.status.toLowerCase() != 'aktif'
-                                          ? "Bayar Sekarang"
-                                          : "Perpanjang Polis",
+                                      _getButtonText(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -464,9 +616,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 12),
-
                   Row(
                     children: [
                       Expanded(
@@ -482,7 +632,7 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {},
+                              onTap: _handleDeletePolicy,
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -514,7 +664,6 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 40),
                 ],
               ),
@@ -602,7 +751,6 @@ class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
         ),
       ];
     }
-
     return [
       _buildDetailRow(
         Icons.info_outline,

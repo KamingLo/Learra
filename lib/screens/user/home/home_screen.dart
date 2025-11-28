@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
-import '../product/product_detail_screen.dart'; 
+import '../product/product_detail_screen.dart';
 import '../../auth/auth_screen.dart';
 import '../../../widgets/user/home/product_carousel.dart'; 
 import '../../../widgets/user/home/home_category_selector.dart';
@@ -28,7 +28,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   final ApiService _apiService = ApiService();
   List<ProductModel> _products = [];
   bool _isLoading = true;
-  
+
   final Color _primaryColor = const Color(0xFF0FA958);
 
   // 2. Variabel Nama (Default null atau string kosong)
@@ -123,20 +123,23 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       const Text("Rekomendasi Terbaik", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       TextButton(
                         onPressed: () => widget.onSwitchTab?.call(1),
-                        child: Text("Lihat Semua", style: TextStyle(color: _primaryColor)),
-                      )
+                        child: Text(
+                          "Lihat Semua",
+                          style: TextStyle(color: _primaryColor),
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 12),
                 ProductCarousel(
-                  products: _products, 
-                  isLoading: _isLoading, 
+                  products: _products,
+                  isLoading: _isLoading,
                   onTap: _goToDetail,
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 30),
             // KATEGORI
             Padding(
@@ -228,7 +231,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         decoration: BoxDecoration(
           color: _primaryColor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: _primaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+          boxShadow: [
+            BoxShadow(
+              color: _primaryColor.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -236,17 +245,33 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Akses Penuh", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    "Akses Penuh",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   SizedBox(height: 4),
-                  Text("Masuk untuk melihat polis Anda.", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(
+                    "Masuk untuk melihat polis Anda.",
+                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AuthScreen())),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: _primaryColor),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AuthScreen()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: _primaryColor,
+              ),
               child: const Text("Masuk"),
-            )
+            ),
           ],
         ),
       );
@@ -263,27 +288,53 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: _primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                  child: Text("POLIS AKTIF", style: TextStyle(color: _primaryColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    "POLIS AKTIF",
+                    style: TextStyle(
+                      color: _primaryColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: Colors.grey,
+                ),
               ],
             ),
             const SizedBox(height: 12),
             const Row(
               children: [
-                 Icon(Icons.health_and_safety, size: 40, color: Colors.orange),
-                 SizedBox(width: 12),
-                 Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     Text("Kesehatan Plus", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                     Text("Berlaku s/d Des 2024", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                   ],
-                 )
+                Icon(Icons.health_and_safety, size: 40, color: Colors.orange),
+                SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Kesehatan Plus",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "Berlaku s/d Des 2024",
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),

@@ -44,9 +44,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
       try {
         response = await _apiService.get('/user/polis');
-      } catch (e) {
-        print("Percobaan 1 Gagal: $e");
-      }
+      } catch (_) {}
 
       List<dynamic> rawList = [];
       if (response is Map) {
@@ -59,8 +57,6 @@ class _PolicyScreenState extends State<PolicyScreen> {
         rawList = response;
       }
 
-      print("DEBUG: List item ditemukan: ${rawList.length}");
-
       for (var item in rawList) {
         if (item is Map<String, dynamic>) {
           try {
@@ -69,9 +65,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
             if (p.ownerId == sessionId || p.ownerId.isEmpty) {
               myPolicies.add(p);
             }
-          } catch (e) {
-            print("Skip item invalid: $e");
-          }
+          } catch (_) {}
         }
       }
 
@@ -81,7 +75,6 @@ class _PolicyScreenState extends State<PolicyScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print("ERROR FINAL: $e");
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -98,11 +91,12 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
   String _buildErrorMessage(Object error) {
     final message = error.toString();
-    if (message.contains('SocketException'))
+    if (message.contains('SocketException')) {
       return "Tidak ada koneksi internet";
+    }
 
     if (message.contains('Cast to ObjectId')) {
-      return "Terjadi kesalahan server (Bug Routing).\nMohon lapor ke Admin.";
+      return "Terjadi kesalahan server. Mohon coba lagi nanti.";
     }
 
     if (message.contains('403')) return "Akses ditolak. Coba login ulang.";
