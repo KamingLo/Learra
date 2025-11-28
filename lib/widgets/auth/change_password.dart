@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../services/session_service.dart';
-import '../../screens/auth/auth_screen.dart';
+import '../../main.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;
@@ -45,35 +45,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
+
+    // Simple logic untuk mapping error umum
     final lower = cleaned.toLowerCase();
 
     if (lower.isEmpty) return 'Terjadi kesalahan, silakan coba lagi.';
-    if (_containsAll(lower, ['email', 'used']) ||
-        _containsAll(lower, ['email', 'sudah', 'digunakan']) ||
-        _containsAll(lower, ['email', 'already'])) {
-      return 'Email sudah digunakan.';
+
+    if (_containsAll(lower, ['password', 'match']) ||
+        _containsAll(lower, ['password', 'tidak', 'sama'])) {
+      return 'Konfirmasi password tidak sesuai.';
     }
-    if (_containsAll(lower, ['email', 'not', 'registered']) ||
-        _containsAll(lower, ['email', 'belum', 'terdaftar'])) {
-      return 'Email belum terdaftar.';
-    }
-    if (_containsAll(lower, ['password', 'invalid'])) {
-      return 'Password tidak valid.';
-    }
-    if (_containsAll(lower, ['password', 'empty']) ||
-        _containsAll(lower, ['password', 'required'])) {
-      return 'Silakan isi password baru.';
-    }
-    if (_containsAll(lower, ['password', 'minimum']) ||
-        _containsAll(lower, ['password', 'minimal']) ||
-        lower.contains('8 characters')) {
-      return 'Password minimal 8 karakter.';
-    }
-    if ((_containsAll(lower, ['confirm', 'password']) ||
-            _containsAll(lower, ['konfirmasi', 'password'])) &&
-        (lower.contains('match') || lower.contains('sama'))) {
-      return 'Password tidak sama.';
-    }
+
     return cleaned;
   }
 
@@ -207,7 +189,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() => _errorMessage = 'Silakan isi konfirmasi password.');
       return;
     }
-    if (password.length < 8) {
+
+    if (newPass.length < 8) {
       setState(() => _errorMessage = 'Password minimal 8 karakter.');
       return;
     }
@@ -236,16 +219,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       await SessionService.clearSession();
 
       if (!mounted) return;
-      
-      _showSuccessMessage('Password berhasil diubah, silakan login.');
-      await Future.delayed(const Duration(milliseconds: 800));
-      if (!mounted) return;
 
-      // KEMBALI KE LOGIN
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const AuthScreen()),
-        (route) => false,
+      // Sukses: Tampilkan snackbar lalu kembali ke Login (bersihkan route stack)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password berhasil diubah. Silakan login.'),
+          backgroundColor: Colors.green,
+        ),
       );
+
+      // Logout dan kembali ke halaman login
+      if (mounted) _performLogout(context);
     } catch (e) {
       final lower = e.toString().toLowerCase();
       final tokenError = lower.contains('invalid or expired token') ||
@@ -267,6 +251,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _performLogout(BuildContext context) async {
+    await SessionService.clearSession();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthCheck()),
+      (route) => false,
+    );
+  }
+
+  void _performLogout(BuildContext context) async {
+    await SessionService.clearSession();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthCheck()),
+      (route) => false,
+    );
   }
 
   @override
@@ -313,15 +317,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 children: [
                                   Center(
                                     child: Text(
-                                      'Password Baru',
-                                      style:
-                                          theme.textTheme.headlineMedium?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black,
-                                      ),
+                                      'Buat Password Baru',
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.black,
+                                          ),
                                     ),
                                   ),
                                   const SizedBox(height: 32),
+
                                   if (_errorMessage != null) ...[
                                     Container(
                                       width: double.infinity,
@@ -334,11 +339,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                       ),
                                       child: Text(
                                         _errorMessage!,
-                                        style: TextStyle(
-                                          color: _errorMessage == 'Password berhasil diubah, silakan login.'
-                                              ? _successColor
-                                              : Colors.red,
-                                          fontWeight: FontWeight.w600,
+                                        style: const TextStyle(
+                                          color: Colors.red,
                                         ),
                                       ),
                                     ),
@@ -348,10 +350,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
                                     decoration: _inputDecoration(
-                                      'Password Baru',
-                                      obscureValue: _obscurePassword,
-                                      onToggle: () => setState(
-                                        () => _obscurePassword = !_obscurePassword,
+                                      label: 'Password Baru',
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _isNewPasswordVisible
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _isNewPasswordVisible =
+                                                !_isNewPasswordVisible;
+                                          });
+                                        },
                                       ),
                                     ),
                                   ),
@@ -360,13 +372,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                     controller: _confirmController,
                                     obscureText: _obscureConfirm,
                                     decoration: _inputDecoration(
-                                      'Konfirmasi Password',
-                                      obscureValue: _obscureConfirm,
-                                      onToggle: () => setState(
-                                        () => _obscureConfirm = !_obscureConfirm,
+                                      label: 'Konfirmasi Password',
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _isConfirmPasswordVisible
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          color: Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _isConfirmPasswordVisible =
+                                                !_isConfirmPasswordVisible;
+                                          });
+                                        },
                                       ),
                                     ),
                                   ),
+
                                   const SizedBox(height: 24),
                                   _buildPrimaryButton(
                                     label: 'Ubah Password',

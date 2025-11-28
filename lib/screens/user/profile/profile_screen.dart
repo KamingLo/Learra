@@ -3,6 +3,7 @@ import '../../../screens/user/profile/edit_profile_screen.dart';
 import '../../../services/session_service.dart';
 import '../../../services/api_service.dart';
 import '../../../main.dart'; // Untuk AuthCheck
+import '../../../widgets/auth/forgot_password.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String role;
@@ -178,7 +179,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.lock_outline_rounded,
                       title: "Ganti Password",
                       subtitle: "Perkuat keamanan akun",
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ForgotPasswordScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
