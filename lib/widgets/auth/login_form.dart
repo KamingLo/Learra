@@ -104,9 +104,11 @@ class _LoginFormState extends State<LoginForm> {
 
       final token = response['token'] as String?;
       final role = response['user']?['role'] as String? ?? 'guest';
+      final id = response['user']?['id'] as String? ?? '';
+      final name = response['user']?['name'] as String? ?? '';
 
       if (token != null && token.isNotEmpty) {
-        await SessionService.saveSession(role, token);
+        await SessionService.saveSession(role, token, id, name);
 
         if (!mounted) return;
 

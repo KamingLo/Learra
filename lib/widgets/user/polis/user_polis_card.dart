@@ -3,14 +3,9 @@ import '../../../models/polis_model.dart';
 
 class PolicyCard extends StatelessWidget {
   final PolicyModel policy;
-  // 1. Tambahkan callback ini agar parent bisa menentukan aksi navigasi
   final VoidCallback? onTap;
 
-  const PolicyCard({
-    super.key,
-    required this.policy,
-    this.onTap, // Masukkan ke constructor
-  });
+  const PolicyCard({super.key, required this.policy, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -34,18 +29,14 @@ class PolicyCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          // 2. Gunakan onTap dari parameter, bukan hardcode Navigator di sini
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
-          splashColor: Colors.green.withValues(
-            alpha: 0.1,
-          ), // Efek sentuhan hijau halus
+          splashColor: Colors.green.withValues(alpha: 0.1),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER SECTION ---
                 Row(
                   children: [
                     Container(
@@ -54,8 +45,9 @@ class PolicyCard extends StatelessWidget {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(12),
                       ),
+
                       child: Icon(
-                        policy.vehicleIcon,
+                        policy.icon,
                         color: Colors.green.shade700,
                         size: 24,
                       ),
@@ -72,75 +64,65 @@ class PolicyCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               letterSpacing: -0.5,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
+
                           Text(
-                            "${policy.vehicleBrand} • ${policy.vehicleType}",
+                            "${policy.summaryTitle} • ${policy.summarySubtitle}",
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey.shade600,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
 
-                    // STATUS CHIP & ARROW
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: policy.statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: policy.statusColor.withValues(alpha: 0.3),
-                              width: 1,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: policy.statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: policy.statusColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: policy.statusColor,
+                              shape: BoxShape.circle,
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: policy.statusColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                policy.status,
-                                style: TextStyle(
-                                  color: policy.statusColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 6),
+                          Text(
+                            policy.status,
+                            style: TextStyle(
+                              color: policy.statusColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        // 3. Tambahan Visual Hint (Panah kecil) agar user tahu ini bisa diklik
-                        // Bisa dihapus jika ingin tampilan lebih bersih
-                        const SizedBox(height: 4),
-                        Icon(
-                          Icons.chevron_right,
-                          color: Colors.grey.shade300,
-                          size: 20,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 20),
 
-                // GARIS PEMBATAS
                 Container(
                   height: 1,
                   decoration: BoxDecoration(
@@ -156,7 +138,6 @@ class PolicyCard extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                // INFO NOMOR POLIS
                 Row(
                   children: [
                     Expanded(
@@ -173,9 +154,13 @@ class PolicyCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: _buildInfoItem(
-                        Icons.directions_car_outlined,
-                        "No. Polisi",
-                        policy.plateNumber,
+                        policy.category == 'kendaraan'
+                            ? Icons.directions_car_outlined
+                            : (policy.category == 'jiwa'
+                                  ? Icons.favorite_border
+                                  : Icons.medical_information_outlined),
+                        policy.primaryDetailLabel,
+                        policy.primaryDetailValue,
                       ),
                     ),
                   ],
@@ -183,8 +168,6 @@ class PolicyCard extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // --- FOOTER (TANGGAL & HARGA) ---
-                // Container Hijau
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -251,8 +234,6 @@ class PolicyCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                // 4. BAGIAN TOMBOL "LIHAT DETAIL" SUDAH DIHAPUS DISINI
               ],
             ),
           ),
@@ -285,6 +266,8 @@ class PolicyCard extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

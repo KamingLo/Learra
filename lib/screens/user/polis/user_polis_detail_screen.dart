@@ -1,13 +1,97 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
+import '../../../models/product_model.dart';
+import '../../../services/api_service.dart';
+import '../payment/payment_detail.dart';
 
-class PolicyDetailScreen extends StatelessWidget {
+class PolicyDetailScreen extends StatefulWidget {
   final PolicyModel policy;
 
   const PolicyDetailScreen({super.key, required this.policy});
 
   @override
+  State<PolicyDetailScreen> createState() => _PolicyDetailScreenState();
+}
+
+class _PolicyDetailScreenState extends State<PolicyDetailScreen> {
+  final ApiService _apiService = ApiService();
+  PolicyModel? _policy;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _policy = widget.policy;
+    _fetchPolicyDetail();
+  }
+
+  Future<void> _fetchPolicyDetail() async {
+    if (widget.policy.id.isEmpty) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final response = await _apiService.get('/polis/${widget.policy.id}');
+
+      if (!mounted) return;
+
+      if (response is Map) {
+        setState(() {
+          _policy = PolicyModel.fromJson(Map<String, dynamic>.from(response));
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            "Gagal memuat detail polis. ${e.toString().replaceAll('Exception: ', '')}";
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null || _policy == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(title: const Text("Detail Polis")),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage ?? "Polis tidak ditemukan",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchPolicyDetail,
+                child: const Text("Coba Lagi"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final policy = _policy!;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -58,7 +142,6 @@ class PolicyDetailScreen extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Row(
@@ -70,7 +153,7 @@ class PolicyDetailScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
-                                policy.vehicleIcon,
+                                policy.icon,
                                 color: Colors.white,
                                 size: 24,
                               ),
@@ -91,13 +174,15 @@ class PolicyDetailScreen extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    "${policy.vehicleBrand} ${policy.vehicleType}",
+                                    "${policy.summaryTitle} - ${policy.summarySubtitle}",
                                     style: TextStyle(
                                       color: Colors.white.withValues(
                                         alpha: 0.9,
                                       ),
                                       fontSize: 13,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
@@ -261,9 +346,16 @@ class PolicyDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    "Informasi Kendaraan",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    policy.category == 'kendaraan'
+                        ? "Informasi Kendaraan"
+                        : policy.category == 'kesehatan'
+                        ? "Informasi Kesehatan"
+                        : "Informasi Tertanggung",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -279,47 +371,8 @@ class PolicyDetailScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Column(
-                      children: [
-                        _buildDetailRow(
-                          Icons.directions_car_outlined,
-                          "Merk Kendaraan",
-                          policy.vehicleBrand,
-                          isFirst: true,
-                        ),
-                        _buildDetailRow(
-                          Icons.category_outlined,
-                          "Jenis Kendaraan",
-                          policy.vehicleType,
-                        ),
-                        _buildDetailRow(
-                          Icons.pin_outlined,
-                          "Nomor Polisi",
-                          policy.plateNumber,
-                        ),
-                        _buildDetailRow(
-                          Icons.qr_code_outlined,
-                          "Nomor Rangka",
-                          policy.frameNumber,
-                        ),
-                        _buildDetailRow(
-                          Icons.settings_outlined,
-                          "Nomor Mesin",
-                          policy.engineNumber,
-                        ),
-                        _buildDetailRow(
-                          Icons.person_outline,
-                          "Nama Pemilik",
-                          policy.ownerName,
-                        ),
-                        _buildDetailRow(
-                          Icons.calendar_today_outlined,
-                          "Tahun Pembelian",
-                          policy.yearBought,
-                          isLast: true,
-                        ),
-                      ],
-                    ),
+
+                    child: Column(children: _buildSpecificDetails(policy)),
                   ),
 
                   const SizedBox(height: 24),
@@ -347,22 +400,56 @@ class PolicyDetailScreen extends StatelessWidget {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                final bool isInactive =
+                                    policy.status.toLowerCase() != 'aktif';
+                                if (isInactive) {
+                                  // Konversi PolicyModel ke ProductModel
+                                  final productModel = ProductModel(
+                                    id: policy.id,
+                                    namaProduk: policy.productName,
+                                    tipe: policy.category,
+                                    premiDasar:
+                                        double.tryParse(
+                                          policy.formattedPrice.replaceAll(
+                                            RegExp(r'[^\d]'),
+                                            '',
+                                          ),
+                                        )?.toInt() ??
+                                        0,
+                                    description: policy.summarySubtitle,
+                                  );
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          PaymentDetail(product: productModel),
+                                    ),
+                                  );
+                                }
+                              },
                               borderRadius: BorderRadius.circular(16),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 18),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.refresh,
+                                      policy.status.toLowerCase() != 'aktif'
+                                          ? Icons.payment
+                                          : Icons.refresh,
                                       color: Colors.white,
                                       size: 20,
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      "Perpanjang Polis",
-                                      style: TextStyle(
+                                      policy.status.toLowerCase() != 'aktif'
+                                          ? "Bayar Sekarang"
+                                          : "Perpanjang Polis",
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -436,6 +523,95 @@ class PolicyDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildSpecificDetails(PolicyModel p) {
+    if (p.category == 'kendaraan') {
+      return [
+        _buildDetailRow(
+          Icons.directions_car_outlined,
+          "Merk Kendaraan",
+          p.vehicleBrand ?? '-',
+          isFirst: true,
+        ),
+        _buildDetailRow(
+          Icons.category_outlined,
+          "Jenis Kendaraan",
+          p.vehicleType ?? '-',
+        ),
+        _buildDetailRow(
+          Icons.pin_outlined,
+          "Nomor Polisi",
+          p.plateNumber ?? '-',
+        ),
+        _buildDetailRow(
+          Icons.qr_code_outlined,
+          "Nomor Rangka",
+          p.frameNumber ?? '-',
+        ),
+        _buildDetailRow(
+          Icons.settings_outlined,
+          "Nomor Mesin",
+          p.engineNumber ?? '-',
+        ),
+        _buildDetailRow(
+          Icons.person_outline,
+          "Nama Pemilik",
+          p.ownerName ?? '-',
+        ),
+        _buildDetailRow(
+          Icons.calendar_today_outlined,
+          "Tahun Pembelian",
+          p.yearBought ?? '-',
+          isLast: true,
+        ),
+      ];
+    } else if (p.category == 'kesehatan') {
+      return [
+        _buildDetailRow(
+          Icons.medical_services_outlined,
+          "Riwayat Diabetes",
+          p.hasDiabetes == true ? 'Ya' : 'Tidak',
+          isFirst: true,
+        ),
+        _buildDetailRow(
+          Icons.smoking_rooms_outlined,
+          "Perokok",
+          p.isSmoker == true ? 'Ya' : 'Tidak',
+        ),
+        _buildDetailRow(
+          Icons.favorite_outline,
+          "Riwayat Hipertensi",
+          p.hasHypertension == true ? 'Ya' : 'Tidak',
+          isLast: true,
+        ),
+      ];
+    } else if (p.category == 'jiwa') {
+      return [
+        _buildDetailRow(
+          Icons.family_restroom_outlined,
+          "Status Pernikahan",
+          p.maritalStatus ?? '-',
+          isFirst: true,
+        ),
+        _buildDetailRow(
+          Icons.people_outline,
+          "Jumlah Tanggungan",
+          "${p.dependentsCount ?? 0} Orang",
+          isLast: true,
+        ),
+      ];
+    }
+
+    return [
+      _buildDetailRow(
+        Icons.info_outline,
+        "Info",
+        "Tidak ada detail tambahan",
+        isFirst: true,
+        isLast: true,
+      ),
+    ];
   }
 
   Widget _buildDetailRow(
