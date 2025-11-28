@@ -22,14 +22,37 @@ abstract class BasePolisForm extends StatefulWidget {
 abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
   final ApiService _apiService = ApiService();
   final _formKey = GlobalKey<FormState>();
-  final _endingDateController = TextEditingController();
+
+  double basePremium = 0;
+  bool isPremiumLoaded = false;
 
   bool _isLoading = false;
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _fetchBasePremium();
+  }
+
+  Future<void> _fetchBasePremium() async {
+    try {
+      final response = await _apiService.get('/produk/${widget.productId}');
+      if (mounted && response is Map) {
+        final data = response['data'] ?? response;
+        setState(() {
+          basePremium =
+              double.tryParse(data['premiDasar']?.toString() ?? '0') ?? 0;
+          isPremiumLoaded = true;
+        });
+      }
+    } catch (e) {
+      print("Gagal mengambil premi dasar: $e");
+    }
+  }
+
+  @override
   void dispose() {
-    _endingDateController.dispose();
     disposeControllers();
     super.dispose();
   }
@@ -41,41 +64,6 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
   List<Widget> buildFormFields();
 
   String getFormTitle();
-
-  Future<void> selectDate() async {
-    final DateTime now = DateTime.now();
-
-    final DateTime cleanNow = DateTime(now.year, now.month, now.day);
-
-    final DateTime tomorrow = cleanNow.add(const Duration(days: 1));
-    final DateTime nextYear = cleanNow.add(const Duration(days: 365));
-    final DateTime maxDate = cleanNow.add(const Duration(days: 3650));
-
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: nextYear,
-      firstDate: tomorrow,
-      lastDate: maxDate,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.green.shade700,
-              onPrimary: Colors.white,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        _endingDateController.text =
-            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-      });
-    }
-  }
 
   Future<String?> _getUserId() async {
     final sessionId = await SessionService.getCurrentId();
@@ -113,7 +101,6 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
       Map<String, dynamic> requestBody = {
         'userId': userId,
         'productId': widget.productId,
-        'endingDate': _endingDateController.text,
         'detail': buildDetailPayload(),
       };
 
@@ -152,6 +139,11 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final nextMonth = DateTime(now.year, now.month + 1, now.day);
+    final formattedEndDate =
+        "${nextMonth.day}/${nextMonth.month}/${nextMonth.year}";
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -166,9 +158,7 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
         centerTitle: true,
         backgroundColor: Colors.green.shade700,
         elevation: 0,
-
         iconTheme: const IconThemeData(color: Colors.white),
-
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,
@@ -192,22 +182,13 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
                 ErrorMessageCard(message: _errorMessage!),
 
               FormSectionCard(
-                title: "Informasi Polis",
+                title: "Lengkapi Data Polis",
                 children: [
-                  CustomDateField(
-                    controller: _endingDateController,
-                    label: "Tanggal Berakhir Polis",
-                    hint: "Pilih tanggal berakhir",
-                    onTap: selectDate,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Pilih tanggal berakhir polis';
-                      }
-                      return null;
-                    },
+                  InfoCard.info(
+                    title: "Masa Berlaku Polis",
+                    message:
+                        "Polis ini akan berlaku selama 1 bulan terhitung sejak hari ini. Tanggal berakhir otomatis: $formattedEndDate",
                   ),
-
-                  const SizedBox(height: 20),
 
                   ...buildFormFields(),
                 ],
