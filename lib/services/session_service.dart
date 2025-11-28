@@ -10,7 +10,7 @@ class SessionService {
   static Future<void> saveSession(String role, String token, String id, String name) async {
     final prefs = await SharedPreferences.getInstance();
 
-    const sessionDuration = Duration(hours: 1);
+    const sessionDuration = Duration(days: 1);
 
     final expireAt = DateTime.now().add(sessionDuration).millisecondsSinceEpoch;
 
@@ -32,7 +32,6 @@ class SessionService {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     if (now > expireAt) {
-      // sesi sudah kadaluarsa → bersihkan
       await prefs.clear();
       return false;
     }
