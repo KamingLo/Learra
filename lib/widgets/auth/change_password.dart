@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
+import '../../services/session_service.dart';
+import '../../main.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;
@@ -45,16 +47,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
-    
+
     // Simple logic untuk mapping error umum
     final lower = cleaned.toLowerCase();
     if (lower.isEmpty) return 'Terjadi kesalahan, silakan coba lagi.';
-    
-    if (_containsAll(lower, ['password', 'match']) || 
+
+    if (_containsAll(lower, ['password', 'match']) ||
         _containsAll(lower, ['password', 'tidak', 'sama'])) {
       return 'Konfirmasi password tidak sesuai.';
     }
-    
+
     return cleaned;
   }
 
@@ -172,8 +174,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     if (newPass.length < 8) {
-       setState(() => _errorMessage = 'Password minimal 8 karakter.');
-       return;
+      setState(() => _errorMessage = 'Password minimal 8 karakter.');
+      return;
     }
 
     if (newPass != confirmPass) {
@@ -189,7 +191,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     try {
       // Endpoint API Reset Password (Sesuaikan jika path berbeda, misal: /auth/reset-password)
       final response = await _apiService.post(
-        '/auth/reset-password', 
+        '/auth/reset-password',
         body: {
           'resetToken': widget.resetToken,
           'newPassword': newPass,
@@ -211,14 +213,23 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         ),
       );
 
-      // Navigasi: Pop semua halaman sampai kembali ke root (biasanya halaman login)
-      Navigator.of(context).popUntil((route) => route.isFirst);
-
+      // Logout dan kembali ke halaman login
+      if (mounted) _performLogout(context);
     } catch (e) {
       setState(() => _errorMessage = _friendlyErrorMessage(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _performLogout(BuildContext context) async {
+    await SessionService.clearSession();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthCheck()),
+      (route) => false,
+    );
   }
 
   @override
@@ -266,10 +277,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                   Center(
                                     child: Text(
                                       'Buat Password Baru',
-                                      style: theme.textTheme.headlineMedium?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black,
-                                      ),
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.black,
+                                          ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -281,7 +293,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 32),
-                                  
+
                                   if (_errorMessage != null) ...[
                                     Container(
                                       width: double.infinity,
@@ -292,7 +304,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                       ),
                                       child: Text(
                                         _errorMessage!,
-                                        style: const TextStyle(color: Colors.red),
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 18),
@@ -313,7 +327,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                         ),
                                         onPressed: () {
                                           setState(() {
-                                            _isNewPasswordVisible = !_isNewPasswordVisible;
+                                            _isNewPasswordVisible =
+                                                !_isNewPasswordVisible;
                                           });
                                         },
                                       ),
@@ -336,13 +351,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                         ),
                                         onPressed: () {
                                           setState(() {
-                                            _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                                            _isConfirmPasswordVisible =
+                                                !_isConfirmPasswordVisible;
                                           });
                                         },
                                       ),
                                     ),
                                   ),
-                                  
+
                                   const SizedBox(height: 24),
                                   _buildPrimaryButton(
                                     label: 'Simpan Password',
