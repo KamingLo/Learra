@@ -462,7 +462,7 @@ class _ClientScreenState extends State<ClientScreen> {
                                               },
                                             );
 
-                                            if (!mounted) return;
+                                            if (!context.mounted) return;
                                             Navigator.pop(
                                               context,
                                             ); // Close sheet
@@ -484,7 +484,7 @@ class _ClientScreenState extends State<ClientScreen> {
                                               ),
                                             );
                                           } catch (e) {
-                                            if (!mounted) return;
+                                            if (!context.mounted) return;
                                             setStateSheet(
                                               () => isSaving = false,
                                             );
