@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart'; // Pastikan import ini ada
+import 'package:google_fonts/google_fonts.dart';
 import 'services/session_service.dart';
 import 'widgets/main_navbar.dart';
 import 'screens/auth/auth_screen.dart';
@@ -30,7 +30,6 @@ class MyApp extends StatelessWidget {
       title: 'Learra',
       
       theme: ThemeData(
-        // 1. GUNAKAN OPEN SANS UNTUK TEXT GLOBAL
         textTheme: GoogleFonts.openSansTextTheme(
           Theme.of(context).textTheme,
         ),
@@ -45,14 +44,12 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: offWhite,
         useMaterial3: true,
 
-        // 2. GUNAKAN OPEN SANS UNTUK APP BAR JUGA
         appBarTheme: AppBarTheme(
           backgroundColor: offWhite,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.black87),
           
-          // Judul AppBar wajib diset manual agar berubah
           titleTextStyle: GoogleFonts.openSans( 
             color: Colors.black87,
             fontWeight: FontWeight.w700, // Bold agar tegas
@@ -69,7 +66,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ... (Bagian AuthCheck ke bawah tetap sama, tidak perlu diubah)
 class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
 
@@ -85,9 +81,14 @@ class _AuthCheckState extends State<AuthCheck> {
     _initialize();
   }
 
+  // --- LOGIC UTAMA DIPERBARUI DI SINI ---
   void _initialize() async {
+    await SessionService.isSessionValid();
+
     String role = await SessionService.getCurrentRole();
+    
     if (!mounted) return;
+
     Navigator.pushReplacement(
       context, 
       MaterialPageRoute(builder: (_) => MainNavbar(role: role))

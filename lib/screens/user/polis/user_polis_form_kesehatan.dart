@@ -19,8 +19,30 @@ class _KesehatanPolisFormState extends BasePolisFormState<KesehatanPolisForm> {
   bool _isSmoker = false;
   bool _hasHypertension = false;
 
+  double _estimatedPremium = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   void disposeControllers() {}
+
+  void _calculateEstimation() {
+    if (!isPremiumLoaded) return;
+
+    double base = basePremium;
+    double multiplier = 1.0;
+
+    if (_hasDiabetes) multiplier += 0.3;
+    if (_isSmoker) multiplier += 0.2;
+    if (_hasHypertension) multiplier += 0.4;
+
+    setState(() {
+      _estimatedPremium = base * multiplier;
+    });
+  }
 
   @override
   String getFormTitle() => "Form Polis Kesehatan";
@@ -38,6 +60,12 @@ class _KesehatanPolisFormState extends BasePolisFormState<KesehatanPolisForm> {
 
   @override
   List<Widget> buildFormFields() {
+    if (isPremiumLoaded && _estimatedPremium == 0 && basePremium > 0) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _calculateEstimation(),
+      );
+    }
+
     return [
       const Divider(height: 32),
 
@@ -64,6 +92,7 @@ class _KesehatanPolisFormState extends BasePolisFormState<KesehatanPolisForm> {
         onChanged: (value) {
           setState(() {
             _hasDiabetes = value;
+            _calculateEstimation();
           });
         },
       ),
@@ -78,6 +107,7 @@ class _KesehatanPolisFormState extends BasePolisFormState<KesehatanPolisForm> {
         onChanged: (value) {
           setState(() {
             _isSmoker = value;
+            _calculateEstimation();
           });
         },
       ),
@@ -92,16 +122,22 @@ class _KesehatanPolisFormState extends BasePolisFormState<KesehatanPolisForm> {
         onChanged: (value) {
           setState(() {
             _hasHypertension = value;
+            _calculateEstimation();
           });
         },
       ),
 
       const SizedBox(height: 20),
 
-      const InfoCard.info(
+      const InfoCard.warning(
+        title: "Perhatian",
         message:
             "Riwayat kesehatan yang Anda berikan akan mempengaruhi besaran premi asuransi. Harap mengisi dengan jujur.",
       ),
+
+      const SizedBox(height: 24),
+
+      EstimationCard(amount: _estimatedPremium),
     ];
   }
 }

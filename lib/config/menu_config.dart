@@ -3,12 +3,12 @@ import 'package:learra/screens/admin/polis/admin_polis_screen.dart';
 import 'package:learra/screens/user/polis/user_polis_screen.dart';
 
 // --- IMPORT SCREEN SESUAI ROLE ---
-import '../screens/admin/product/product_screen.dart';  // Screen Admin (CRUD)
-import '../screens/admin/client/client_screen.dart' ;  // Screen Admin (Management User)
-import '../screens/user/product/product_screen.dart';   // Screen User (Belanja)
-import '../screens/user/profile/profile_screen.dart';   // Profile (Logout)
+import '../screens/admin/product/product_screen.dart'; // Screen Admin (CRUD)
+import '../screens/admin/client/client_screen.dart'; // Screen Admin (Management User)
+import '../screens/user/product/product_screen.dart'; // Screen User (Belanja)
+import '../screens/user/profile/profile_screen.dart'; // Profile (Logout)
 import 'package:learra/screens/user/home/home_screen.dart';
-
+import '../screens/user/claim/claim_menu.dart'; // Import Claim Menu
 
 class NavItem {
   final String label;
@@ -24,22 +24,22 @@ class MenuConfig {
     if (role == 'admin') {
       return [
         NavItem(
-          label: "Client", 
+          label: "Client",
           icon: Icons.diversity_3_rounded,
           // Arahkan ke screen Admin yang punya fitur CRUD
-          screen: const ClientScreen(), 
+          screen: const ClientScreen(),
         ),
         NavItem(
-          label: "Produk", 
+          label: "Produk",
           icon: Icons.inventory_2_rounded,
           // Arahkan ke screen Admin yang punya fitur CRUD
-          screen: const AdminProductScreen(), 
+          screen: const AdminProductScreen(),
         ),
         NavItem(
-          label: "Polis", 
+          label: "Polis",
           icon: Icons.my_library_books_rounded,
           // Arahkan ke screen Admin yang punya fitur CRUD
-          screen: const AdminPolicyScreen(), 
+          screen: const AdminPolicyScreen(),
         ),
         NavItem(
           label: "Akun",
@@ -47,27 +47,31 @@ class MenuConfig {
           screen: const ProfileScreen(role: 'admin'),
         ),
       ];
-    } 
-    
+    }
     // --- 2. MENU USER ---
     else if (role == 'user') {
       return [
         NavItem(
           label: "Home",
           icon: Icons.home_rounded,
-          screen: const UserHomeScreen(role: "user") , // Placeholder
+          screen: const UserHomeScreen(role: "user"),
         ),
         NavItem(
           label: "Belanja",
           icon: Icons.shopping_cart_rounded,
           // Arahkan ke screen User yang punya fitur Beli
-          screen: const UserProductScreen(), 
+          screen: const UserProductScreen(),
         ),
         NavItem(
           label: "Polis",
           icon: Icons.my_library_books_rounded,
           // Arahkan ke screen User yang punya fitur Beli
-          screen: const PolicyScreen(), 
+          screen: const PolicyScreen(),
+        ),
+        NavItem(
+          label: "Klaim",
+          icon: Icons.assignment_rounded,
+          screen: const KlaimSayaScreen(),
         ),
         NavItem(
           label: "Profil",
@@ -75,26 +79,26 @@ class MenuConfig {
           screen: const ProfileScreen(role: 'user'),
         ),
       ];
-    } 
-    
+    }
     // --- 3. MENU GUEST ---
     else {
       return [
         NavItem(
           label: "Home",
           icon: Icons.home_outlined,
-          screen: const  UserHomeScreen(role: "public"), // Placeholder
+          screen: const UserHomeScreen(role: "public"),
         ),
         NavItem(
           label: "Produk",
           icon: Icons.grid_view_rounded,
           // Arahkan ke screen Public yang hanya Preview
-          screen: const UserProductScreen(), 
+          screen: const UserProductScreen(),
         ),
         NavItem(
           label: "Masuk",
           icon: Icons.login_rounded,
-          screen: const SizedBox(), // Screen dummy, karena di-intercept oleh MainNavbar
+          screen:
+              const SizedBox(), // Screen dummy, karena di-intercept oleh MainNavbar
         ),
       ];
     }

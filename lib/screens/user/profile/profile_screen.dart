@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../screens/user/profile/edit_profile_screen.dart';
 import '../../../services/session_service.dart';
+import '../../../services/api_service.dart';
 import '../../../main.dart'; // Untuk AuthCheck
 
 class ProfileScreen extends StatefulWidget {
@@ -20,8 +21,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color _primaryGreen = Color(0xFF06A900);
   static const Color _deepGreen = Color(0xFF024000);
 
-  // 1. Variabel untuk menampung nama (Default 'Nama Pengguna' sebelum load selesai)
+  // 1. Variabel untuk menampung data user
   String _userName = 'Nama Pengguna';
+  String _email = '';
+  String _pekerjaan = '';
+
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -30,14 +35,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-  // 3. Fungsi Asynchronous untuk mengambil nama dari SessionService
+  // 3. Fungsi Asynchronous untuk mengambil data profil
   Future<void> _loadUserData() async {
+    // Load nama dari session dulu agar cepat tampil
     final name = await SessionService.getCurrentName();
-    // Jika widget masih aktif (mounted) dan nama ada, update state
     if (mounted && name != null) {
       setState(() {
         _userName = name;
       });
+    }
+
+    // Fetch detail lengkap dari API
+    try {
+      final response = await _apiService.get('/user/profile');
+      if (!mounted) return;
+
+      if (response['user'] != null) {
+        final data = response['user'];
+        setState(() {
+          _userName = data['name'] ?? _userName;
+          _email = data['email'] ?? '';
+          _pekerjaan = data['pekerjaan'] ?? '';
+        });
+
+        // Update session jika nama berubah di server
+        if (data['name'] != null) {
+          await SessionService.saveName(data['name']);
+        }
+      }
+    } catch (e) {
+      // Silent error atau log, biarkan data session yang tampil
+      debugPrint("Gagal load profile: $e");
     }
   }
 
@@ -56,8 +84,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Perhatikan penggunaan 'widget.role' karena kita ada di dalam State
     final bool isAdmin = widget.role.toLowerCase() == 'admin';
     final Color accentColor = isAdmin ? const Color(0xFFE53935) : _primaryGreen;
-    final Color accentSecondary =
-        isAdmin ? const Color(0xFFB71C1C) : _deepGreen;
+    final Color accentSecondary = isAdmin
+        ? const Color(0xFFB71C1C)
+        : _deepGreen;
 
     return Scaffold(
       backgroundColor: _surfaceLight,
@@ -73,17 +102,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: Stack(
         children: [
-          Container(
-            height: 190,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isAdmin
-                    ? [const Color(0xFFFFC1B6), accentColor]
-                    : [_primaryGreen.withOpacity(0.35), _deepGreen],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // Background dengan desain baru
+          Stack(
+            children: [
+              Container(
+                height: 240,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isAdmin
+                        ? [const Color(0xFFFFC1B6), accentColor]
+                        : [_primaryGreen, _deepGreen],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                ),
               ),
-            ),
+              Positioned(
+                top: -60,
+                right: -40,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 80,
+                left: -40,
+                child: Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
           ),
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -107,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ).then((_) {
                           // Opsional: Reload nama setelah kembali dari edit profile
-                          _loadUserData(); 
+                          _loadUserData();
                         });
                       },
                     ),
@@ -145,7 +207,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   "Versi Aplikasi 1.0.0",
                   style: TextStyle(
-                      color: _secondaryText.withOpacity(0.5), fontSize: 12),
+                    color: _secondaryText.withOpacity(0.5),
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 32),
               ],
@@ -194,28 +258,87 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _userName, // 4. Menggunakan variabel state yang sudah diload
+                      _userName,
+                      textAlign: TextAlign.start,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
                         color: _primaryText,
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
+                    if (_email.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.email_outlined,
+                            size: 14,
+                            color: _secondaryText.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _email,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: _secondaryText.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    if (_pekerjaan.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.work_outline,
+                            size: 14,
+                            color: _secondaryText.withOpacity(0.6),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _pekerjaan,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: _secondaryText.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    if (_email.isEmpty && _pekerjaan.isEmpty)
+                      const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.15),
+                        color: accentColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: accentColor.withOpacity(0.2)),
                       ),
                       child: Text(
-                        widget.role.toUpperCase(), // Gunakan widget.role
+                        widget.role.toUpperCase(),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: accentColor,
-                          letterSpacing: 0.8,
+                          letterSpacing: 1.0,
                         ),
                       ),
                     ),
@@ -263,7 +386,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             subtitle,
             style: TextStyle(
-                color: _secondaryText.withOpacity(0.7), fontSize: 13),
+              color: _secondaryText.withOpacity(0.7),
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 20),
           ...children,
@@ -280,8 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool isDestructive = false,
   }) {
     final Color textColor = isDestructive ? Colors.redAccent : _deepGreen;
-    final Color iconBg =
-        isDestructive ? Colors.red.shade50 : _surfaceLight;
+    final Color iconBg = isDestructive ? Colors.red.shade50 : _surfaceLight;
 
     return Material(
       color: Colors.transparent,
@@ -338,8 +462,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right,
-                  color: _secondaryText.withOpacity(0.6), size: 20),
+              Icon(
+                Icons.chevron_right,
+                color: _secondaryText.withOpacity(0.6),
+                size: 20,
+              ),
             ],
           ),
         ),
@@ -396,7 +523,7 @@ class _ProfileMetaItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // Karena kita mengakses warna privat dari _ProfileScreenState,
     // kita perlu membuatnya public atau mendefinisikan ulang warna disini.
-    // Agar simpel, saya hardcode warna yang sama di sini, 
+    // Agar simpel, saya hardcode warna yang sama di sini,
     // atau Anda bisa membuat Class Color terpisah (Theme).
     const Color localSecondaryText = Color(0xFF3F3F3F);
     const Color localPrimaryText = Color(0xFF111111);
