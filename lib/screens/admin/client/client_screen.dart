@@ -22,6 +22,7 @@ class ClientScreen extends StatefulWidget {
 class _ClientScreenState extends State<ClientScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
+  static const Color _secondaryText = Color(0xFF3F3F3F);
 
   List<AdminUser> _users = [];
   bool _isLoading = true;
@@ -273,8 +274,69 @@ class _ClientScreenState extends State<ClientScreen> {
                               horizontal: 20,
                               vertical: 8,
                             ),
-                            itemCount: _users.length,
+                            itemCount: _users.length + 1,
                             itemBuilder: (context, index) {
+                              if (index == _users.length) {
+                                return Column(
+                                  children: [
+                                    const SizedBox(height: 24),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Opacity(
+                                          opacity:
+                                              0.8, // Agar tidak terlalu mencolok
+                                          child: SizedBox(
+                                            height:
+                                                48, // Ukuran logo proporsional
+                                            child: Image.asset(
+                                              'assets/IconApp/LearraFull.png',
+                                              fit: BoxFit.contain,
+                                              errorBuilder: (ctx, err, stack) =>
+                                                  const Icon(
+                                                    Icons.verified_user,
+                                                    color: Colors.grey,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          "© 2025 Learra. Hak Cipta Dilindungi.",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Terdaftar dan diawasi oleh OJK",
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 20,
+                                        ), // Bottom safe area padding
+                                        const SizedBox(height: 32),
+                                        Text(
+                                          "Versi Aplikasi 1.0.0",
+                                          style: TextStyle(
+                                            color: _secondaryText.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                );
+                              }
                               final user = _users[index];
                               return ClientCard(
                                 user: user,
