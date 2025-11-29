@@ -3,8 +3,6 @@ import 'dart:async';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
 import 'product_form_screen.dart';
-
-// Import Widgets
 import '../../../widgets/admin/product/product_card_item.dart';
 import '../../../widgets/admin/product/product_search_bar.dart';
 
@@ -22,7 +20,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
   String _searchQuery = "";
   Timer? _debounce;
 
-  // Definisi Warna Modern
   final Color _backgroundColor = const Color(0xFFF4F7F6);
   final Color _accentGreen = const Color(0xFF00C853);
 
@@ -32,16 +29,13 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     _fetchProducts();
   }
 
-  // --- PERBAIKAN 1: TAMBAHKAN CEK MOUNTED DI SINI ---
   Future<void> _fetchProducts({String query = ""}) async {
-    // Cek mounted sebelum set loading
     if (mounted) setState(() => _isLoading = true);
     
     try {
       final endpoint = query.isEmpty ? '/produk' : '/produk?search=$query';
       final response = await _apiService.get(endpoint);
 
-      // --- PENTING: Cek apakah widget masih ada di layar sebelum setState ---
       if (!mounted) return; 
 
       List<dynamic> data = (response is Map && response.containsKey('data')) 
@@ -53,19 +47,15 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      // --- PENTING: Cek mounted di sini juga ---
       if (!mounted) return;
       
       setState(() => _isLoading = false);
-      // Opsional: debugPrint("Error: $e");
     }
   }
 
-  // --- PERBAIKAN 2: TAMBAHKAN CEK MOUNTED DI TIMER ---
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      // Cek mounted sebelum eksekusi apapun di dalam timer
       if (!mounted) return;
       
       setState(() => _searchQuery = query);
@@ -73,7 +63,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     });
   }
 
-  // --- PERBAIKAN 3: TAMBAHKAN CEK MOUNTED SETELAH DIALOG ---
   Future<void> _deleteProduct(String id) async {
     bool confirm = await showDialog(
       context: context,
@@ -104,7 +93,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
       try {
         await _apiService.delete('/produk/$id');
         
-        // --- CEK MOUNTED SEBELUM UPDATE UI ---
         if (!mounted) return;
 
         _fetchProducts(query: _searchQuery);
@@ -125,14 +113,12 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     }
   }
 
-  // --- NAVIGASI KE FORM ---
   void _openForm({ProductModel? product}) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ProductFormScreen(product: product)),
     );
     
-    // Cek mounted setelah kembali dari halaman lain
     if (!mounted) return;
 
     if (result == true) {
@@ -155,14 +141,13 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
           "Manajemen Produk", 
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 22)
         ),
-        backgroundColor: _backgroundColor, 
+        backgroundColor: Colors.white, 
         elevation: 0,
         centerTitle: false,
       ),
       
       body: Column(
         children: [
-          // --- 1. HEADER AREA ---
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
             child: Row(
@@ -200,7 +185,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
             ),
           ),
 
-          // --- 2. LIST DATA ---
           Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator(color: _accentGreen))

@@ -7,14 +7,13 @@ class ProductSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Menggunakan Container untuk membuat efek "Card" melayang
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white, // Latar belakang putih bersih
-        borderRadius: BorderRadius.circular(30), // Sudut sangat membulat (bentuk pil)
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05), // Bayangan sangat halus
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -26,8 +25,8 @@ class ProductSearchBar extends StatelessWidget {
         decoration: InputDecoration(
           hintText: "Cari produk...",
           hintStyle: TextStyle(color: Colors.grey.shade400),
-          prefixIcon: Icon(Icons.search, color: Colors.green.shade400), // Ikon hijau
-          border: InputBorder.none, // Hilangkan garis border bawaan
+          prefixIcon: Icon(Icons.search, color: Colors.green.shade400),
+          border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           isDense: true,
         ),

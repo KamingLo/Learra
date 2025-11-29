@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
-import '../../../widgets/admin/product/product_form_fields.dart'; // Import Widget Form
+import '../../../widgets/admin/product/product_form_fields.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final ProductModel? product; 
@@ -80,7 +80,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     final isEdit = widget.product != null;
     
     return Scaffold(
-      appBar: AppBar(title: Text(isEdit ? "Edit Produk" : "Tambah Produk Baru")),
+      appBar: AppBar(
+        title: Text(isEdit ? "Edit Produk" : "Tambah Produk Baru"),
+        backgroundColor: Colors.white,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(

@@ -21,11 +21,8 @@ class ProductCarousel extends StatefulWidget {
 }
 
 class _FullWidthProductCarouselState extends State<ProductCarousel> {
-  // Controller untuk PageView
   late PageController _pageController;
-  // Timer untuk auto-play
   Timer? _timer;
-  // Halaman saat ini
   int _currentPage = 0;
 
   @override
@@ -33,7 +30,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
     super.initState();
     _pageController = PageController(initialPage: 0);
     
-    // Hanya mulai timer jika data sudah siap
     if (!widget.isLoading && widget.products.isNotEmpty) {
       _startAutoPlay();
     }
@@ -42,7 +38,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
   @override
   void didUpdateWidget(ProductCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Jika data baru dimuat, mulai timer
     if (oldWidget.isLoading && !widget.isLoading && widget.products.isNotEmpty) {
       _startAutoPlay();
     }
@@ -50,43 +45,39 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
 
   @override
   void dispose() {
-    // PENTING: Hentikan timer dan controller saat widget dihancurkan untuk mencegah memory leak
     _timer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
 
-  // Fungsi untuk memulai timer 5 detik
   void _startAutoPlay() {
-    _timer?.cancel(); // Pastikan timer sebelumnya mati
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
       if (widget.products.isEmpty || !_pageController.hasClients) return;
 
       if (_currentPage < widget.products.length - 1) {
         _currentPage++;
       } else {
-        _currentPage = 0; // Kembali ke awal jika sudah di akhir
+        _currentPage = 0;
       }
 
       _pageController.animateToPage(
         _currentPage,
-        duration: const Duration(milliseconds: 800), // Durasi animasi geser
-        curve: Curves.easeInOutCubicEmphasized, // Efek animasi halus
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOutCubicEmphasized,
       );
     });
   }
 
-  // Fungsi untuk menghentikan timer sementara (saat user menyentuh layar)
   void _pauseAutoPlay() {
     _timer?.cancel();
   }
 
   @override
   Widget build(BuildContext context) {
-    // --- 1. Loading State (Shimmer 16:9) ---
     if (widget.isLoading) {
       return AspectRatio(
-        aspectRatio: 16 / 9, // Rasio 16:9
+        aspectRatio: 16 / 9,
         child: Shimmer.fromColors(
           baseColor: Colors.grey[300]!,
           highlightColor: Colors.grey[100]!,
@@ -101,7 +92,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
       );
     }
 
-    // --- 2. Empty State ---
     if (widget.products.isEmpty) {
       return const AspectRatio(
         aspectRatio: 16 / 9,
@@ -111,12 +101,9 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
       );
     }
 
-    // --- 3. Full Width Carousel Real ---
-    // Menggunakan AspectRatio untuk memastikan bentuk 16:9
     return AspectRatio(
       aspectRatio: 16 / 9, 
       child: GestureDetector(
-        // Logika: Hentikan timer saat ditekan, lanjutkan saat dilepas
         onPanDown: (_) => _pauseAutoPlay(),
         onPanEnd: (_) => _startAutoPlay(),
         onPanCancel: () => _startAutoPlay(),
@@ -130,7 +117,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
           },
           itemBuilder: (context, index) {
             final product = widget.products[index];
-            // Membangun item full screen
             return _buildFullScreenItem(product);
           },
         ),
@@ -138,28 +124,24 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
     );
   }
 
-  // Helper untuk membangun tampilan item 16:9
   Widget _buildFullScreenItem(ProductModel product) {
     final imageUrl = ProductHelper.getImageUrl(product.tipe);
     
     return GestureDetector(
       onTap: () => widget.onTap(product),
       child: Container(
-        // Margin horizontal agar tidak terlalu mepet layar (opsional, bisa dihapus jika ingin full 'bleeding')
         margin: const EdgeInsets.symmetric(horizontal: 20), 
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24), // Sudut membulat besar
+          borderRadius: BorderRadius.circular(24),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Layer 1: Gambar Background
               Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade300, child: const Icon(Icons.broken_image)),
               ),
               
-              // Layer 2: Gradient Hitam di Bawah agar teks terbaca
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -175,7 +157,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
                 ),
               ),
 
-              // Layer 3: Informasi Produk
               Positioned(
                 bottom: 24,
                 left: 24,
@@ -183,11 +164,10 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Badge Tipe
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: ProductHelper.primaryGreen,
+                        color: Colors.green.shade700,
                         borderRadius: BorderRadius.circular(8)
                       ),
                       child: Text(
@@ -196,7 +176,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // Nama Produk
                     Text(
                       product.namaProduk,
                       maxLines: 2,
@@ -210,11 +189,10 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Harga
                     Text(
                       "Rp ${_formatRupiah(product.premiDasar)}",
                       style: TextStyle(
-                        color: ProductHelper.lightGreen,
+                        color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -229,7 +207,6 @@ class _FullWidthProductCarouselState extends State<ProductCarousel> {
     );
   }
 
-  // Helper format rupiah (karena kita tidak pakai card item terpisah lagi di sini)
   String _formatRupiah(int price) {
     String priceStr = price.toString();
     String result = '';

@@ -15,10 +15,7 @@ class ProductCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definisi Warna Hijau Modern untuk harga
-    const Color modernGreen = Color(0xFF00C853);
-
-    // --- LOGIKA ICONS & WARNA BERDASARKAN TIPE ---
+    const Color modernGreen = Colors.green;
     IconData typeIcon;
     Color typeColor = Colors.green;
     String lowerType = product.tipe.toLowerCase();
@@ -26,14 +23,12 @@ class ProductCardItem extends StatelessWidget {
     if (lowerType.contains('jiwa')) {
       typeIcon = Icons.favorite_border_rounded; 
     } else if (lowerType.contains('kendaraan')) {
-      typeIcon = Icons.directions_car_filled_rounded; // Ikon Mobil
+      typeIcon = Icons.directions_car_filled_rounded;
     } else if (lowerType.contains('kesehatan')) {
-      typeIcon = Icons.local_hospital_rounded; // Ikon Rumah Sakit/Kesehatan
+      typeIcon = Icons.local_hospital_rounded;
     } else {
-      typeIcon = Icons.verified_user_rounded; // Ikon Perisai umum
+      typeIcon = Icons.verified_user_rounded;
     }
-    // --------------------------------------------
-
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -52,27 +47,21 @@ class ProductCardItem extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            // --- 1. ICON PRODUK (DINAMIS) ---
             Container(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                // Gunakan warna tipe tapi versi sangat muda untuk background
                 color: typeColor.withValues(alpha: 0.1), 
                 border: Border.all(color: typeColor.withValues(alpha: 0.3)),
               ),
-              // Gunakan icon dan warna yang sudah ditentukan di atas
               child: Icon(typeIcon, color: typeColor, size: 36),
             ),
             const SizedBox(width: 16),
-
-            // --- 2. INFORMASI PRODUK ---
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Nama Produk
                   Text(
                     product.namaProduk, 
                     style: const TextStyle(
@@ -85,7 +74,6 @@ class ProductCardItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   
-                  // Harga (premiDasar)
                   Text(
                     "Rp ${product.premiDasar}",
                     style: const TextStyle(
@@ -96,7 +84,6 @@ class ProductCardItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Badge Tipe (Warnanya disamakan dengan icon)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -112,7 +99,6 @@ class ProductCardItem extends StatelessWidget {
               ),
             ),
 
-            // --- 3. TOMBOL AKSI (Vertikal) ---
             Column(
               children: [
                 IconButton(

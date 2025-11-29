@@ -3,7 +3,6 @@ import 'dart:async';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
 import '../../../widgets/admin/product/product_search_bar.dart';
-import '../../../utils/product_helper.dart'; 
 import '../../../widgets/user/product/product_card.dart';
 import '../../../widgets/user/product/product_skeleton.dart';
 import 'product_detail_screen.dart';
@@ -108,24 +107,31 @@ class UserProductScreenState extends State<UserProductScreen> {
       ),
       body: Column(
         children: [
-          // SEARCH BAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Tampilkan info jika sedang memfilter berdasarkan kategori
                 if (_searchQuery.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0, left: 4),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text("Hasil pencarian: \"$_searchQuery\"", style: TextStyle(color: ProductHelper.primaryGreen, fontWeight: FontWeight.bold)),
+                        Text(
+                          "Hasil pencarian: \"$_searchQuery\"", 
+                          style: TextStyle(
+                            color: Colors.green, 
+                            fontWeight: FontWeight.bold
+                            )
+                          ),
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: () => performSearch(""), // Reset search
-                          child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                          onTap: () => performSearch(""),
+                          child: const Icon(
+                            Icons.close, 
+                            size: 16, 
+                            color: Colors.grey),
                         )
                       ],
                     ),
@@ -135,7 +141,6 @@ class UserProductScreenState extends State<UserProductScreen> {
             ),
           ),
 
-          // GRID PRODUCTS
           Expanded(
             child: _isLoading
                 ? const ProductSkeleton() 
@@ -143,7 +148,7 @@ class UserProductScreenState extends State<UserProductScreen> {
                     ? _buildEmptyState()
                     : RefreshIndicator(
                         onRefresh: () => _fetchProducts(query: _searchQuery),
-                        color: ProductHelper.primaryGreen,
+                        color: Colors.green,
                         child: GridView.builder(
                           padding: const EdgeInsets.all(20),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -154,7 +159,7 @@ class UserProductScreenState extends State<UserProductScreen> {
                           ),
                           itemCount: _products.length,
                           itemBuilder: (context, index) {
-                            return ProductCard(
+                            return ProductCardGrid(
                               product: _products[index],
                               onTap: () => _goToDetail(_products[index].id),
                             );
