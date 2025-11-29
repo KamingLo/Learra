@@ -153,24 +153,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // --- FUNGSI DATE PICKER ---
-  Future<void> _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-
-    if (picked != null) {
-      setState(() {
-        String formattedDate =
-            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-        _birthDateController.text = formattedDate;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -285,7 +267,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: _deepGreen.withOpacity(0.18),
+            color: _deepGreen.withValues(alpha:0.18),
             blurRadius: 26,
             offset: const Offset(0, 12),
           ),
@@ -297,9 +279,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             height: 72,
             width: 72,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha:0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha:0.3)),
             ),
             child: const Icon(Icons.person, color: Colors.white, size: 36),
           ),
@@ -326,7 +308,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   builder: (_, value, __) => Text(
                     value.text.isEmpty ? "Email belum tersedia" : value.text,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha:0.85),
                       fontSize: 14,
                     ),
                   ),
@@ -368,7 +350,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         border: Border.all(color: _backgroundColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha:0.03),
             blurRadius: 20,
             offset: const Offset(0, 12),
           ),

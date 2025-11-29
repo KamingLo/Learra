@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../services/api_service.dart';
+import 'dart:math';
 
 class BatalkanPembayaranScreen extends StatefulWidget {
   final Map<String, String> paymentData;
@@ -20,29 +21,9 @@ class BatalkanPembayaranScreen extends StatefulWidget {
 
 class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
   final ApiService _apiService = ApiService();
-  final TextEditingController _reasonController = TextEditingController();
   bool _isLoading = false;
 
-  @override
-  void dispose() {
-    _reasonController.dispose();
-    super.dispose();
-  }
-
   Future<void> _handleCancelPayment() async {
-    final reason = _reasonController.text.trim();
-
-    if (reason.isEmpty) {
-      _showSnackBar('Mohon isi alasan pembatalan', Colors.orange);
-      return;
-    }
-
-    if (reason.length < 10) {
-      _showSnackBar('Alasan minimal 10 karakter', Colors.orange);
-      return;
-    }
-
-    // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -146,26 +127,24 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
   }
 
   String _getBannerAsset() {
-    final produk = widget.paymentData['Produk'] ?? '';
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
 
-    if (produk.toLowerCase().contains('kesehatan')) {
-      return 'assets/PayKlaim/AsuransiKesehatan.png';
-    } else if (produk.toLowerCase().contains('jiwa')) {
-      return 'assets/PayKlaim/AsuransiJiwa.png';
-    } else if (produk.toLowerCase().contains('kendaraan') ||
-        produk.toLowerCase().contains('mobil')) {
-      return 'assets/PayKlaim/AsuransiMobil.png';
-    }
+    final random = Random();
+    final int randomIndex = random.nextInt(availableAssets.length);
 
-    return 'assets/PayKlaim/AsuransiMobil.png';
+    return availableAssets[randomIndex];
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => !_isLoading,
+    return PopScope(
+      canPop: !_isLoading,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
@@ -190,7 +169,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner Image - FIXED
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
@@ -219,11 +197,10 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Payment Details Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FA),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -268,55 +245,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Reason Input
-                  const Text(
-                    'Alasan Membatalkan Pembayaran',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _reasonController,
-                    enabled: !_isLoading,
-                    maxLines: 4,
-                    maxLength: 200,
-                    decoration: InputDecoration(
-                      hintText: 'Contoh: Salah pilih metode pembayaran...',
-                      hintStyle: const TextStyle(
-                        color: Colors.black38,
-                        fontSize: 14,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.red,
-                          width: 2,
-                        ),
-                      ),
-                      counterStyle: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Warning Card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -352,7 +280,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
               ),
             ),
 
-            // Bottom Button
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
@@ -362,7 +289,7 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),

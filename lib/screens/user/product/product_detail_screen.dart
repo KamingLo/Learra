@@ -159,10 +159,10 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha:0.9),
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8),
+              BoxShadow(color: Colors.black.withValues(alpha:0.1), blurRadius: 8),
             ],
           ),
           child: IconButton(
@@ -174,7 +174,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
-                color: ProductHelper.primaryGreen,
+                color: Colors.green,
               ),
             )
           : _errorMessage != null
@@ -232,13 +232,13 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: ProductHelper.lightGreen,
+                      color: Colors.green.shade600,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       _product!.tipe.toUpperCase(),
                       style: const TextStyle(
-                        color: ProductHelper.darkGreen,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -257,10 +257,10 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     "Rp ${_product!.premiDasar}",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: ProductHelper.primaryGreen,
+                      color: Colors.green.shade800,
                     ),
                   ),
 
@@ -319,7 +319,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -329,7 +329,7 @@ class _UserProductDetailScreenState extends State<UserProductDetailScreen> {
         onPressed: isUser ? _buyNow : _navigateToLogin,
         style: ElevatedButton.styleFrom(
           backgroundColor: isUser
-              ? ProductHelper.primaryGreen
+              ? Colors.green.shade600
               : Colors.grey.shade800,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),

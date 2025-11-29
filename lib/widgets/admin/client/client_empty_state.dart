@@ -20,7 +20,7 @@ class ClientEmptyState extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
-                  color: _kPrimary.withOpacity(0.12),
+                  color: _kPrimary.withValues(alpha:0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -42,7 +42,7 @@ class ClientEmptyState extends StatelessWidget {
               Text(
                 "Gunakan form registrasi atau impor data untuk menambahkan pengguna.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: _kTextSecondary.withOpacity(0.7)),
+                style: TextStyle(color: _kTextSecondary.withValues(alpha:0.7)),
               ),
             ],
           ),

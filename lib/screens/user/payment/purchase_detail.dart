@@ -3,7 +3,7 @@ import 'package:dotted_border/dotted_border.dart';
 
 class DetailPembayaranScreen extends StatelessWidget {
   final Map<String, String> paymentData;
-  
+
   const DetailPembayaranScreen({super.key, required this.paymentData});
 
   @override
@@ -73,7 +73,10 @@ class DetailPembayaranScreen extends StatelessWidget {
                         children: [
                           _infoRow('Nama Polis:', paymentData['name'] ?? '-'),
                           const SizedBox(height: 12),
-                          _infoRow('Nomor Polis:', paymentData['polis_id'] ?? '-'),
+                          _infoRow(
+                            'Nomor Polis:',
+                            paymentData['polis_id'] ?? '-',
+                          ),
                           const SizedBox(height: 12),
                           _infoRow('Jumlah:', paymentData['amount'] ?? '-'),
                           const SizedBox(height: 12),

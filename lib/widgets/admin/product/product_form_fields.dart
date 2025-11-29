@@ -11,9 +11,8 @@ class ProductFormFields extends StatelessWidget {
   final bool isLoading;
   final bool isEdit;
 
-  // Palet Warna
   static const Color kPrimaryGreen = Color(0xFF0FA958);
-  static const Color kBorderColor = Color(0xFFE0E0E0); // Abu-abu muda untuk garis tepi halus
+  static const Color kBorderColor = Color(0xFFE0E0E0);
   static const Color kTextLabel = Color(0xFF6B7280); 
 
   const ProductFormFields({
@@ -28,7 +27,6 @@ class ProductFormFields extends StatelessWidget {
     required this.isEdit,
   });
 
-  // Helper Decoration: White Style
   InputDecoration _whiteDecoration({
     required String label,
     IconData? icon,
@@ -40,32 +38,29 @@ class ProductFormFields extends StatelessWidget {
       hintText: hintText,
       prefixText: prefixText,
       
-      // Styling Text
       labelStyle: const TextStyle(color: kTextLabel, fontSize: 14),
       floatingLabelStyle: const TextStyle(color: kPrimaryGreen, fontWeight: FontWeight.bold),
       prefixStyle: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
       
-      // Icon
       prefixIcon: icon != null 
           ? Icon(icon, color: kTextLabel, size: 22) 
           : null,
-      prefixIconColor: MaterialStateColor.resolveWith((states) => 
-          states.contains(MaterialState.focused) ? kPrimaryGreen : kTextLabel
+      prefixIconColor: WidgetStateColor.resolveWith((states) => 
+          states.contains(WidgetState.focused) ? kPrimaryGreen : kTextLabel
       ),
 
       filled: true,
-      fillColor: Colors.white, // UBAH KE PUTIH
+      fillColor: Colors.white,
 
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
 
-      // Border: Menggunakan border tipis agar terlihat di background putih
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kBorderColor, width: 1), // Garis halus
+        borderSide: const BorderSide(color: kBorderColor, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: kPrimaryGreen, width: 1.5), // Hijau saat aktif
+        borderSide: const BorderSide(color: kPrimaryGreen, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -84,14 +79,12 @@ class ProductFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         
-        // --- SECTION 1: IDENTITAS PRODUK ---
         const Text(
           "Detail Produk",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
         const SizedBox(height: 12),
 
-        // 1. Nama Produk
         TextFormField(
           controller: nameController,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -106,9 +99,8 @@ class ProductFormFields extends StatelessWidget {
         
         const SizedBox(height: 16),
 
-        // 2. Tipe Asuransi
         DropdownButtonFormField<String>(
-          value: selectedType,
+          initialValue: selectedType,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: kTextLabel),
           style: const TextStyle(color: Colors.black87, fontSize: 15),
           decoration: _whiteDecoration(
@@ -143,14 +135,12 @@ class ProductFormFields extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // --- SECTION 2: HARGA & DESKRIPSI ---
         const Text(
           "Informasi Penjualan",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
         const SizedBox(height: 12),
 
-        // 3. Harga
         TextFormField(
           controller: priceController,
           keyboardType: TextInputType.number,
@@ -167,7 +157,6 @@ class ProductFormFields extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // 4. Deskripsi
         TextFormField(
           controller: descController,
           maxLines: 4,
@@ -183,7 +172,6 @@ class ProductFormFields extends StatelessWidget {
 
         const SizedBox(height: 40),
 
-        // --- TOMBOL SUBMIT ---
         SizedBox(
           width: double.infinity,
           height: 56,

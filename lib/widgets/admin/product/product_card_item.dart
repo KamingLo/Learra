@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/product_model.dart';
+import '../../../screens/admin/product/preview_product_screen.dart'; 
 
 class ProductCardItem extends StatelessWidget {
   final ProductModel product;
@@ -15,25 +16,20 @@ class ProductCardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definisi Warna Hijau Modern untuk harga
-    const Color modernGreen = Color(0xFF00C853);
-
-    // --- LOGIKA ICONS & WARNA BERDASARKAN TIPE ---
+    Color modernGreen = Colors.green.shade800;
     IconData typeIcon;
-    Color typeColor = Colors.green;
+    Color typeColor = Colors.green.shade700;
     String lowerType = product.tipe.toLowerCase();
 
     if (lowerType.contains('jiwa')) {
-      typeIcon = Icons.favorite_border_rounded; 
+      typeIcon = Icons.favorite_rounded; 
     } else if (lowerType.contains('kendaraan')) {
-      typeIcon = Icons.directions_car_filled_rounded; // Ikon Mobil
+      typeIcon = Icons.directions_car_filled_rounded;
     } else if (lowerType.contains('kesehatan')) {
-      typeIcon = Icons.local_hospital_rounded; // Ikon Rumah Sakit/Kesehatan
+      typeIcon = Icons.local_hospital_rounded;
     } else {
-      typeIcon = Icons.verified_user_rounded; // Ikon Perisai umum
+      typeIcon = Icons.verified_user_rounded;
     }
-    // --------------------------------------------
-
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -48,88 +44,96 @@ class ProductCardItem extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            // --- 1. ICON PRODUK (DINAMIS) ---
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                // Gunakan warna tipe tapi versi sangat muda untuk background
-                color: typeColor.withValues(alpha: 0.1), 
-                border: Border.all(color: typeColor.withValues(alpha: 0.3)),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PreviewProductScreen(product: product),
               ),
-              // Gunakan icon dan warna yang sudah ditentukan di atas
-              child: Icon(typeIcon, color: typeColor, size: 36),
-            ),
-            const SizedBox(width: 16),
-
-            // --- 2. INFORMASI PRODUK ---
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nama Produk
-                  Text(
-                    product.namaProduk, 
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  // Harga (premiDasar)
-                  Text(
-                    "Rp ${product.premiDasar}",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: modernGreen, 
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Badge Tipe (Warnanya disamakan dengan icon)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: typeColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8)
-                    ),
-                    child: Text(
-                      product.tipe.toUpperCase(),
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: typeColor),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // --- 3. TOMBOL AKSI (Vertikal) ---
-            Column(
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                IconButton(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  color: Colors.grey.shade600,
-                  tooltip: 'Edit',
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: typeColor.withValues(alpha: 0.1), 
+                    border: Border.all(color: typeColor.withValues(alpha: 0.3)),
+                  ),
+                  child: Icon(typeIcon, color: typeColor, size: 36),
                 ),
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  color: Colors.red.shade400,
-                  tooltip: 'Hapus',
+                const SizedBox(width: 16),
+                
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.namaProduk, 
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      
+                      Text(
+                        "Rp ${product.premiDasar}",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: modernGreen, 
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: typeColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8)
+                        ),
+                        child: Text(
+                          product.tipe.toUpperCase(),
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: typeColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Action Buttons (Edit/Delete)
+                Column(
+                  children: [
+                    IconButton(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                      color: Colors.grey.shade600,
+                      tooltip: 'Edit',
+                    ),
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      color: Colors.red.shade400,
+                      tooltip: 'Hapus',
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

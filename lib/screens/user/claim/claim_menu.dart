@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
-import '../../../models/product_model.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import '../../../services/api_service.dart';
 import 'claim_detail.dart';
 import 'claim_cancel.dart';
 import 'succes_detail.dart';
@@ -15,68 +14,253 @@ class KlaimSayaScreen extends StatefulWidget {
 }
 
 class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
-  List<dynamic> klaimList = [];
-  bool loading = true;
+  late DateFormat dateFmt;
+  final ApiService api = ApiService();
+  final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
+  final searchCtrl = TextEditingController();
+
+  List<dynamic> _allKlaim = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+  bool _isInitialized = false;
+
+  String? _selectedStatus;
 
   @override
   void initState() {
     super.initState();
-    fetchKlaimUser();
+    _initializeDateFormatting();
+    searchCtrl.addListener(() => setState(() {}));
   }
 
-  Future<void> fetchKlaimUser() async {
-    try {
-      // TOKEN sudah otomatis diinject API service lu, jadi tidak perlu header Authorization
-      final res = await http.get(
-        Uri.parse("https://yourdomain.com/user/klaim"),
-      );
+  Future<void> _initializeDateFormatting() async {
+    await initializeDateFormatting('id_ID', null);
+    setState(() {
+      dateFmt = DateFormat('dd MMMM yyyy', 'id_ID');
+      _isInitialized = true;
+    });
+    _loadData();
+  }
 
-      if (res.statusCode == 200) {
-        setState(() {
-          klaimList = jsonDecode(res.body);
-          loading = false;
-        });
+  dynamic _getNestedValue(Map<String, dynamic> map, List<String> keys) {
+    dynamic value = map;
+    for (String key in keys) {
+      if (value is Map) {
+        value = value[key];
       } else {
-        print(res.body);
-        setState(() => loading = false);
+        return null;
       }
-    } catch (e) {
-      print("ERR: $e");
-      setState(() => loading = false);
     }
+    return value;
   }
 
-  // Format tanggal
-  String formatTanggal(String tgl) {
-    try {
-      final date = DateTime.parse(tgl);
-      return "${date.day}-${date.month}-${date.year}";
-    } catch (e) {
-      return tgl;
-    }
-  }
-
-  // Format harga
-  String formatRupiah(num value) {
-    return "Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => "${m[1]}.")}";
-  }
-
-  // Mapping status dari backend
-  String mapStatus(String status) {
-    switch (status) {
-      case "menunggu":
-        return "Menunggu";
-      case "ditolak":
-        return "Ditolak";
-      case "disetujui":
-        return "Diterima";
+  int _getStatusPriority(String status) {
+    switch (status.toLowerCase()) {
+      case 'menunggu':
+        return 1;
+      case 'diterima':
+        return 2;
+      case 'ditolak':
+        return 3;
       default:
-        return status;
+        return 4;
+    }
+  }
+
+  Future<void> _loadData() async {
+    if (!_isInitialized || !mounted) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final res = await api.get('/user/klaim');
+
+      List<dynamic> klaimList = [];
+      if (res is Map && res.containsKey('klaim')) {
+        klaimList = res['klaim'] as List;
+      } else if (res is List) {
+        klaimList = res;
+      }
+
+      klaimList.sort((a, b) {
+        final statusA = (a['status']?.toString() ?? 'menunggu').toLowerCase();
+        final statusB = (b['status']?.toString() ?? 'menunggu').toLowerCase();
+
+        final priorityA = _getStatusPriority(statusA);
+        final priorityB = _getStatusPriority(statusB);
+
+        final priorityComparison = priorityA.compareTo(priorityB);
+
+        if (priorityComparison == 0) {
+          final dateA =
+              DateTime.tryParse(a['tanggalKlaim'] ?? a['createdAt'] ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final dateB =
+              DateTime.tryParse(b['tanggalKlaim'] ?? b['createdAt'] ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          return dateB.compareTo(dateA);
+        }
+
+        return priorityComparison;
+      });
+
+      setState(() {
+        _allKlaim = klaimList;
+        _isLoading = false;
+        _hasError = false;
+      });
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Filter Status Klaim'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _filterOption('Semua', null),
+            _filterOption('Menunggu', 'menunggu'),
+            _filterOption('Berhasil', 'diterima'),
+            _filterOption('Ditolak', 'ditolak'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _filterOption(String label, String? value) {
+    final isSelected = _selectedStatus == value;
+    return ListTile(
+      title: Text(label),
+      trailing: isSelected
+          ? const Icon(Icons.check, color: Colors.green)
+          : null,
+      onTap: () {
+        setState(() => _selectedStatus = value);
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  List<dynamic> _getFilteredKlaim() {
+    var filtered = _allKlaim;
+
+    if (_selectedStatus != null) {
+      filtered = filtered.where((k) {
+        final status = (k['status']?.toString() ?? 'menunggu').toLowerCase();
+        return status == _selectedStatus!.toLowerCase();
+      }).toList();
+    }
+
+    final query = searchCtrl.text.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      filtered = filtered.where((k) {
+        final policyNumber =
+            _getNestedValue(k, [
+              'polisId',
+              'policyNumber',
+            ])?.toString().toLowerCase() ??
+            _getNestedValue(k, [
+              'polisId',
+              'nomorPolis',
+            ])?.toString().toLowerCase() ??
+            _getNestedValue(k, ['polisId', '_id'])?.toString().toLowerCase() ??
+            '';
+
+        final productName =
+            _getNestedValue(k, [
+              'polisId',
+              'productId',
+              'name',
+            ])?.toString().toLowerCase() ??
+            _getNestedValue(k, [
+              'polisId',
+              'productId',
+              'namaProduk',
+            ])?.toString().toLowerCase() ??
+            'produk asuransi';
+
+        final deskripsi = k['deskripsi']?.toString().toLowerCase() ?? '';
+
+        final rawDate = k['tanggalKlaim'] ?? k['createdAt'] ?? '';
+        String dateStr = '';
+        String isoDate = '';
+        try {
+          final date = DateTime.parse(rawDate.toString());
+          dateStr = dateFmt.format(date).toLowerCase();
+          isoDate = DateFormat('yyyy-MM-dd').format(date).toLowerCase();
+        } catch (_) {}
+
+        return policyNumber.contains(query) ||
+            productName.contains(query) ||
+            deskripsi.contains(query) ||
+            dateStr.contains(query) ||
+            isoDate.contains(query);
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  @override
+  void dispose() {
+    searchCtrl.dispose();
+    super.dispose();
+  }
+
+  String _mapStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'menunggu':
+        return 'MENUNGGU';
+      case 'diterima':
+        return 'BERHASIL';
+      case 'ditolak':
+        return 'DITOLAK';
+      default:
+        return status.toUpperCase();
+    }
+  }
+
+  Color _statusBg(String status) {
+    switch (status.toLowerCase()) {
+      case 'menunggu':
+        return Colors.orange[100]!;
+      case 'diterima':
+        return Colors.green[100]!;
+      case 'ditolak':
+        return Colors.red[100]!;
+      default:
+        return Colors.grey[300]!;
+    }
+  }
+
+  Color _statusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'menunggu':
+        return Colors.orange[800]!;
+      case 'diterima':
+        return Colors.green[800]!;
+      case 'ditolak':
+        return Colors.red[800]!;
+      default:
+        return Colors.grey[800]!;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final filteredKlaim = _getFilteredKlaim();
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -91,144 +275,144 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Column(
-                  children: [
-                    // Search
-                    Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Asuransi K..l',
-                                  hintStyle: TextStyle(color: Colors.grey[600]),
-                                  prefixIcon: Icon(
-                                    Icons.search,
-                                    color: Colors.grey[600],
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.tune),
-                              onPressed: () {},
-                            ),
-                          ),
-                        ],
-                      ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
                     ),
-
-                    // List Klaim
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-                        itemCount: klaimList.length,
-                        itemBuilder: (context, index) {
-                          final item = klaimList[index];
-                          final polis = item["polisId"] ?? {};
-                          final produk = polis["produkId"] ?? {};
-
-                          return ClaimCard(
-                            name:
-                                produk["namaProduk"] ?? "Nama Produk Tidak Ada",
-                            polisId: polis["_id"] ?? "-",
-                            amount: formatRupiah(item["jumlahKlaim"] ?? 0),
-                            date: formatTanggal(item["tanggalKlaim"] ?? ""),
-                            status: mapStatus(item["status"] ?? "menunggu"),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Button Klaim Baru
-                Positioned(
-                  right: 16,
-                  bottom: 16,
-                  child: FloatingActionButton.extended(
-                    onPressed: () {
-                      final newProduct = ProductModel(
-                        id: 'temp_claim',
-                        namaProduk: 'Klaim Baru',
-                        tipe: 'Kesehatan',
-                        premiDasar: 0,
-                        description: 'Klaim baru',
-                      );
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ClaimDetail(product: newProduct),
+                    child: TextField(
+                      controller: searchCtrl,
+                      decoration: InputDecoration(
+                        hintText:
+                            'Cari polis, produk, tanggal, atau deskripsi...',
+                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                      );
-                    },
-                    backgroundColor: Colors.green,
-                    icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'Klaim Baru',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _selectedStatus != null
+                        ? Colors.green[50]
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.tune,
+                      color: _selectedStatus != null
+                          ? Colors.green
+                          : Colors.grey[700],
+                    ),
+                    onPressed: _showFilterDialog,
+                  ),
+                ),
               ],
             ),
+          ),
+
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadData,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _hasError
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Gagal memuat data'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadData,
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : filteredKlaim.isEmpty
+                  ? Center(
+                      child: Text(
+                        searchCtrl.text.isEmpty
+                            ? 'Belum ada klaim'
+                            : 'Tidak ditemukan',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredKlaim.length,
+                      itemBuilder: (context, i) =>
+                          _buildKlaimCard(filteredKlaim[i]),
+                    ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ClaimDetail()),
+          );
+          if (result == true) _loadData();
+        },
+        label: const Text(
+          'Ajukan Klaim',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        icon: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.green,
+      ),
     );
   }
-}
 
-class ClaimCard extends StatelessWidget {
-  final String name;
-  final String polisId;
-  final String amount;
-  final String date;
-  final String status;
+  Widget _buildKlaimCard(Map<String, dynamic> klaim) {
+    final jumlah = (klaim['jumlahKlaim'] as num?)?.toDouble() ?? 0.0;
+    final rawStatus = (klaim['status']?.toString() ?? 'menunggu').toLowerCase();
 
-  const ClaimCard({
-    super.key,
-    required this.name,
-    required this.polisId,
-    required this.amount,
-    required this.date,
-    required this.status,
-  });
+    String rawDateStr = klaim['tanggalKlaim'] ?? klaim['createdAt'] ?? '';
+    DateTime tanggal = DateTime.now();
+    try {
+      tanggal = DateTime.parse(rawDateStr);
+    } catch (_) {}
 
-  @override
-  Widget build(BuildContext context) {
+    final policyNumber =
+        _getNestedValue(klaim, ['polisId', 'policyNumber'])?.toString() ??
+        _getNestedValue(klaim, ['polisId', 'nomorPolis'])?.toString() ??
+        _getNestedValue(klaim, ['polisId', '_id'])?.toString() ??
+        'ID Tidak tersedia';
+
+    final productName =
+        _getNestedValue(klaim, ['polisId', 'productId', 'name'])?.toString() ??
+        _getNestedValue(klaim, [
+          'polisId',
+          'productId',
+          'namaProduk',
+        ])?.toString() ??
+        'Produk Asuransi';
+
+    final deskripsi = klaim['deskripsi']?.toString() ?? '-';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -247,7 +431,6 @@ class ClaimCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,21 +440,24 @@ class ClaimCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name,
+                        productName,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        "Polis ID:",
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      const Text(
+                        'Polis ID:',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       Text(
-                        polisId,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+                        policyNumber,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
                       ),
                     ],
                   ),
@@ -280,110 +466,87 @@ class ClaimCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      amount,
+                      currency.format(jumlah),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Tanggal Klaim",
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    Text(
-                      date,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+                      dateFmt.format(tanggal),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
               ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Status + Button
-            _buildStatus(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatus(BuildContext context) {
-    // terima
-    if (status == "Diterima") {
-      return Row(
-        children: [_badge("Diterima"), const Spacer(), _detailButton(context)],
-      );
-    }
-
-    // menunggu
-    if (status == "Menunggu") {
-      return Row(
-        children: [
-          _badge("Menunggu"),
-          const Spacer(),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PengajuanKlaimScreen(),
-                ),
-              );
-            },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.red),
-              foregroundColor: Colors.red,
+            const SizedBox(height: 12),
+            Text(
+              deskripsi,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
-            child: Row(
-              children: const [
-                Text("Batal"),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward, size: 16),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _statusBg(rawStatus),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _mapStatus(rawStatus),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _statusText(rawStatus),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () async {
+                    if (rawStatus == 'menunggu') {
+                      final refreshed = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ClaimCancelScreen(klaimData: klaim),
+                        ),
+                      );
+                      if (refreshed == true) _loadData();
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DetailKlaimScreen(klaimData: klaim),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Row(
+                    children: [
+                      Text(
+                        'Detail',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_forward, size: 16),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      );
-    }
-
-    // ditolak atau batal
-    return Row(
-      children: [_badge(status), const Spacer(), _detailButton(context)],
-    );
-  }
-
-  Widget _badge(String txt) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        txt,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  Widget _detailButton(BuildContext context) {
-    return TextButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const DetailKlaimScreen()),
-        );
-      },
-      child: Row(
-        children: const [
-          Text("Detail"),
-          SizedBox(width: 4),
-          Icon(Icons.arrow_forward, size: 16),
-        ],
+          ],
+        ),
       ),
     );
   }

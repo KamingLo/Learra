@@ -38,6 +38,7 @@ class PolicyCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -45,7 +46,6 @@ class PolicyCard extends StatelessWidget {
                         color: Colors.green.shade50,
                         borderRadius: BorderRadius.circular(12),
                       ),
-
                       child: Icon(
                         policy.icon,
                         color: Colors.green.shade700,
@@ -53,68 +53,47 @@ class PolicyCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
+
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            policy.productName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  policy.productName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.2,
+                                    letterSpacing: -0.3,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildStatusBadge(),
+                            ],
                           ),
-                          const SizedBox(height: 2),
+
+                          const SizedBox(height: 6),
 
                           Text(
-                            "${policy.summaryTitle} • ${policy.summarySubtitle}",
+                            policy.category.toUpperCase(),
                             style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.grey.shade400,
+                              letterSpacing: 0.5,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    ),
 
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: policy.statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: policy.statusColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: policy.statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            policy.status,
-                            style: TextStyle(
-                              color: policy.statusColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const SizedBox(height: 6),
+
+                          _buildDynamicSubtitle(policy),
                         ],
                       ),
                     ),
@@ -238,6 +217,70 @@ class PolicyCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicSubtitle(PolicyModel p) {
+    String textToDisplay = "";
+
+    if (p.category.toLowerCase() == 'kesehatan') {
+      List<String> conditions = [];
+      if (p.hasDiabetes == true) conditions.add('Diabetes');
+      if (p.isSmoker == true) conditions.add('Perokok');
+      if (p.hasHypertension == true) conditions.add('Hipertensi');
+
+      if (conditions.isNotEmpty) {
+        textToDisplay = conditions.join(' | ');
+      } else {
+        textToDisplay = "Sehat";
+      }
+    } else if (p.category.toLowerCase() == 'jiwa') {
+      textToDisplay = p.summarySubtitle;
+    } else {
+      textToDisplay = "${p.summaryTitle} • ${p.summarySubtitle}";
+    }
+
+    return Text(
+      textToDisplay,
+      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: policy.statusColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: policy.statusColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: policy.statusColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            policy.status,
+            style: TextStyle(
+              color: policy.statusColor,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

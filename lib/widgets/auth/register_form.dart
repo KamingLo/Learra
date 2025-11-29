@@ -35,10 +35,20 @@ class _RegisterFormState extends State<RegisterForm> {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+  static const Color _successColor = Color(0xFF1ED760);
 
   bool _containsAll(String source, List<String> tokens) {
     final lower = source.toLowerCase();
     return tokens.every(lower.contains);
+  }
+
+  void _showSuccessMessage(String message) {
+    setState(() => _errorMessage = message);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && _errorMessage == message) {
+        setState(() => _errorMessage = null);
+      }
+    });
   }
 
   Widget _buildPrimaryButton({
@@ -151,7 +161,7 @@ class _RegisterFormState extends State<RegisterForm> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha:0.08),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -245,12 +255,57 @@ class _RegisterFormState extends State<RegisterForm> {
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       builder: (context, child) {
-        final colorScheme = Theme.of(context).colorScheme.copyWith(
-              primary: const Color(0xFF1ABC75),
-              onSurface: Colors.black87,
-            );
         return Theme(
-          data: Theme.of(context).copyWith(colorScheme: colorScheme),
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: const Color(0xFF1ABC75),
+                  onPrimary: Colors.white,
+                  onSurface: Colors.black87,
+                  surface: Colors.white,
+                ),
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.white,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF1ABC75),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            datePickerTheme: DatePickerThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              headerBackgroundColor: const Color(0xFF1ABC75),
+              headerForegroundColor: Colors.white,
+              headerHeadlineStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+              headerHelpStyle: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+              weekdayStyle: const TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+              dayStyle: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+              ),
+            ),
+          ),
           child: child ?? const SizedBox.shrink(),
         );
       },
@@ -291,9 +346,9 @@ class _RegisterFormState extends State<RegisterForm> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi berhasil, silakan login.')),
-      );
+      _showSuccessMessage('Registrasi berhasil, silakan login.');
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
       widget.onSwitchToLogin?.call();
 
     } catch (e) {
@@ -329,7 +384,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha:0.08),
                     blurRadius: 30,
                     offset: const Offset(0, 20),
                     spreadRadius: -10,
@@ -354,12 +409,19 @@ class _RegisterFormState extends State<RegisterForm> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: _errorMessage == 'Registrasi berhasil, silakan login.'
+                            ? _successColor.withValues(alpha:0.1)
+                            : Colors.red.withValues(alpha:0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(
+                          color: _errorMessage == 'Registrasi berhasil, silakan login.'
+                              ? _successColor
+                              : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -429,7 +491,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     onTap: _selectBirthDate,
                     decoration: _inputDecoration(
                       'Tanggal Lahir',
-                      suffixIcon: const Icon(Icons.calendar_today_outlined),
+                      suffixIcon: const Icon(Icons.calendar_month, color: Color(0xFF6B6B6B)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -444,7 +506,7 @@ class _RegisterFormState extends State<RegisterForm> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _rentangGajiController.text.isEmpty
+                    initialValue: _rentangGajiController.text.isEmpty
                         ? null
                         : _rentangGajiController.text,
                     items: const [

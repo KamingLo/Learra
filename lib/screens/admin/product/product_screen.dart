@@ -3,8 +3,6 @@ import 'dart:async';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
 import 'product_form_screen.dart';
-
-// Import Widgets
 import '../../../widgets/admin/product/product_card_item.dart';
 import '../../../widgets/admin/product/product_search_bar.dart';
 
@@ -17,12 +15,13 @@ class AdminProductScreen extends StatefulWidget {
 
 class _AdminProductScreenState extends State<AdminProductScreen> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchCtrl = TextEditingController();
+
   List<ProductModel> _products = [];
   bool _isLoading = true;
   String _searchQuery = "";
   Timer? _debounce;
 
-  // Definisi Warna Modern
   final Color _backgroundColor = const Color(0xFFF4F7F6);
   final Color _accentGreen = const Color(0xFF00C853);
 
@@ -32,17 +31,14 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     _fetchProducts();
   }
 
-  // --- PERBAIKAN 1: TAMBAHKAN CEK MOUNTED DI SINI ---
   Future<void> _fetchProducts({String query = ""}) async {
-    // Cek mounted sebelum set loading
     if (mounted) setState(() => _isLoading = true);
-    
+
     try {
       final endpoint = query.isEmpty ? '/produk' : '/produk?search=$query';
       final response = await _apiService.get(endpoint);
 
-      // --- PENTING: Cek apakah widget masih ada di layar sebelum setState ---
-      if (!mounted) return; 
+      if (!mounted) return;
 
       List<dynamic> data = (response is Map && response.containsKey('data')) 
           ? response['data'] 
@@ -53,27 +49,26 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      // --- PENTING: Cek mounted di sini juga ---
       if (!mounted) return;
-      
       setState(() => _isLoading = false);
-      // Opsional: debugPrint("Error: $e");
     }
   }
 
-  // --- PERBAIKAN 2: TAMBAHKAN CEK MOUNTED DI TIMER ---
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
-      // Cek mounted sebelum eksekusi apapun di dalam timer
       if (!mounted) return;
-      
       setState(() => _searchQuery = query);
       _fetchProducts(query: query);
     });
   }
 
-  // --- PERBAIKAN 3: TAMBAHKAN CEK MOUNTED SETELAH DIALOG ---
+  void _clearSearch() {
+    _searchCtrl.clear();
+    _fetchProducts(query: "");
+    setState(() => _searchQuery = "");
+  }
+
   Future<void> _deleteProduct(String id) async {
     bool confirm = await showDialog(
       context: context,
@@ -103,8 +98,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     if (confirm) {
       try {
         await _apiService.delete('/produk/$id');
-        
-        // --- CEK MOUNTED SEBELUM UPDATE UI ---
         if (!mounted) return;
 
         _fetchProducts(query: _searchQuery);
@@ -125,14 +118,12 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     }
   }
 
-  // --- NAVIGASI KE FORM ---
   void _openForm({ProductModel? product}) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ProductFormScreen(product: product)),
     );
     
-    // Cek mounted setelah kembali dari halaman lain
     if (!mounted) return;
 
     if (result == true) {
@@ -143,6 +134,7 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -155,27 +147,31 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
           "Manajemen Produk", 
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 22)
         ),
-        backgroundColor: _backgroundColor, 
+        backgroundColor: Colors.white, 
         elevation: 0,
         centerTitle: false,
       ),
       
       body: Column(
         children: [
-          // --- 1. HEADER AREA ---
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(0, 0, 20, 10),
             child: Row(
               children: [
                 Expanded(
-                  child: ProductSearchBar(onChanged: _onSearchChanged),
+                  child: ProductSearchBar(
+                    controller: _searchCtrl,
+                    onChanged: _onSearchChanged,
+                    onClear: _clearSearch,
+                  ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Material(
-                  color: _accentGreen,
-                  borderRadius: BorderRadius.circular(30),
+                  color: Colors.green.shade600,
+                  borderRadius: BorderRadius.circular(12),
                   elevation: 4,
-                  shadowColor: _accentGreen.withValues(alpha: 0.4),
+                  shadowColor: Colors.green.shade800.withValues(alpha:0.3),
                   child: InkWell(
                     onTap: () => _openForm(),
                     borderRadius: BorderRadius.circular(30),
@@ -183,13 +179,17 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
                       height: 50,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       alignment: Alignment.center,
-                      child: const Row(
-                        children: [
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
                           Icon(Icons.add_rounded, color: Colors.white),
                           SizedBox(width: 8),
                           Text(
-                            "Tambah", 
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+                            "Tambah",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -200,7 +200,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
             ),
           ),
 
-          // --- 2. LIST DATA ---
           Expanded(
             child: _isLoading
                 ? Center(child: CircularProgressIndicator(color: _accentGreen))
@@ -232,10 +231,10 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
           Container(
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: Colors.green.shade100,
               shape: BoxShape.circle
             ),
-            child: Icon(Icons.inventory_2_outlined, size: 80, color: _accentGreen.withValues(alpha: 0.7)),
+            child: Icon(Icons.inventory_2_outlined, size: 80, color: Colors.green.shade700),
           ),
           const SizedBox(height: 24),
           Text(

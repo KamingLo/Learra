@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../config/menu_config.dart';
 import '../screens/auth/auth_screen.dart';
 import '../../screens/user/home/home_screen.dart'; 
-// PENTING: Import Product Screen untuk akses tipe State-nya
 import '../../screens/user/product/product_screen.dart'; 
 
 class MainNavbar extends StatefulWidget {
@@ -19,7 +18,6 @@ class _MainNavbarState extends State<MainNavbar> {
   int _currentIndex = 0;
   late List<NavItem> _menuItems;
 
-  // 1. Buat GLOBAL KEY untuk mengontrol Product Screen
   final GlobalKey<UserProductScreenState> _productScreenKey = GlobalKey<UserProductScreenState>();
 
   @override
@@ -32,8 +30,6 @@ class _MainNavbarState extends State<MainNavbar> {
     final List<NavItem> originalMenus = MenuConfig.getMenus(widget.role);
 
     _menuItems = originalMenus.map((item) {
-      
-      // A. Jika Screen adalah HOME SCREEN
       if (item.screen is UserHomeScreen) {
         return NavItem(
           icon: item.icon,
@@ -43,18 +39,11 @@ class _MainNavbarState extends State<MainNavbar> {
             onSwitchTab: (int targetIndex) {
               _onItemTapped(targetIndex);
             },
-            // Callback: Ketika Kategori di Home diklik
             onCategoryTap: (String category) {
-              // 1. Pindah tab ke Product (Asumsi index 1 adalah Product)
-              // Anda mungkin perlu menyesuaikan index ini jika urutan menu berubah
-              // Cari index menu yang screen-nya tipe UserProductScreen
               final productIndex = _menuItems.indexWhere((m) => m.screen is UserProductScreen);
               
               if (productIndex != -1) {
-                _onItemTapped(productIndex); // Pindah Tab UI
-                
-                // 2. Perintahkan Product Screen untuk search
-                // Gunakan delay sedikit agar UI render tab-nya dulu
+                _onItemTapped(productIndex);
                 Future.delayed(const Duration(milliseconds: 100), () {
                   _productScreenKey.currentState?.performSearch(category);
                 });
@@ -63,19 +52,15 @@ class _MainNavbarState extends State<MainNavbar> {
           ),
         );
       }
-      
-      // B. Jika Screen adalah PRODUCT SCREEN
-      // Kita harus menyuntikkan (inject) key yang sudah kita buat
+
       if (item.screen is UserProductScreen) {
         return NavItem(
           icon: item.icon,
           label: item.label,
-          // Gunakan Key disini!
           screen: UserProductScreen(key: _productScreenKey),
         );
       }
       
-      // Screen Lainnya
       return item;
     }).toList();
   }
@@ -122,7 +107,7 @@ class _MainNavbarState extends State<MainNavbar> {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha:0.08),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
@@ -146,11 +131,11 @@ class _MainNavbarState extends State<MainNavbar> {
                     width: bubbleSize,
                     height: bubbleSize,
                     decoration: BoxDecoration(
-                      color: colorScheme.primary, 
+                      color: Colors.green.shade600, 
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.primary.withOpacity(0.4),
+                          color: Colors.green.shade600.withValues(alpha:0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         )

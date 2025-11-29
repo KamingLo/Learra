@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
-import '../../../services/api_service.dart';
 import 'payment_cancel.dart';
 
 class PaymentWait extends StatefulWidget {
@@ -25,8 +24,6 @@ class _PaymentWaitState extends State<PaymentWait>
   late Animation<double> _rotationAnimation;
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  final ApiService _apiService = ApiService();
-  bool _isCancelling = false;
 
   @override
   void initState() {
@@ -67,7 +64,6 @@ class _PaymentWaitState extends State<PaymentWait>
       return;
     }
 
-    // Navigate to payment cancel screen
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -75,14 +71,12 @@ class _PaymentWaitState extends State<PaymentWait>
           paymentData: widget.data,
           paymentId: widget.paymentId!,
           onCancelSuccess: () {
-            // Call callback if provided
             widget.onPaymentCancelled?.call();
           },
         ),
       ),
     );
 
-    // If cancellation was successful, go back
     if (result == true && mounted) {
       Navigator.pop(context);
     }
@@ -109,38 +103,9 @@ class _PaymentWaitState extends State<PaymentWait>
     );
   }
 
-  Widget _buildLoadingOverlay() {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: const Center(
-        child: Card(
-          margin: EdgeInsets.all(20),
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text(
-                  'Membatalkan pembayaran...',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      automaticallyImplyLeading: true,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
-      ),
+      automaticallyImplyLeading: false,
       title: const Text(
         'Status Pembayaran',
         style: TextStyle(
@@ -191,7 +156,7 @@ class _PaymentWaitState extends State<PaymentWait>
                 height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFFFD966).withOpacity(0.15),
+                  color: const Color(0xFFFFD966).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -200,7 +165,7 @@ class _PaymentWaitState extends State<PaymentWait>
               height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFFFD966).withOpacity(0.3),
+                color: const Color(0xFFFFD966).withValues(alpha: 0.3),
               ),
             ),
             RotationTransition(
@@ -352,7 +317,7 @@ class _PaymentWaitState extends State<PaymentWait>
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),

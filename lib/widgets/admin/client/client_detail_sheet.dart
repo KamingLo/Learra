@@ -50,7 +50,7 @@ class ClientDetailSheet extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
                   radius: 26,
-                  backgroundColor: _kPrimary.withOpacity(0.15),
+                  backgroundColor: _kPrimary.withValues(alpha:0.15),
                   child: const Icon(Icons.person, color: _kPrimary),
                 ),
                 title: Text(
@@ -63,10 +63,10 @@ class ClientDetailSheet extends StatelessWidget {
                 ),
                 subtitle: Text(
                   user.email,
-                  style: TextStyle(color: _kTextSecondary.withOpacity(0.8)),
+                  style: TextStyle(color: _kTextSecondary.withValues(alpha:0.8)),
                 ),
                 trailing: Chip(
-                  backgroundColor: _kPrimary.withOpacity(0.1),
+                  backgroundColor: _kPrimary.withValues(alpha:0.1),
                   label: Text(
                     user.role.toUpperCase(),
                     style: const TextStyle(
@@ -116,7 +116,7 @@ class ClientDetailSheet extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                       side: BorderSide(
-                        color: Colors.redAccent.withOpacity(0.2),
+                        color: Colors.redAccent.withValues(alpha:0.2),
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -144,7 +144,7 @@ class ClientDetailSheet extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: _kTextSecondary.withOpacity(0.7),
+              color: _kTextSecondary.withValues(alpha:0.7),
               fontSize: 12.5,
               letterSpacing: 0.2,
             ),

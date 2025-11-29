@@ -5,9 +5,13 @@ class PolicyModel {
   final String id;
   final String policyNumber;
   final String productName;
+  final String? productId;
+  final String? productType;
   final double premiumAmount;
   final String status;
   final DateTime expiredDate;
+  final DateTime? startDate;
+  final DateTime? createdAt;
   final String ownerId;
 
   final String category;
@@ -18,7 +22,9 @@ class PolicyModel {
   final String? frameNumber;
   final String? engineNumber;
   final String? yearBought;
+  final double? vehiclePrice;
   final String? ownerName;
+  final String? ownerEmail;
 
   final bool? hasDiabetes;
   final bool? isSmoker;
@@ -26,14 +32,19 @@ class PolicyModel {
 
   final int? dependentsCount;
   final String? maritalStatus;
+  final String? statusReason;
 
   PolicyModel({
     required this.id,
     required this.policyNumber,
     required this.productName,
+    this.productId,
+    this.productType,
     required this.premiumAmount,
     required this.status,
     required this.expiredDate,
+    this.startDate,
+    this.createdAt,
     required this.ownerId,
     required this.category,
     this.vehicleBrand,
@@ -42,27 +53,71 @@ class PolicyModel {
     this.frameNumber,
     this.engineNumber,
     this.yearBought,
+    this.vehiclePrice,
     this.ownerName,
+    this.ownerEmail,
     this.hasDiabetes,
     this.isSmoker,
     this.hasHypertension,
     this.dependentsCount,
     this.maritalStatus,
+    this.statusReason,
   });
 
+  PolicyModel copyWith({String? productName, String? productType}) {
+    return PolicyModel(
+      id: id,
+      policyNumber: policyNumber,
+      productName: productName ?? this.productName,
+      productId: productId,
+      productType: productType ?? this.productType,
+      premiumAmount: premiumAmount,
+      status: status,
+      expiredDate: expiredDate,
+      startDate: startDate,
+      createdAt: createdAt,
+      ownerId: ownerId,
+      category: category,
+      vehicleBrand: vehicleBrand,
+      vehicleType: vehicleType,
+      plateNumber: plateNumber,
+      frameNumber: frameNumber,
+      engineNumber: engineNumber,
+      yearBought: yearBought,
+      vehiclePrice: vehiclePrice,
+      ownerName: ownerName,
+      ownerEmail: ownerEmail,
+      hasDiabetes: hasDiabetes,
+      isSmoker: isSmoker,
+      hasHypertension: hasHypertension,
+      dependentsCount: dependentsCount,
+      maritalStatus: maritalStatus,
+      statusReason: statusReason,
+    );
+  }
+
   factory PolicyModel.fromJson(Map<String, dynamic> json) {
-    DateTime parseExpiredDate(dynamic dateValue) {
-      if (dateValue is String) return DateTime.parse(dateValue);
-      if (dateValue is Map && dateValue.containsKey('\$date')) {
-        return DateTime.fromMillisecondsSinceEpoch(dateValue['\$date']);
-      }
-      return DateTime.now().add(const Duration(days: 365));
+    DateTime parseDateOrNow(dynamic dateValue, {DateTime? fallback}) {
+      final parsed = _parseDate(dateValue);
+      if (parsed != null) return parsed;
+      return fallback ?? DateTime.now().add(const Duration(days: 365));
     }
+
+    DateTime? parseOptionalDate(dynamic dateValue) => _parseDate(dateValue);
 
     double parsePremium(dynamic value) {
       if (value is num) return value.toDouble();
       if (value is String) return double.tryParse(value) ?? 0.0;
       return 0.0;
+    }
+
+    dynamic rawProduct = json['productId'] ?? json['product'];
+    String? parsedProductId;
+    if (rawProduct is String) {
+      parsedProductId = rawProduct;
+    } else if (rawProduct is Map) {
+      parsedProductId =
+          rawProduct['_id']?.toString() ?? rawProduct['id']?.toString();
     }
 
     final detail = json['detail'] as Map<String, dynamic>?;
@@ -88,11 +143,26 @@ class PolicyModel {
       }
     }
 
-    final ownerId =
-        json['userId']?.toString() ??
-        json['user']?['id']?.toString() ??
-        json['user']?['_id']?.toString() ??
-        '';
+    dynamic userSource = json['userId'];
+
+    String parsedOwnerId = '';
+    if (userSource is String) {
+      parsedOwnerId = userSource;
+    } else if (userSource is Map) {
+      parsedOwnerId =
+          userSource['_id']?.toString() ?? userSource['id']?.toString() ?? '';
+    }
+
+    if (parsedOwnerId.isEmpty && json['user'] is Map) {
+      parsedOwnerId =
+          json['user']['id']?.toString() ??
+          json['user']['_id']?.toString() ??
+          '';
+    }
+
+    final Map<dynamic, dynamic>? userMap = (userSource is Map)
+        ? userSource
+        : (json['user'] is Map ? json['user'] : null);
 
     final rawDependents = jiwa?['jumlahTanggungan'];
     final int? parsedDependents = rawDependents is int
@@ -106,14 +176,29 @@ class PolicyModel {
           json['productName'] ??
           json['product']?['namaProduk'] ??
           'Produk Asuransi',
+      productId: parsedProductId,
+      productType:
+          json['product']?['tipe']?.toString() ??
+          json['productType']?.toString(),
       premiumAmount: parsePremium(
         json['premiumAmount'] ?? json['premi'] ?? json['premium'],
       ),
       status: json['status']?.toString() ?? 'Aktif',
-      expiredDate: parseExpiredDate(
+      statusReason: json['statusReason']?.toString(),
+      expiredDate: parseDateOrNow(
         json['expiredDate'] ?? json['endingDate'] ?? json['expireDate'],
       ),
-      ownerId: ownerId,
+      startDate: parseOptionalDate(
+        json['startDate'] ?? json['startingDate'] ?? json['beginDate'],
+      ),
+      createdAt: parseOptionalDate(
+        json['createdAt'] ??
+            json['created_at'] ??
+            json['createdAtUtc'] ??
+            json['createdTime'],
+      ),
+
+      ownerId: parsedOwnerId,
       category: determinedCategory,
 
       vehicleBrand: kendaraan?['merek']?.toString(),
@@ -126,7 +211,21 @@ class PolicyModel {
       yearBought:
           kendaraan?['tahunPembelian']?.toString() ??
           kendaraan?['umurKendaraan']?.toString(),
-      ownerName: kendaraan?['namaPemilik']?.toString() ?? json['user']?['name'],
+      vehiclePrice: () {
+        final rawPrice = kendaraan?['hargaKendaraan'];
+        if (rawPrice == null) return null;
+        if (rawPrice is num) return rawPrice.toDouble();
+        return double.tryParse(rawPrice.toString());
+      }(),
+
+      ownerName:
+          kendaraan?['namaPemilik']?.toString() ??
+          userMap?['name']?.toString() ??
+          json['userName']?.toString(),
+      ownerEmail:
+          userMap?['email']?.toString() ??
+          json['userEmail']?.toString() ??
+          json['email']?.toString(),
 
       hasDiabetes: kesehatan?['diabetes'],
       isSmoker: kesehatan?['merokok'],
@@ -155,9 +254,9 @@ class PolicyModel {
       case 'kendaraan':
         return vehicleBrand ?? 'Kendaraan';
       case 'kesehatan':
-        return 'Proteksi Kesehatan';
+        return 'Kesehatan';
       case 'jiwa':
-        return 'Proteksi Jiwa';
+        return 'Jiwa';
       default:
         return 'Asuransi Umum';
     }
@@ -179,7 +278,7 @@ class PolicyModel {
           if (isSmoker == true) {
             conditions.add('Perokok');
           }
-          if (conditions.isEmpty) return 'Sehat / Tidak ada riwayat';
+          if (conditions.isEmpty) return 'Sehat';
           return conditions.join(', ');
         }
       case 'jiwa':
@@ -192,11 +291,11 @@ class PolicyModel {
   String get primaryDetailLabel {
     switch (category.toLowerCase()) {
       case 'kendaraan':
-        return 'No. Polisi';
+        return 'No. Plat';
       case 'jiwa':
         return 'Status';
       case 'kesehatan':
-        return 'Kondisi';
+        return 'Kondisi Kesehatan';
       default:
         return 'Info';
     }
@@ -248,7 +347,41 @@ class PolicyModel {
     return "Rp${premiumAmount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
   }
 
+  String get formattedCreatedAt {
+    if (createdAt == null) return '-';
+    final date = createdAt!;
+    return "${date.day}/${date.month}/${date.year}";
+  }
+
+  String get formattedStartDate {
+    if (startDate == null) return '-';
+    final date = startDate!;
+    return "${date.day}/${date.month}/${date.year}";
+  }
+
   Color get statusColor {
-    return status.toLowerCase() == 'aktif' ? Colors.green : Colors.orange;
+    switch (status.toLowerCase()) {
+      case 'aktif':
+        return Colors.green;
+      default:
+        return Colors.orange;
+    }
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String && value.isNotEmpty) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {}
+    }
+    if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
+    if (value is Map && value.containsKey('\$date')) {
+      return DateTime.fromMillisecondsSinceEpoch(value['\$date']);
+    }
+    return null;
   }
 }

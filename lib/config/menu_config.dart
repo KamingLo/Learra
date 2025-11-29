@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:learra/screens/admin/polis/admin_polis_screen.dart';
 import 'package:learra/screens/user/polis/user_polis_screen.dart';
-
-// --- IMPORT SCREEN SESUAI ROLE ---
-import '../screens/admin/product/product_screen.dart'; // Screen Admin (CRUD)
-import '../screens/admin/client/client_screen.dart'; // Screen Admin (Management User)
-import '../screens/user/product/product_screen.dart'; // Screen User (Belanja)
-import '../screens/user/profile/profile_screen.dart'; // Profile (Logout)
+import '../screens/admin/product/product_screen.dart';
+import '../screens/admin/client/client_screen.dart'; 
+import '../screens/user/product/product_screen.dart';
+import '../screens/user/profile/profile_screen.dart';
 import 'package:learra/screens/user/home/home_screen.dart';
-import '../screens/user/claim/claim_menu.dart'; // Import Claim Menu
+import '../screens/user/claim/claim_menu.dart';
+import 'package:learra/screens/admin/payment/ad_payment_menu.dart';
+import 'package:learra/screens/admin/claim/ad_claim_menu.dart';
 
 class NavItem {
   final String label;
@@ -20,26 +20,32 @@ class NavItem {
 
 class MenuConfig {
   static List<NavItem> getMenus(String role) {
-    // --- 1. MENU ADMIN ---
     if (role == 'admin') {
       return [
         NavItem(
           label: "Client",
           icon: Icons.diversity_3_rounded,
-          // Arahkan ke screen Admin yang punya fitur CRUD
           screen: const ClientScreen(),
         ),
         NavItem(
           label: "Produk",
           icon: Icons.inventory_2_rounded,
-          // Arahkan ke screen Admin yang punya fitur CRUD
           screen: const AdminProductScreen(),
         ),
         NavItem(
           label: "Polis",
           icon: Icons.my_library_books_rounded,
-          // Arahkan ke screen Admin yang punya fitur CRUD
           screen: const AdminPolicyScreen(),
+        ),
+        NavItem(
+          label: "Payment",
+          icon: Icons.payment,
+          screen: const AdminPembayaranScreen(),
+        ),
+        NavItem(
+          label: "Klaim",
+          icon: Icons.receipt_long,
+          screen: const AdminKlaimScreen(),
         ),
         NavItem(
           label: "Akun",
@@ -48,7 +54,6 @@ class MenuConfig {
         ),
       ];
     }
-    // --- 2. MENU USER ---
     else if (role == 'user') {
       return [
         NavItem(
@@ -59,13 +64,11 @@ class MenuConfig {
         NavItem(
           label: "Belanja",
           icon: Icons.shopping_cart_rounded,
-          // Arahkan ke screen User yang punya fitur Beli
           screen: const UserProductScreen(),
         ),
         NavItem(
           label: "Polis",
           icon: Icons.my_library_books_rounded,
-          // Arahkan ke screen User yang punya fitur Beli
           screen: const PolicyScreen(),
         ),
         NavItem(
@@ -80,7 +83,6 @@ class MenuConfig {
         ),
       ];
     }
-    // --- 3. MENU GUEST ---
     else {
       return [
         NavItem(
@@ -91,14 +93,13 @@ class MenuConfig {
         NavItem(
           label: "Produk",
           icon: Icons.grid_view_rounded,
-          // Arahkan ke screen Public yang hanya Preview
           screen: const UserProductScreen(),
         ),
         NavItem(
           label: "Masuk",
           icon: Icons.login_rounded,
           screen:
-              const SizedBox(), // Screen dummy, karena di-intercept oleh MainNavbar
+              const SizedBox(),
         ),
       ];
     }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../services/session_service.dart';
-import '../../main.dart';
+import '../../screens/auth/auth_screen.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String email;
@@ -27,8 +27,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _isConfirmPasswordVisible = false;
   String? _errorMessage;
 
-  // Style constants match VerifyCodeScreen
+  // Style constants
   static const Color _fieldFillColor = Color(0xFFF8F8FA);
+  static const Color _successColor = Color(0xFF1ED760); // Warna sukses (Hijau)
   static const LinearGradient _primaryGradient = LinearGradient(
     colors: [Color(0xFF1ED760), Color(0xFF0EAD3C)],
     begin: Alignment.topLeft,
@@ -48,7 +49,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
 
-    // Simple logic untuk mapping error umum
     final lower = cleaned.toLowerCase();
     if (lower.isEmpty) return 'Terjadi kesalahan, silakan coba lagi.';
 
@@ -58,6 +58,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
 
     return cleaned;
+  }
+
+  Widget _buildBackButton(ThemeData theme) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha:0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black87),
+      ),
+    );
   }
 
   Widget _buildPrimaryButton({
@@ -108,29 +131,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildBackButton(ThemeData theme) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.of(context).maybePop(),
-      child: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: const Icon(Icons.arrow_back, color: Colors.black87),
-      ),
-    );
-  }
-
   InputDecoration _inputDecoration({
     required String label,
     Widget? suffixIcon,
@@ -167,7 +167,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final newPass = _newPasswordController.text;
     final confirmPass = _confirmPasswordController.text;
 
-    // Validasi Client Side
+    // --- Validasi Client Side ---
     if (newPass.isEmpty || confirmPass.isEmpty) {
       setState(() => _errorMessage = 'Silakan lengkapi semua kolom.');
       return;
@@ -189,7 +189,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     });
 
     try {
-      // Endpoint API Reset Password (Sesuaikan jika path berbeda, misal: /auth/reset-password)
+      // Endpoint API Reset Password
       final response = await _apiService.post(
         '/auth/reset-password',
         body: {
@@ -205,16 +205,28 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       if (!mounted) return;
 
-      // Sukses: Tampilkan snackbar lalu kembali ke Login (bersihkan route stack)
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password berhasil diubah. Silakan login.'),
-          backgroundColor: Colors.green,
-        ),
+      // --- SUKSES ---
+      // 1. Tampilkan pesan sukses di box notifikasi (Hijau)
+      setState(() {
+        _errorMessage = 'Password berhasil diubah.';
+      });
+
+      // 2. Beri jeda waktu 2 detik agar user membaca notifikasi
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (!mounted) return;
+
+      // 3. Bersihkan sesi (Logout) dan redirect ke Halaman Login
+      await SessionService.clearSession();
+      
+      if (!mounted) return;
+      
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false, // Hapus semua route sebelumnya agar tidak bisa back
       );
 
-      // Logout dan kembali ke halaman login
-      if (mounted) _performLogout(context);
     } catch (e) {
       setState(() => _errorMessage = _friendlyErrorMessage(e));
     } finally {
@@ -222,22 +234,33 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
   }
 
-  void _performLogout(BuildContext context) async {
-    await SessionService.clearSession();
-    if (!context.mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const AuthCheck()),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    // Cek apakah pesan saat ini adalah pesan sukses
+    final isSuccessMessage = _errorMessage == 'Password berhasil diubah.';
 
     return Scaffold(
       backgroundColor: const Color(0xFFEFF1F5),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: SizedBox(
+          height: 48,
+          child: Image.asset(
+            'assets/IconApp/LearraFull.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Text("Learra",
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold));
+            },
+          ),
+        ),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -263,7 +286,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
+                                    color: Colors.black.withValues(alpha:0.08),
                                     blurRadius: 30,
                                     offset: const Offset(0, 20),
                                     spreadRadius: -10,
@@ -294,18 +317,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                   ),
                                   const SizedBox(height: 32),
 
+                                  // --- NOTIFIKASI ERROR / SUKSES ---
                                   if (_errorMessage != null) ...[
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(0.1),
+                                        // Ubah warna background berdasarkan status sukses/gagal
+                                        color: isSuccessMessage
+                                            ? _successColor.withValues(alpha:0.1)
+                                            : Colors.red.withValues(alpha:0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         _errorMessage!,
-                                        style: const TextStyle(
-                                          color: Colors.red,
+                                        style: TextStyle(
+                                          // Ubah warna teks berdasarkan status sukses/gagal
+                                          color: isSuccessMessage
+                                              ? _successColor
+                                              : Colors.red,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),

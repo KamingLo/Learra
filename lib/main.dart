@@ -21,20 +21,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definisi Warna Modern
     const Color modernGreen = Color(0xFF00C853);
     const Color offWhite = Color(0xFFF4F7F6);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Learra',
-      
-      theme: ThemeData(
-        textTheme: GoogleFonts.openSansTextTheme(
-          Theme.of(context).textTheme,
-        ),
 
-        // Skema Warna
+      theme: ThemeData(
+        textTheme: GoogleFonts.openSansTextTheme(Theme.of(context).textTheme),
+
         colorScheme: ColorScheme.fromSeed(
           seedColor: modernGreen,
           primary: modernGreen,
@@ -49,19 +45,17 @@ class MyApp extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.black87),
-          
-          titleTextStyle: GoogleFonts.openSans( 
+
+          titleTextStyle: GoogleFonts.openSans(
             color: Colors.black87,
-            fontWeight: FontWeight.w700, // Bold agar tegas
+            fontWeight: FontWeight.w700,
             fontSize: 22,
           ),
         ),
       ),
-      
+
       home: const AuthCheck(),
-      routes: {
-        '/login': (context) => const AuthScreen(),
-      },
+      routes: {'/login': (context) => const AuthScreen()},
     );
   }
 }
@@ -81,22 +75,21 @@ class _AuthCheckState extends State<AuthCheck> {
     _initialize();
   }
 
-  // --- LOGIC UTAMA DIPERBARUI DI SINI ---
   void _initialize() async {
     await SessionService.isSessionValid();
 
     String role = await SessionService.getCurrentRole();
-    
+
     if (!mounted) return;
 
     Navigator.pushReplacement(
-      context, 
-      MaterialPageRoute(builder: (_) => MainNavbar(role: role))
+      context,
+      MaterialPageRoute(builder: (_) => MainNavbar(role: role)),
     );
   }
 
   @override
   Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: CircularProgressIndicator(color: Color(0xFF00C853)))
+    body: Center(child: CircularProgressIndicator(color: Color(0xFF00C853))),
   );
 }

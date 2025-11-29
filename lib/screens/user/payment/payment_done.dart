@@ -13,7 +13,7 @@ class PaymentDone extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
-          'Pembayaran Berhasil',
+          'Pembayaran',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -80,7 +80,7 @@ class PaymentDone extends StatelessWidget {
 
   Widget _buildTitle() {
     return const Text(
-      'Pembayaran Berhasil!',
+      'Form Terkirim!',
       style: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
@@ -94,7 +94,7 @@ class PaymentDone extends StatelessWidget {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 32),
       child: Text(
-        'Pembayaran Anda telah diterima dan sedang diproses oleh admin',
+        'Mohon transfer dalam waktu 3x24 jam dengan nomor polis di berita transfer.',
         style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
         textAlign: TextAlign.center,
       ),
@@ -102,7 +102,6 @@ class PaymentDone extends StatelessWidget {
   }
 
   Widget _buildPaymentDetails() {
-    // Filter out 'Status' field from data
     final filteredData = Map<String, String>.from(data)..remove('Status');
 
     return DottedBorder(
@@ -185,7 +184,7 @@ class PaymentDone extends StatelessWidget {
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              'Admin akan memverifikasi pembayaran Anda dalam 1x24 jam. Anda akan mendapat notifikasi setelah pembayaran dikonfirmasi.',
+              'Admin akan segera memverifikasi pembayaran anda dan mendapat notifikasi setelah pembayaran dikonfirmasi.',
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.black87,
@@ -208,7 +207,7 @@ class PaymentDone extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -217,7 +216,6 @@ class PaymentDone extends StatelessWidget {
         child: SafeArea(
           child: ElevatedButton(
             onPressed: () {
-              // Navigate back to home or policy list
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
             style: ElevatedButton.styleFrom(

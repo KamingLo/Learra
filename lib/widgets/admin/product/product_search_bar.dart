@@ -1,36 +1,56 @@
 import 'package:flutter/material.dart';
 
 class ProductSearchBar extends StatelessWidget {
+  final TextEditingController controller;
   final Function(String) onChanged;
+  final VoidCallback onClear;
 
-  const ProductSearchBar({super.key, required this.onChanged});
+  const ProductSearchBar({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Menggunakan Container untuk membuat efek "Card" melayang
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // Latar belakang putih bersih
-        borderRadius: BorderRadius.circular(30), // Sudut sangat membulat (bentuk pil)
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05), // Bayangan sangat halus
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+      padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                decoration: InputDecoration(
+                  hintText: 'Cari nama produk',
+                  hintStyle: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  suffixIcon: controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: Colors.grey[600]),
+                          onPressed: onClear,
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
-      ),
-      child: TextField(
-        onChanged: onChanged,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          hintText: "Cari produk...",
-          hintStyle: TextStyle(color: Colors.grey.shade400),
-          prefixIcon: Icon(Icons.search, color: Colors.green.shade400), // Ikon hijau
-          border: InputBorder.none, // Hilangkan garis border bawaan
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          isDense: true,
-        ),
       ),
     );
   }
