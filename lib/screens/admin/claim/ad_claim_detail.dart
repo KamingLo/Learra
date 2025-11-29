@@ -1,63 +1,87 @@
-// lib/screens/admin/klaim_detail.dart
-// Tampilan Detail Klaim Admin - 100% mirip dengan payment_detail.dart
-
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:intl/intl.dart';
+import 'dart:math';
 
 class DetailKlaimScreen extends StatelessWidget {
-  final Map<String, dynamic> klaimData;
+  const DetailKlaimScreen({super.key, required this.klaimData});
 
-  const DetailKlaimScreen({ super.key, required this.klaimData});
+  final Map<String, dynamic> klaimData;
 
   @override
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
     final dateFmt = DateFormat('dd MMMM yyyy', 'id_ID');
 
-    // Ambil data dengan aman (hindari null)
-    final userName = _val(
-      klaimData['polisId']?['userId']?['name'],
+    dynamic getNestedValue(Map<String, dynamic> data, List<String> keys) {
+      dynamic current = data;
+      for (String key in keys) {
+        if (current is Map && current.containsKey(key)) {
+          current = current[key];
+        } else {
+          return null;
+        }
+      }
+      return current;
+    }
+
+    final userName = val(
+      getNestedValue(klaimData, ['polisId', 'userId', 'name']),
       'Tidak diketahui',
     );
-    final userEmail = _val(klaimData['polisId']?['userId']?['email'], '-');
-    final policyNumber = _val(
-      klaimData['polisId']?['policyNumber'],
+
+    final userEmail = val(
+      getNestedValue(klaimData, ['polisId', 'userId', 'email']),
+      '-',
+    );
+
+    final policyNumber = val(
+      getNestedValue(klaimData, ['polisId', 'policyNumber']),
       'Tidak tersedia',
     );
-    final productName = _val(
-      klaimData['polisId']?['productId']?['name'],
+
+    final productName = val(
+      getNestedValue(klaimData, ['polisId', 'productId', 'name']),
       'Produk Tidak Diketahui',
     );
-    final jumlahKlaim = (klaimData['jumlahKlaim'] is int
-        ? klaimData['jumlahKlaim'].toDouble()
-        : klaimData['jumlahKlaim'] ?? 0.0);
-    final deskripsi = _val(klaimData['deskripsi'], 'Tidak ada deskripsi');
-    final status = klaimData['status'] ?? 'menunggu';
-    final tanggalKlaim =
-        DateTime.tryParse(
-          klaimData['tanggalKlaim']?.toString() ??
-              klaimData['createdAt']?.toString() ??
-              '',
-        ) ??
-        DateTime.now();
 
-    // Status tampilan
-    String statusText = 'Menunggu Konfirmasi';
-    Color statusColor = Colors.orange;
+    final productType = val(
+      getNestedValue(klaimData, ['polisId', 'productId', 'tipe']),
+      'kendaraan',
+    );
 
-    if (status == 'diterima') {
-      statusText = 'Diterima';
-      statusColor = Colors.green;
-    } else if (status == 'ditolak') {
-      statusText = 'Ditolak';
-      statusColor = Colors.red;
+    double jumlahKlaim = 0.0;
+    if (klaimData['jumlahKlaim'] != null) {
+      if (klaimData['jumlahKlaim'] is int) {
+        jumlahKlaim = klaimData['jumlahKlaim'].toDouble();
+      } else if (klaimData['jumlahKlaim'] is double) {
+        jumlahKlaim = klaimData['jumlahKlaim'];
+      } else if (klaimData['jumlahKlaim'] is String) {
+        jumlahKlaim = double.tryParse(klaimData['jumlahKlaim']) ?? 0.0;
+      }
     }
+
+    final deskripsi = val(klaimData['deskripsi'], 'Tidak ada deskripsi');
+    final status = klaimData['status'] ?? 'menunggu';
+
+    DateTime tanggalKlaim;
+    try {
+      final tanggalString =
+          klaimData['tanggalKlaim']?.toString() ??
+          klaimData['createdAt']?.toString() ??
+          '';
+      tanggalKlaim = DateTime.parse(tanggalString);
+    } catch (e) {
+      tanggalKlaim = DateTime.now();
+    }
+
+    final namaRekening = val(klaimData['namaRekening'], '-');
+    final noRekening = val(klaimData['noRekening'], '-');
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: const BackButton(color: Colors.black),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Detail Klaim',
           style: TextStyle(
@@ -77,38 +101,34 @@ class DetailKlaimScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Gambar placeholder (bisa diganti dengan URL foto bukti klaim nanti)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/klaim_placeholder.jpg', // Optional: buat asset ini
-                    width: double.infinity,
-                    height: 140,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 140,
-                      color: Colors.grey[300],
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_not_supported,
-                            size: 50,
-                            color: Colors.grey,
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      getBannerAsset(productType),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 150,
+                          color: const Color(0xFFE8F5E9),
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Foto Bukti Klaim',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Kotak Informasi Utama
                 Center(
                   child: DottedBorder(
                     color: const Color(0xFFDEDEDE),
@@ -129,28 +149,44 @@ class DetailKlaimScreen extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          _infoRow('Nama Produk:', productName),
+                          infoRow('Nama Produk:', productName),
                           const SizedBox(height: 12),
-                          _infoRow('Nomor Polis:', policyNumber),
+                          infoRow('Nomor Polis:', policyNumber),
                           const SizedBox(height: 12),
-                          _infoRow('Pemegang Polis:', userName),
+                          infoRow('Pemegang Polis:', userName),
                           const SizedBox(height: 12),
-                          _infoRow('Email:', userEmail),
+                          infoRow('Email:', userEmail),
                           const SizedBox(height: 12),
-                          _infoRow(
+                          infoRow(
                             'Jumlah Klaim:',
                             currency.format(jumlahKlaim),
                           ),
                           const SizedBox(height: 12),
-                          _infoRow(
+                          infoRow(
                             'Tanggal Pengajuan:',
                             dateFmt.format(tanggalKlaim),
                           ),
+
+                          if (status == 'diterima') ...[
+                            const SizedBox(height: 12),
+                            infoRow(
+                              'Nama Rekening:',
+                              namaRekening,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(height: 12),
+                            infoRow(
+                              'Nomor Rekening:',
+                              noRekening,
+                              color: Colors.green,
+                            ),
+                          ],
+
                           const SizedBox(height: 12),
-                          _infoRow(
+                          infoRow(
                             'Status Klaim:',
-                            statusText,
-                            color: statusColor,
+                            getStatusText(status),
+                            color: getStatusColor(status),
                           ),
                         ],
                       ),
@@ -160,7 +196,6 @@ class DetailKlaimScreen extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // Deskripsi Klaim
                 const Text(
                   'Deskripsi Klaim:',
                   style: TextStyle(
@@ -188,42 +223,11 @@ class DetailKlaimScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Catatan jika ditolak
-                if (status == 'ditolak') ...[
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Catatan Penolakan:',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Text(
-                      'Klaim ditolak oleh admin. Jika ada pertanyaan, silakan hubungi customer service.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.red.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 100),
+                const SizedBox(height: 80),
               ],
             ),
           ),
 
-          // Tombol Kembali (sama persis seperti payment_detail)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -262,7 +266,7 @@ class DetailKlaimScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value, {Color? color}) {
+  Widget infoRow(String label, String value, {Color? color}) {
     return Row(
       children: [
         SizedBox(
@@ -288,9 +292,49 @@ class DetailKlaimScreen extends StatelessWidget {
     );
   }
 
-  String _val(dynamic value, [String fallback = '-']) {
+  String val(dynamic value, [String fallback = '-']) {
     if (value == null) return fallback;
     if (value is String && value.isEmpty) return fallback;
     return value.toString();
+  }
+
+  String getBannerAsset(String tipe) {
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
+
+    final random = Random();
+
+    final int randomIndex = random.nextInt(availableAssets.length);
+
+    return availableAssets[randomIndex];
+  }
+
+  String getStatusText(String status) {
+    switch (status) {
+      case 'diterima':
+        return 'Diterima';
+      case 'ditolak':
+        return 'Ditolak';
+      case 'menunggu':
+        return 'Menunggu Konfirmasi';
+      default:
+        return status;
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status) {
+      case 'diterima':
+        return Colors.green;
+      case 'ditolak':
+        return Colors.red;
+      case 'menunggu':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 }

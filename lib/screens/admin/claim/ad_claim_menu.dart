@@ -1,9 +1,8 @@
-// lib/screens/admin/klaim_menu.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../../services/api_service.dart';
-import 'ad_claim_detail.dart'; // Nanti dibuat di langkah 2
+import 'ad_claim_detail.dart';
 
 class AdminKlaimScreen extends StatefulWidget {
   const AdminKlaimScreen({super.key});
@@ -20,8 +19,10 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
   late DateFormat dateFmt;
   bool _isInitialized = false;
 
-  // Filter status klaim
-  String? _selectedStatus; // null = semua, 'menunggu', 'diterima', 'ditolak'
+  String? _selectedStatus;
+
+  List<dynamic> _allKlaimData = [];
+  List<dynamic> _filteredKlaimData = [];
 
   @override
   void initState() {
@@ -41,13 +42,58 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
   void loadData() {
     if (!_isInitialized) return;
     setState(() {
-      String query = '/klaim?limit=100';
-      final search = searchCtrl.text.trim();
-      if (search.isNotEmpty) query += '&search=$search';
-      if (_selectedStatus != null) query += '&status=$_selectedStatus';
-
-      futureKlaim = api.get(query).then((res) => res as List<dynamic>);
+      futureKlaim = api.get('/klaim?limit=100').then((res) {
+        _allKlaimData = res as List<dynamic>;
+        _applyFilters();
+        return _filteredKlaimData;
+      });
     });
+  }
+
+  void _applyFilters() {
+    List<dynamic> filtered = List.from(_allKlaimData);
+
+    if (_selectedStatus != null) {
+      filtered = filtered.where((k) {
+        final status = val(k['status'], 'menunggu').toLowerCase();
+        return status == _selectedStatus!.toLowerCase();
+      }).toList();
+    }
+
+    final searchQuery = searchCtrl.text.trim().toLowerCase();
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((k) {
+        final userName = val(
+          k['polisId']?['userId']?['name'],
+          '',
+        ).toLowerCase();
+
+        final userEmail = val(
+          k['polisId']?['userId']?['email'],
+          '',
+        ).toLowerCase();
+
+        final policyNumber = val(
+          k['polisId']?['policyNumber'],
+          '',
+        ).toLowerCase();
+
+        final createdAt = DateTime.tryParse(
+          val(k['tanggalKlaim'] ?? k['createdAt']),
+        );
+
+        final dateString = createdAt != null
+            ? dateFmt.format(createdAt).toLowerCase()
+            : '';
+
+        return userName.contains(searchQuery) ||
+            userEmail.contains(searchQuery) ||
+            policyNumber.contains(searchQuery) ||
+            dateString.contains(searchQuery);
+      }).toList();
+    }
+
+    _filteredKlaimData = filtered;
   }
 
   String val(dynamic value, [String fallback = '-']) {
@@ -82,9 +128,11 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
           ? const Icon(Icons.check, color: Colors.green)
           : null,
       onTap: () {
-        setState(() => _selectedStatus = value);
         Navigator.pop(context);
-        loadData();
+        setState(() {
+          _selectedStatus = value;
+          _applyFilters();
+        });
       },
     );
   }
@@ -112,7 +160,6 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
       ),
       body: Column(
         children: [
-          // Search + Filter Bar
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(16),
@@ -127,16 +174,37 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
                     child: TextField(
                       controller: searchCtrl,
                       decoration: InputDecoration(
-                        hintText: 'Cari nama pengguna...',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        hintText: 'Cari nama, email, polis, atau tanggal...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                        ),
                         prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                        suffixIcon: searchCtrl.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Colors.grey[600],
+                                ),
+                                onPressed: () {
+                                  searchCtrl.clear();
+                                  setState(() {
+                                    _applyFilters();
+                                  });
+                                },
+                              )
+                            : null,
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
                         ),
                       ),
-                      onSubmitted: (_) => loadData(),
+                      onChanged: (_) {
+                        setState(() {
+                          _applyFilters();
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -147,6 +215,9 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
                         ? Colors.indigo[50]
                         : Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
+                    border: _selectedStatus != null
+                        ? Border.all(color: Colors.indigo, width: 2)
+                        : null,
                   ),
                   child: IconButton(
                     icon: Icon(
@@ -162,7 +233,45 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
             ),
           ),
 
-          // Daftar Klaim
+          if (_selectedStatus != null)
+            Container(
+              width: double.infinity,
+              color: Colors.indigo[50],
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(Icons.filter_alt, size: 16, color: Colors.indigo[700]),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Filter: ${_selectedStatus![0].toUpperCase()}${_selectedStatus!.substring(1)}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.indigo[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedStatus = null;
+                        _applyFilters();
+                      });
+                    },
+                    child: Text(
+                      'Hapus Filter',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.indigo[700],
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => loadData(),
@@ -175,12 +284,41 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
                   if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   }
-                  final data = snapshot.data ?? [];
+                  final data = _filteredKlaimData;
                   if (data.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Belum ada pengajuan klaim',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            searchCtrl.text.isNotEmpty ||
+                                    _selectedStatus != null
+                                ? 'Tidak ada hasil yang ditemukan'
+                                : 'Belum ada pengajuan klaim',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          if (searchCtrl.text.isNotEmpty ||
+                              _selectedStatus != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                'Coba kata kunci atau filter lain',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     );
                   }
@@ -214,10 +352,10 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
                         'Tidak ada polis',
                       );
 
-                      final isPending = status == 'menunggu';
+                      final isPending = status.toLowerCase() == 'menunggu';
                       final statusLabel = isPending
                           ? 'MENUNGGU'
-                          : status == 'diterima'
+                          : status.toLowerCase() == 'diterima'
                           ? 'DITERIMA'
                           : 'DITOLAK';
 
@@ -275,9 +413,8 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
     if (confirmed == true) {
       try {
         await api.put('/klaim/$id', body: {'status': newStatus});
-        loadData();
-        
         if (!mounted) return;
+        loadData();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -290,7 +427,6 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
         );
       } catch (e) {
         if (!mounted) return;
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal: $e'), backgroundColor: Colors.red),
         );
@@ -305,7 +441,6 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
   }
 }
 
-// Widget Card Klaim (sama persis UI dengan PaymentCardAdmin)
 class KlaimCardAdmin extends StatelessWidget {
   final String name;
   final String email;

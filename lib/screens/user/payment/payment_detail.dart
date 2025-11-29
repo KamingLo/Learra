@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../../models/product_model.dart';
 import '../../../services/api_service.dart';
 import 'payment_done.dart';
+import 'dart:math';
 
 class PaymentDetail extends StatefulWidget {
   final ProductModel product;
   final String? policyId;
   final String? userId;
   final String? policyNumber;
-  final bool
-  isPerpanjangan; // Parameter tambahan untuk membedakan pembayaran pertama atau perpanjangan
+  final bool isPerpanjangan;
 
   const PaymentDetail({
     super.key,
@@ -19,7 +20,7 @@ class PaymentDetail extends StatefulWidget {
     this.policyId,
     this.userId,
     this.policyNumber,
-    this.isPerpanjangan = false, // Default: false (pembayaran pertama)
+    this.isPerpanjangan = false,
   });
 
   @override
@@ -37,10 +38,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
   void initState() {
     super.initState();
     _initializeDateFormatting();
-    // Pre-fill nomor polis jika ada
-    if (widget.policyNumber != null && widget.policyNumber!.isNotEmpty) {
-      _policyNumberController.text = widget.policyNumber!;
-    }
   }
 
   Future<void> _initializeDateFormatting() async {
@@ -75,33 +72,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
       'accountNumber': '9876543210',
       'accountName': 'PT Learra Insurance',
     },
-    {
-      'id': 'bni',
-      'name': 'Bank BNI',
-      'icon': Icons.account_balance,
-      'description': 'Transfer via Bank Negara Indonesia',
-      'color': const Color(0xFFE67E22),
-      'accountNumber': '5555666677',
-      'accountName': 'PT Learra Insurance',
-    },
-    {
-      'id': 'bri',
-      'name': 'Bank BRI',
-      'icon': Icons.account_balance,
-      'description': 'Transfer via Bank Rakyat Indonesia',
-      'color': const Color(0xFF0066AE),
-      'accountNumber': '1111222233',
-      'accountName': 'PT Learra Insurance',
-    },
-    {
-      'id': 'cimb',
-      'name': 'Bank CIMB Niaga',
-      'icon': Icons.account_balance,
-      'description': 'Transfer via CIMB Niaga',
-      'color': const Color(0xFFB71C1C),
-      'accountNumber': '7777888899',
-      'accountName': 'PT Learra Insurance',
-    },
   ];
 
   Future<void> _createPembayaran() async {
@@ -110,14 +80,12 @@ class _PaymentDetailState extends State<PaymentDetail> {
       return;
     }
 
-    // Validasi nomor polis
     final policyNumber = _policyNumberController.text.trim();
     if (policyNumber.isEmpty) {
-      _showSnackBar('Harap masukkan nomor polis Anda', Colors.orange);
+      _showWarningDialog();
       return;
     }
 
-    // Validasi policyId
     if (widget.policyId == null || widget.policyId!.isEmpty) {
       _showSnackBar('Data polis tidak lengkap', Colors.red);
       return;
@@ -126,7 +94,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
     setState(() => _isLoading = true);
 
     try {
-      // Pilih endpoint berdasarkan jenis pembayaran
       final String endpoint = widget.isPerpanjangan
           ? '/payment/perpanjangan'
           : '/payment';
@@ -145,12 +112,11 @@ class _PaymentDetailState extends State<PaymentDetail> {
       if (response != null) {
         final pembayaran = response['pembayaran'];
 
-        // Prepare data untuk PaymentDone (langsung ke done, tidak ke wait)
         final Map<String, String> policyData = {
           'Nomor Pembayaran':
               pembayaran?['_id']?.toString() ??
               'PY${DateTime.now().millisecondsSinceEpoch}',
-          'Nomor Polis': policyNumber, // Gunakan input user
+          'Nomor Polis': policyNumber,
           'Produk': widget.product.namaProduk,
           'Metode Pembayaran': _getPaymentMethodName(_selectedPaymentMethod),
           'Total Pembayaran': _formatCurrency(
@@ -183,6 +149,58 @@ class _PaymentDetailState extends State<PaymentDetail> {
 
       _showSnackBar(errorMessage, Colors.red);
     }
+  }
+
+  void _showWarningDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text('Nomor Polis Wajib', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nomor Polis harus diisi, jika tidak maka pembayaran akan ditolak atau pengembalian dana akan tertahan.',
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _policyNumberFocusNode.requestFocus();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Mengerti',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _getPaymentMethodName(String id) {
@@ -220,21 +238,23 @@ class _PaymentDetailState extends State<PaymentDetail> {
     ).format(number);
   }
 
-  String _getBannerAsset(String tipe) {
-    switch (tipe.toLowerCase()) {
-      case 'kesehatan':
-        return 'assets/PayKlaim/AsuransiKesehatan.png';
-      case 'jiwa':
-        return 'assets/PayKlaim/AsuransiJiwa.png';
-      case 'kendaraan':
-        return 'assets/PayKlaim/AsuransiMobil.png';
-      default:
-        return 'assets/PayKlaim/AsuransiMobil.png';
-    }
+  String _getBannerAsset() {
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
+
+    final random = Random();
+    final int randomIndex = random.nextInt(availableAssets.length);
+
+    return availableAssets[randomIndex];
   }
 
   @override
   Widget build(BuildContext context) {
+    final randomBannerPath = _getBannerAsset();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -244,7 +264,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
         ),
         title: Text(
           widget.isPerpanjangan
-              ? 'Perpanjangan ${widget.product.namaProduk}' // Ubah judul jika perpanjangan
+              ? 'Perpanjangan ${widget.product.namaProduk}'
               : 'Pembayaran ${widget.product.namaProduk}',
           style: const TextStyle(
             color: Colors.black,
@@ -264,7 +284,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner Produk
                 Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F5E9),
@@ -273,11 +292,13 @@ class _PaymentDetailState extends State<PaymentDetail> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Image.asset(
-                      _getBannerAsset(widget.product.tipe),
+                      randomBannerPath,
                       fit: BoxFit.cover,
+                      height: 90.0,
+                      width: double.infinity,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          height: 150,
+                          height: 90.0,
                           color: const Color(0xFFE8F5E9),
                           child: const Center(
                             child: Icon(
@@ -293,7 +314,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
                 ),
                 const SizedBox(height: 24.0),
 
-                // Informasi Polis
                 _buildSectionTitle("Informasi Polis"),
                 _buildInfoCard([
                   {
@@ -308,7 +328,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
                 ]),
                 const SizedBox(height: 24.0),
 
-                // Metode Pembayaran
                 _buildSectionTitle("Pilih Bank Transfer"),
                 ..._paymentMethods.map((method) {
                   return _buildPaymentMethodCard(
@@ -321,52 +340,14 @@ class _PaymentDetailState extends State<PaymentDetail> {
                 }),
                 const SizedBox(height: 24.0),
 
-                // Detail Transfer Bank
                 _buildSectionTitle("Detail Transfer"),
                 _buildTransferDetail(),
                 const SizedBox(height: 24.0),
 
-                // Input Nomor Polis User - CHANGED
-                _buildSectionTitle("Konfirmasi Nomor Polis"),
+                _buildSectionTitle("Masukkan Nomor Polis"),
                 _buildPolicyNumberInput(),
                 const SizedBox(height: 24.0),
 
-                // Ringkasan Pembayaran
-                _buildSectionTitle("Ringkasan Pembayaran"),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Premi Dasar:',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          Text(
-                            _formatCurrency(
-                              widget.product.premiDasar.toString(),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Divider(),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 32.0),
               ],
             ),
@@ -466,7 +447,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.green : color.withValues(alpha:0.1),
+                color: isSelected ? Colors.green : color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -581,49 +562,81 @@ class _PaymentDetailState extends State<PaymentDetail> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.orange.shade200, width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Masukkan nomor polis Anda untuk konfirmasi',
-            style: TextStyle(fontSize: 13, color: Colors.black54),
+          Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Nomor polis wajib diisi',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade900,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
+          Text(
+            'Nomor Polis harus diisi, jika tidak maka pembayaran akan ditolak atau pengembalian dana akan tertahan.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.orange.shade800,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
           TextField(
             controller: _policyNumberController,
             focusNode: _policyNumberFocusNode,
             keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.characters,
+            inputFormatters: [UpperCaseTextFormatter()],
             decoration: InputDecoration(
-              hintText: 'Contoh: PL-2025-001',
+              hintText: 'Contoh: 4ED3207ACD',
+              hintStyle: TextStyle(color: Colors.grey.shade400),
               prefixIcon: Icon(
                 Icons.description_outlined,
-                color: Colors.green.shade700,
+                color: Colors.orange.shade700,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide(color: Colors.orange.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.orange.shade300),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.green, width: 2),
+                borderSide: BorderSide(color: Colors.orange.shade700, width: 2),
               ),
               filled: true,
-              fillColor: Colors.grey.shade50,
+              fillColor: Colors.white,
             ),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.info_outline, size: 14, color: Colors.grey.shade600),
+              Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   'Pastikan nomor polis yang Anda masukkan sesuai',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 11, color: Colors.orange.shade700),
                 ),
               ),
             ],
@@ -643,7 +656,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20.0,
               offset: const Offset(0, -2),
             ),
@@ -727,6 +740,19 @@ class _PaymentDetailState extends State<PaymentDetail> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }

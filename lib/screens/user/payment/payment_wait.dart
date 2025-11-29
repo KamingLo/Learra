@@ -64,7 +64,6 @@ class _PaymentWaitState extends State<PaymentWait>
       return;
     }
 
-    // Navigate to payment cancel screen
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -72,14 +71,12 @@ class _PaymentWaitState extends State<PaymentWait>
           paymentData: widget.data,
           paymentId: widget.paymentId!,
           onCancelSuccess: () {
-            // Call callback if provided
             widget.onPaymentCancelled?.call();
           },
         ),
       ),
     );
 
-    // If cancellation was successful, go back
     if (result == true && mounted) {
       Navigator.pop(context);
     }
@@ -108,11 +105,7 @@ class _PaymentWaitState extends State<PaymentWait>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      automaticallyImplyLeading: true,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
-      ),
+      automaticallyImplyLeading: false,
       title: const Text(
         'Status Pembayaran',
         style: TextStyle(
@@ -163,7 +156,7 @@ class _PaymentWaitState extends State<PaymentWait>
                 height: 220,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFFFD966).withValues(alpha:0.15),
+                  color: const Color(0xFFFFD966).withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -172,7 +165,7 @@ class _PaymentWaitState extends State<PaymentWait>
               height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFFFD966).withValues(alpha:0.3),
+                color: const Color(0xFFFFD966).withValues(alpha: 0.3),
               ),
             ),
             RotationTransition(
@@ -324,7 +317,7 @@ class _PaymentWaitState extends State<PaymentWait>
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),

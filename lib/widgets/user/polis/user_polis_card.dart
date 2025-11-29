@@ -227,8 +227,8 @@ class PolicyCard extends StatelessWidget {
     if (p.category.toLowerCase() == 'kesehatan') {
       List<String> conditions = [];
       if (p.hasDiabetes == true) conditions.add('Diabetes');
-      if (p.hasHypertension == true) conditions.add('Hipertensi');
       if (p.isSmoker == true) conditions.add('Perokok');
+      if (p.hasHypertension == true) conditions.add('Hipertensi');
 
       if (conditions.isNotEmpty) {
         textToDisplay = conditions.join(' | ');

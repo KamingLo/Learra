@@ -1,7 +1,7 @@
-// lib/screens/admin/payment_detail.dart
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:intl/intl.dart';
+import 'dart:math';
 
 class DetailPembayaranScreen extends StatelessWidget {
   final Map<String, dynamic> paymentData;
@@ -12,48 +12,66 @@ class DetailPembayaranScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
     final dateFmt = DateFormat('dd MMMM yyyy', 'id_ID');
+    final timeFmt = DateFormat('HH:mm', 'id_ID');
 
-    // Ambil data dengan aman
-    final userName = _val(
-      paymentData['policyId']?['userId']?['name'],
+    dynamic getNestedValue(Map<String, dynamic> data, List<String> keys) {
+      dynamic current = data;
+      for (String key in keys) {
+        if (current is Map && current.containsKey(key)) {
+          current = current[key];
+        } else {
+          return null;
+        }
+      }
+      return current;
+    }
+
+    final userName = val(
+      getNestedValue(paymentData, ['policyId', 'userId', 'name']),
       'Tidak diketahui',
     );
-    final userEmail = _val(paymentData['policyId']?['userId']?['email'], '-');
-    final policyNumber = _val(
-      paymentData['policyId']?['policyNumber'],
+    final userEmail = val(
+      getNestedValue(paymentData, ['policyId', 'userId', 'email']),
+      '-',
+    );
+    final policyNumber = val(
+      getNestedValue(paymentData, ['policyId', 'policyNumber']),
       'Belum terhubung',
     );
-    final productName = _val(
-      paymentData['policyId']?['productId']?['name'],
-      'Produk Tidak Diketahui',
+    final productType = val(
+      getNestedValue(paymentData, ['policyId', 'productId', 'tipe']),
+      'kendaraan',
     );
-    final amount = (paymentData['amount'] is int
-        ? paymentData['amount'].toDouble()
-        : paymentData['amount'] ?? 0.0);
-    final method = _val(paymentData['method'], 'Tidak diketahui');
+
+    double amount = 0.0;
+    if (paymentData['amount'] != null) {
+      if (paymentData['amount'] is int) {
+        amount = paymentData['amount'].toDouble();
+      } else if (paymentData['amount'] is double) {
+        amount = paymentData['amount'];
+      } else if (paymentData['amount'] is String) {
+        amount = double.tryParse(paymentData['amount']) ?? 0.0;
+      }
+    }
+
+    final method = val(paymentData['method'], 'Tidak diketahui');
     final type = paymentData['type'] == 'perpanjangan'
         ? 'Perpanjangan Polis'
         : 'Pembayaran Awal';
     final status = paymentData['status'] ?? 'menunggu_konfirmasi';
-    final createdAt =
-        DateTime.tryParse(paymentData['createdAt']?.toString() ?? '') ??
-        DateTime.now();
 
-    String statusText = 'Menunggu Konfirmasi';
-    Color statusColor = Colors.orange;
-
-    if (status == 'berhasil') {
-      statusText = 'Berhasil';
-      statusColor = Colors.green;
-    } else if (status == 'gagal') {
-      statusText = 'Ditolak';
-      statusColor = Colors.red;
+    DateTime createdAt;
+    try {
+      final tanggalString = paymentData['createdAt']?.toString() ?? '';
+      createdAt = DateTime.parse(tanggalString);
+    } catch (e) {
+      createdAt = DateTime.now();
     }
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: const BackButton(color: Colors.black),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Detail Pembayaran',
           style: TextStyle(
@@ -73,23 +91,34 @@ class DetailPembayaranScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Gambar produk (bisa diganti nanti dengan URL dari backend)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: double.infinity,
-                    height: 120,
-                    color: Colors.grey[300],
-                    child: const Icon(
-                      Icons.image,
-                      size: 60,
-                      color: Colors.grey,
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      getBannerAsset(productType),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 150,
+                          color: const Color(0xFFE8F5E9),
+                          child: const Center(
+                            child: Icon(
+                              Icons.image,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Kotak info utama
                 Center(
                   child: DottedBorder(
                     color: const Color(0xFFDEDEDE),
@@ -110,66 +139,41 @@ class DetailPembayaranScreen extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          _infoRow('Nama Produk:', productName),
+                          infoRow('Nomor Polis:', policyNumber),
                           const SizedBox(height: 12),
-                          _infoRow('Nomor Polis:', policyNumber),
+                          infoRow('Pemegang Polis:', userName),
                           const SizedBox(height: 12),
-                          _infoRow('Pemegang Polis:', userName),
+                          infoRow('Email:', userEmail),
                           const SizedBox(height: 12),
-                          _infoRow('Email:', userEmail),
-                          const SizedBox(height: 12),
-                          _infoRow(
+                          infoRow(
                             'Jumlah Pembayaran:',
                             currency.format(amount),
                           ),
                           const SizedBox(height: 12),
-                          _infoRow('Metode:', method.toUpperCase()),
+                          infoRow('Metode:', method.toUpperCase()),
                           const SizedBox(height: 12),
-                          _infoRow('Tipe:', type),
+                          infoRow('Tipe:', type),
                           const SizedBox(height: 12),
-                          _infoRow('Tanggal:', dateFmt.format(createdAt)),
+                          infoRow('Tanggal:', dateFmt.format(createdAt)),
                           const SizedBox(height: 12),
-                          _infoRow('Status:', statusText, color: statusColor),
+                          infoRow('Waktu:', timeFmt.format(createdAt)),
+                          const SizedBox(height: 12),
+                          infoRow(
+                            'Status:',
+                            getStatusText(status),
+                            color: getStatusColor(status),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 24),
-
-                // Catatan jika ditolak
-                if (status == 'gagal') ...[
-                  const Text(
-                    'Catatan oleh admin:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.red.shade200),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Pembayaran ditolak oleh admin. Silakan hubungi customer service untuk informasi lebih lanjut.',
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                  ),
-                ],
-
                 const SizedBox(height: 80),
               ],
             ),
           ),
 
-          // Tombol Kembali di bawah (tetap sama)
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -208,7 +212,7 @@ class DetailPembayaranScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value, {Color? color}) {
+  Widget infoRow(String label, String value, {Color? color}) {
     return Row(
       children: [
         SizedBox(
@@ -234,9 +238,48 @@ class DetailPembayaranScreen extends StatelessWidget {
     );
   }
 
-  String _val(dynamic value, [String fallback = '-']) {
+  String val(dynamic value, [String fallback = '-']) {
     if (value == null) return fallback;
     if (value is String && value.isEmpty) return fallback;
     return value.toString();
+  }
+
+  String getBannerAsset(String tipe) {
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
+
+    final random = Random();
+    final int randomIndex = random.nextInt(availableAssets.length);
+
+    return availableAssets[randomIndex];
+  }
+
+  String getStatusText(String status) {
+    switch (status) {
+      case 'berhasil':
+        return 'Berhasil';
+      case 'gagal':
+        return 'Ditolak';
+      case 'menunggu_konfirmasi':
+        return 'Menunggu Konfirmasi';
+      default:
+        return status;
+    }
+  }
+
+  Color getStatusColor(String status) {
+    switch (status) {
+      case 'berhasil':
+        return Colors.green;
+      case 'gagal':
+        return Colors.red;
+      case 'menunggu_konfirmasi':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 }

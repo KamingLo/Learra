@@ -77,6 +77,7 @@ flutter:
     - assets/
     - assets/IconApp/
     - assets/PayKlaim/
+    - assets/Author/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -106,26 +107,23 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-
-# ==========================================
-# SPLASH SCREEN CONFIGURATION (ROOT LEVEL)
-# ==========================================
-
 flutter_native_splash:
-  color: "#FFFFFF"
-  image: assets/IconApp/LearraFull.png
-  android_gravity: center
-  ios_content_mode: scaleAspectFit
   android: true
   ios: true
-  branding: assets/IconApp/LearraFull.png
-  branding_mode: bottom
 
-# ==========================================
-# APP ICON CONFIGURATION (ROOT LEVEL)
-# ==========================================
+  color: "#FFFFFF"
+  color_dark: "#FFFFFF"
+
+  image: assets/IconApp/ico.png
+  image_dark: assets/IconApp/ico.png
+
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#FFFFFF"
 
 flutter_icons:
+  color: "#FFFFFF"
+  color_dark: "#FFFFFF"
   android: true
   ios: true
   image_path: "assets/IconApp/ico.png"

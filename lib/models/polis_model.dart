@@ -143,11 +143,26 @@ class PolicyModel {
       }
     }
 
-    final ownerId =
-        json['userId']?.toString() ??
-        json['user']?['id']?.toString() ??
-        json['user']?['_id']?.toString() ??
-        '';
+    dynamic userSource = json['userId'];
+
+    String parsedOwnerId = '';
+    if (userSource is String) {
+      parsedOwnerId = userSource;
+    } else if (userSource is Map) {
+      parsedOwnerId =
+          userSource['_id']?.toString() ?? userSource['id']?.toString() ?? '';
+    }
+
+    if (parsedOwnerId.isEmpty && json['user'] is Map) {
+      parsedOwnerId =
+          json['user']['id']?.toString() ??
+          json['user']['_id']?.toString() ??
+          '';
+    }
+
+    final Map<dynamic, dynamic>? userMap = (userSource is Map)
+        ? userSource
+        : (json['user'] is Map ? json['user'] : null);
 
     final rawDependents = jiwa?['jumlahTanggungan'];
     final int? parsedDependents = rawDependents is int
@@ -182,7 +197,8 @@ class PolicyModel {
             json['createdAtUtc'] ??
             json['createdTime'],
       ),
-      ownerId: ownerId,
+
+      ownerId: parsedOwnerId,
       category: determinedCategory,
 
       vehicleBrand: kendaraan?['merek']?.toString(),
@@ -201,12 +217,13 @@ class PolicyModel {
         if (rawPrice is num) return rawPrice.toDouble();
         return double.tryParse(rawPrice.toString());
       }(),
+
       ownerName:
           kendaraan?['namaPemilik']?.toString() ??
-          json['user']?['name']?.toString() ??
+          userMap?['name']?.toString() ??
           json['userName']?.toString(),
       ownerEmail:
-          json['user']?['email']?.toString() ??
+          userMap?['email']?.toString() ??
           json['userEmail']?.toString() ??
           json['email']?.toString(),
 

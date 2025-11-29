@@ -44,13 +44,13 @@ class MenuConfig {
           screen: const AdminPolicyScreen(),
         ),
         NavItem(
-          label: "Pembayaran",
+          label: "Payment",
           icon: Icons.payment,
           screen: const AdminPembayaranScreen(),
         ),
         NavItem(
           label: "Klaim",
-          icon: Icons.payment,
+          icon: Icons.receipt_long,
           screen: const AdminKlaimScreen(),
         ),
         NavItem(

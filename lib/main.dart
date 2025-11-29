@@ -28,11 +28,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Learra',
-      
+
       theme: ThemeData(
-        textTheme: GoogleFonts.openSansTextTheme(
-          Theme.of(context).textTheme,
-        ),
+        textTheme: GoogleFonts.openSansTextTheme(Theme.of(context).textTheme),
 
         // Skema Warna
         colorScheme: ColorScheme.fromSeed(
@@ -49,19 +47,17 @@ class MyApp extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           iconTheme: const IconThemeData(color: Colors.black87),
-          
-          titleTextStyle: GoogleFonts.openSans( 
+
+          titleTextStyle: GoogleFonts.openSans(
             color: Colors.black87,
             fontWeight: FontWeight.w700, // Bold agar tegas
             fontSize: 22,
           ),
         ),
       ),
-      
+
       home: const AuthCheck(),
-      routes: {
-        '/login': (context) => const AuthScreen(),
-      },
+      routes: {'/login': (context) => const AuthScreen()},
     );
   }
 }
@@ -86,17 +82,17 @@ class _AuthCheckState extends State<AuthCheck> {
     await SessionService.isSessionValid();
 
     String role = await SessionService.getCurrentRole();
-    
+
     if (!mounted) return;
 
     Navigator.pushReplacement(
-      context, 
-      MaterialPageRoute(builder: (_) => MainNavbar(role: role))
+      context,
+      MaterialPageRoute(builder: (_) => MainNavbar(role: role)),
     );
   }
 
   @override
   Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: CircularProgressIndicator(color: Color(0xFF00C853)))
+    body: Center(child: CircularProgressIndicator(color: Color(0xFF00C853))),
   );
 }
