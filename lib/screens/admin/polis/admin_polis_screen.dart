@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../../models/polis_model.dart';
+import '../../../models/product_model.dart';
 import '../../../widgets/admin/polis/admin_polis_card.dart';
 import '../../../services/api_service.dart';
 
@@ -13,12 +15,16 @@ class AdminPolicyScreen extends StatefulWidget {
 class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   List<PolicyModel> _policies = [];
   List<PolicyModel> _filteredPolicies = [];
+
   bool _isLoading = true;
   String? _errorMessage;
+
   String _filterStatus = 'Semua';
+  String _filterCategory = 'Semua';
   String _sortOrder = 'desc';
 
   @override
@@ -30,16 +36,23 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
+    final query = _searchController.text;
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
+      _fetchPolicies(query: query.trim());
+    });
     _applyFilters();
   }
 
-  Future<void> _fetchPolicies({String? searchQuery}) async {
+  Future<void> _fetchPolicies({String query = ''}) async {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -47,11 +60,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     });
 
     try {
-      String endpoint = '/polis';
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        endpoint += '?search=${Uri.encodeComponent(searchQuery)}';
-      }
-
+      final String endpoint = query.isEmpty ? '/polis' : '/polis?search=$query';
       final response = await _apiService.get(endpoint);
 
       if (!mounted) return;
@@ -65,11 +74,16 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
         data = [];
       }
 
+      List<PolicyModel> initialPolicies = data
+          .map((json) => PolicyModel.fromJson(json))
+          .toList();
+
+      final enrichedPolicies = await _hydrateProductNames(initialPolicies);
+
       setState(() {
-        _policies = data.map((json) => PolicyModel.fromJson(json)).toList();
-        _sortPolicyList(_policies);
-        _applyFilters();
+        _policies = enrichedPolicies;
         _isLoading = false;
+        _applyFilters();
       });
     } catch (e) {
       if (!mounted) return;
@@ -81,8 +95,55 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     }
   }
 
+  Future<List<PolicyModel>> _hydrateProductNames(
+    List<PolicyModel> policies,
+  ) async {
+    final missingIds = policies
+        .where(
+          (p) =>
+              (p.productName.isEmpty || p.productName == 'Produk Asuransi') &&
+              (p.productId?.isNotEmpty ?? false),
+        )
+        .map((p) => p.productId!)
+        .toSet();
+
+    if (missingIds.isEmpty) return policies;
+
+    final productMap = <String, ProductModel>{};
+
+    for (final id in missingIds) {
+      try {
+        final response = await _apiService.get('/produk/$id');
+        final data = (response is Map && response['data'] is Map)
+            ? response['data']
+            : (response is Map ? response : null);
+        if (data != null) {
+          productMap[id] = ProductModel.fromJson(data);
+        }
+      } catch (_) {}
+    }
+
+    if (productMap.isEmpty) return policies;
+
+    return policies.map((policy) {
+      if (policy.productId != null &&
+          productMap.containsKey(policy.productId) &&
+          (policy.productName.isEmpty ||
+              policy.productName == 'Produk Asuransi')) {
+        final product = productMap[policy.productId]!;
+        return policy.copyWith(
+          productName: product.namaProduk,
+          productType: product.tipe,
+        );
+      }
+      return policy;
+    }).toList();
+  }
+
   void _applyFilters() {
     final searchQuery = _searchController.text.toLowerCase();
+    final selectedStatus = _filterStatus.toLowerCase();
+    final selectedCategory = _filterCategory.toLowerCase();
 
     setState(() {
       _filteredPolicies = _policies.where((policy) {
@@ -93,22 +154,23 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
             policy.productName.toLowerCase().contains(searchQuery) ||
             (policy.ownerEmail ?? '').toLowerCase().contains(searchQuery);
 
-        final selectedFilter = _filterStatus.toLowerCase();
         final matchesStatus =
-            selectedFilter == 'semua' ||
-            _normalizeStatus(policy.status) == selectedFilter;
+            selectedStatus == 'semua' ||
+            _normalizeStatus(policy.status) == selectedStatus;
 
-        return matchesSearch && matchesStatus;
+        final matchesCategory =
+            selectedCategory == 'semua' ||
+            policy.category.toLowerCase() == selectedCategory;
+
+        return matchesSearch && matchesStatus && matchesCategory;
       }).toList();
+
       _sortPolicyList(_filteredPolicies);
     });
   }
 
   Future<void> _refreshPolicies() async {
-    final currentQuery = _searchController.text.trim();
-    await _fetchPolicies(
-      searchQuery: currentQuery.isNotEmpty ? currentQuery : null,
-    );
+    await _fetchPolicies(query: _searchController.text.trim());
   }
 
   void _sortPolicyList(List<PolicyModel> list) {
@@ -124,18 +186,34 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     if (_sortOrder == order) return;
     setState(() {
       _sortOrder = order;
-      _sortPolicyList(_policies);
-      _applyFilters();
+      _sortPolicyList(_filteredPolicies);
     });
   }
 
+  String _normalizeStatus(String value) {
+    final lower = value.toLowerCase();
+    if (lower.contains('inaktif') ||
+        lower.contains('tidak aktif') ||
+        lower.contains('nonaktif')) {
+      return 'inaktif';
+    }
+    return 'aktif';
+  }
+
   String get _sortLabel => _sortOrder == 'desc' ? 'Terbaru' : 'Terlama';
+
+  bool _shouldShowBack(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route == null) return false;
+    return route.canPop;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: _refreshPolicies,
           child: CustomScrollView(
@@ -144,8 +222,8 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
               SliverAppBar(
                 backgroundColor: Colors.grey[50],
                 elevation: 0,
-                pinned: false,
-                floating: true,
+                pinned: true,
+                floating: false,
                 automaticallyImplyLeading: false,
                 titleSpacing: 0,
                 title: Row(
@@ -159,7 +237,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                     const SizedBox(width: 16),
                     const Expanded(
                       child: Text(
-                        "Polis Pengguna",
+                        "Daftar Polis Pengguna",
                         style: TextStyle(
                           color: Colors.black87,
                           fontWeight: FontWeight.w800,
@@ -169,68 +247,21 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                     ),
                   ],
                 ),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(70),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: _buildSearchBar(),
+                  ),
+                ),
               ),
 
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha:0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          onSubmitted: (value) =>
-                              _fetchPolicies(searchQuery: value),
-                          decoration: InputDecoration(
-                            hintText: "Cari nama, no. polis, produk...",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 14,
-                            ),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Colors.green.shade600,
-                              size: 22,
-                            ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: Icon(
-                                      Icons.clear,
-                                      color: Colors.grey.shade400,
-                                      size: 20,
-                                    ),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _fetchPolicies();
-                                    },
-                                  )
-                                : null,
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
                       Row(
                         children: [
                           Expanded(
@@ -252,27 +283,78 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildFilterChip('Semua'),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Aktif'),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Inaktif'),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Dibatalkan'),
-                            ],
-                          ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Status",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey,
                         ),
                       ),
-                      const SizedBox(height: 12),
-
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('Semua', _filterStatus, (val) {
+                              setState(() => _filterStatus = val);
+                              _applyFilters();
+                            }),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Aktif', _filterStatus, (val) {
+                              setState(() => _filterStatus = val);
+                              _applyFilters();
+                            }),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Inaktif', _filterStatus, (val) {
+                              setState(() => _filterStatus = val);
+                              _applyFilters();
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Kategori",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('Semua', _filterCategory, (val) {
+                              setState(() => _filterCategory = val);
+                              _applyFilters();
+                            }),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Kesehatan', _filterCategory, (
+                              val,
+                            ) {
+                              setState(() => _filterCategory = val);
+                              _applyFilters();
+                            }),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Jiwa', _filterCategory, (val) {
+                              setState(() => _filterCategory = val);
+                              _applyFilters();
+                            }),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Kendaraan', _filterCategory, (
+                              val,
+                            ) {
+                              setState(() => _filterCategory = val);
+                              _applyFilters();
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
@@ -293,6 +375,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                             style: TextStyle(
                               color: Colors.green.shade700,
                               fontWeight: FontWeight.w600,
+                              fontSize: 13,
                             ),
                           ),
                           style: TextButton.styleFrom(
@@ -377,21 +460,69 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: AdminPolicyCard(
-                          policy: _filteredPolicies[index],
-                          onRefresh: _refreshPolicies,
-                        ),
+                      (context, index) => AdminPolicyCard(
+                        policy: _filteredPolicies[index],
+                        onRefresh: _refreshPolicies,
                       ),
                       childCount: _filteredPolicies.length,
                     ),
                   ),
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: "Cari nama produk, username, no. polis...",
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          prefixIcon: Icon(
+            Icons.search,
+            color: Colors.green.shade600,
+            size: 22,
+          ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    FocusScope.of(context).unfocus();
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
           ),
         ),
       ),
@@ -411,7 +542,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -422,7 +553,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha:0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -451,17 +582,16 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label) {
-    final isSelected = _filterStatus.toLowerCase() == label.toLowerCase();
+  Widget _buildFilterChip(
+    String label,
+    String groupValue,
+    ValueChanged<String> onSelected,
+  ) {
+    final isSelected = groupValue.toLowerCase() == label.toLowerCase();
     return FilterChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _filterStatus = label;
-        });
-        _applyFilters();
-      },
+      onSelected: (_) => onSelected(label),
       backgroundColor: Colors.white,
       selectedColor: Colors.green.shade50,
       checkmarkColor: Colors.green.shade700,
@@ -475,22 +605,5 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     );
-  }
-
-  String _normalizeStatus(String value) {
-    final lower = value.toLowerCase();
-    if (lower.contains('batal')) return 'dibatalkan';
-    if (lower.contains('inaktif') ||
-        lower.contains('tidak aktif') ||
-        lower.contains('nonaktif')) {
-      return 'inaktif';
-    }
-    return 'aktif';
-  }
-
-  bool _shouldShowBack(BuildContext context) {
-    final route = ModalRoute.of(context);
-    if (route == null) return false;
-    return route.canPop;
   }
 }
