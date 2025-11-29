@@ -215,112 +215,179 @@ class _PolicyScreenState extends State<PolicyScreen> {
     return route.canPop;
   }
 
-  void _showFilterDialog() {
-    showDialog(
+  void _showFilterSheet() {
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         String tempFilterStatus = _filterStatus;
         String tempFilterCategory = _filterCategory;
 
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text(
-                'Filter Polis',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                  color: Colors.black87,
-                ),
+          builder: (context, setSheetState) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDialogSectionTitle('Status Polis'),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: ['Semua', 'Aktif', 'Inaktif'].map((status) {
-                        return _buildDialogFilterChip(
-                          label: status,
-                          groupValue: tempFilterStatus,
-                          onSelected: (val) {
-                            setStateDialog(() => tempFilterStatus = val);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildDialogSectionTitle('Kategori Asuransi'),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: ['Semua', 'Kesehatan', 'Jiwa', 'Kendaraan'].map(
-                        (cat) {
-                          return _buildDialogFilterChip(
-                            label: cat,
-                            groupValue: tempFilterCategory,
-                            onSelected: (val) {
-                              setStateDialog(() => tempFilterCategory = val);
-                            },
-                          );
-                        },
-                      ).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              actions: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          setStateDialog(() {
-                            tempFilterStatus = 'Semua';
-                            tempFilterCategory = 'Semua';
-                          });
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey.shade600,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: const Text('Reset'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _filterStatus = tempFilterStatus;
-                            _filterCategory = tempFilterCategory;
-                            _applyFilters();
-                          });
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  ),
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Filter Polis',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionLabel("Status Polis"),
+                          const SizedBox(height: 12),
+                          _buildFilterOption(
+                            "Semua Status",
+                            "Semua",
+                            tempFilterStatus,
+                            (val) =>
+                                setSheetState(() => tempFilterStatus = val),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFilterOption(
+                            "Aktif",
+                            "Aktif",
+                            tempFilterStatus,
+                            (val) =>
+                                setSheetState(() => tempFilterStatus = val),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFilterOption(
+                            "Inaktif",
+                            "Inaktif",
+                            tempFilterStatus,
+                            (val) =>
+                                setSheetState(() => tempFilterStatus = val),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          _buildSectionLabel("Kategori Asuransi"),
+                          const SizedBox(height: 12),
+                          _buildFilterOption(
+                            "Semua Kategori",
+                            "Semua",
+                            tempFilterCategory,
+                            (val) =>
+                                setSheetState(() => tempFilterCategory = val),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFilterOption(
+                            "Kesehatan",
+                            "Kesehatan",
+                            tempFilterCategory,
+                            (val) =>
+                                setSheetState(() => tempFilterCategory = val),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFilterOption(
+                            "Jiwa",
+                            "Jiwa",
+                            tempFilterCategory,
+                            (val) =>
+                                setSheetState(() => tempFilterCategory = val),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildFilterOption(
+                            "Kendaraan",
+                            "Kendaraan",
+                            tempFilterCategory,
+                            (val) =>
+                                setSheetState(() => tempFilterCategory = val),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setSheetState(() {
+                              tempFilterStatus = 'Semua';
+                              tempFilterCategory = 'Semua';
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            "Reset",
+                            style: TextStyle(color: Colors.grey.shade700),
                           ),
                         ),
-                        child: const Text('Terapkan'),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _filterStatus = tempFilterStatus;
+                              _filterCategory = tempFilterCategory;
+                              _applyFilters();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            "Terapkan Filter",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -328,41 +395,55 @@ class _PolicyScreenState extends State<PolicyScreen> {
     );
   }
 
-  Widget _buildDialogSectionTitle(String title) {
+  Widget _buildSectionLabel(String label) {
     return Text(
-      title,
+      label,
       style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: Colors.grey.shade700,
+        color: Colors.grey.shade600,
       ),
     );
   }
 
-  Widget _buildDialogFilterChip({
-    required String label,
-    required String groupValue,
-    required ValueChanged<String> onSelected,
-  }) {
-    final isSelected = groupValue.toLowerCase() == label.toLowerCase();
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onSelected(label),
-      backgroundColor: Colors.white,
-      selectedColor: Colors.green.shade50,
-      checkmarkColor: Colors.green.shade700,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.green.shade700 : Colors.grey.shade700,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        fontSize: 13,
+  Widget _buildFilterOption(
+    String label,
+    String value,
+    String currentValue,
+    Function(String) onSelect,
+  ) {
+    final isSelected = currentValue.toLowerCase() == value.toLowerCase();
+
+    return GestureDetector(
+      onTap: () => onSelect(value),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.green[50] : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.green[300]! : Colors.grey[200]!,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 0,
+          ),
+          visualDensity: VisualDensity.compact,
+          title: Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? Colors.green[700] : Colors.black87,
+            ),
+          ),
+          trailing: isSelected
+              ? Icon(Icons.check_circle, color: Colors.green[600], size: 22)
+              : Icon(Icons.circle_outlined, color: Colors.grey[300], size: 22),
+        ),
       ),
-      side: BorderSide(
-        color: isSelected ? Colors.green.shade300 : Colors.grey.shade300,
-        width: isSelected ? 1.5 : 1.0,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
 
@@ -589,7 +670,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
               Icons.tune,
               color: isFilterActive ? Colors.green.shade700 : Colors.grey[700],
             ),
-            onPressed: _showFilterDialog,
+            onPressed: _showFilterSheet,
           ),
         ),
       ],
