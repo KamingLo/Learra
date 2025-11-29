@@ -46,11 +46,22 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
+
           labelStyle: TextStyle(
             color: Colors.grey.shade700,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
+
+          floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+            final isFocused = states.contains(WidgetState.focused);
+            return TextStyle(
+              color: isFocused ? Colors.green.shade700 : Colors.grey.shade600,
+              fontSize: 16,
+              fontWeight: isFocused ? FontWeight.bold : FontWeight.w500,
+            );
+          }),
+
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           prefixIcon: Container(
@@ -151,6 +162,16 @@ class CustomDateField extends StatelessWidget {
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
+
+          floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+            final isFocused = states.contains(WidgetState.focused);
+            return TextStyle(
+              color: isFocused ? Colors.green.shade700 : Colors.grey.shade600,
+              fontSize: 16,
+              fontWeight: isFocused ? FontWeight.bold : FontWeight.w500,
+            );
+          }),
+
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           prefixIcon: Container(

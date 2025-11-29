@@ -276,7 +276,8 @@ class _PolicyScreenState extends State<PolicyScreen> {
                           Expanded(
                             child: _buildStatCard(
                               "Total Polis",
-                              "${_policies.length}",
+
+                              "${_filteredPolicies.length}",
                               Icons.description_outlined,
                               Colors.blue,
                             ),
@@ -285,7 +286,8 @@ class _PolicyScreenState extends State<PolicyScreen> {
                           Expanded(
                             child: _buildStatCard(
                               "Polis Aktif",
-                              "${_policies.where((p) => p.status.toLowerCase() == 'aktif').length}",
+
+                              "${_filteredPolicies.where((p) => p.status.toLowerCase() == 'aktif').length}",
                               Icons.verified_outlined,
                               Colors.green,
                             ),
