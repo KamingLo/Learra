@@ -104,34 +104,14 @@ class UserProductScreenState extends State<UserProductScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_searchQuery.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0, left: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Hasil pencarian: \"$_searchQuery\"", 
-                    style: TextStyle(
-                      color: Colors.green, 
-                      fontWeight: FontWeight.bold
-                    )
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _clearSearch,
-                    child: const Icon(
-                      Icons.close, 
-                      size: 16, 
-                      color: Colors.grey),
-                  )
-                ],
-              ),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+            child: ProductSearchBar(
+              controller: _searchCtrl,
+              onChanged: _onSearchChanged,
+              onClear: _clearSearch,
             ),
-          ProductSearchBar(
-            controller: _searchCtrl,
-            onChanged: _onSearchChanged,
-            onClear: _clearSearch,
           ),
           Expanded(
             child: _isLoading
