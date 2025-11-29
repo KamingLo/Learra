@@ -265,6 +265,24 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFEFF1F5),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: SizedBox(
+          height: 48,
+          child: Image.asset(
+            'assets/IconApp/LearraFull.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Text("Learra",
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold));
+            },
+          ),
+        ),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

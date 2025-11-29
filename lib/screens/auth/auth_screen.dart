@@ -22,10 +22,21 @@ class _AuthScreenState extends State<AuthScreen> {
       backgroundColor: const Color(0xFFEFF1F5),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        toolbarHeight: 0,
+        backgroundColor: Colors.white,
         elevation: 0,
-        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        title: SizedBox(
+          height: 48,
+          child: Image.asset(
+            'assets/IconApp/LearraFull.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Text("Learra",
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold));
+            },
+          ),
+        ),
       ),
       body: SafeArea(
         child: LayoutBuilder(
