@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FAQItem {
   final String category;
@@ -155,7 +156,8 @@ class FAQPage extends StatefulWidget {
 }
 
 class _FAQPageState extends State<FAQPage> {
-  int? expandedIndex;
+  String? expandedQuestionIndex;
+  Set<String> expandedCategories = {};
 
   final List<AuthorItem> authors = [
     AuthorItem(name: 'Charless', assetPath: 'assets/Author/charless.png'),
@@ -185,6 +187,24 @@ class _FAQPageState extends State<FAQPage> {
           'Anda dapat mengubah paket polis sesuai kebutuhan dengan menghubungi tim customer service kami melalui aplikasi atau menelepon hotline. Perubahan akan berlaku pada tanggal pembaruan yang Anda tentukan.',
     ),
     FAQItem(
+      category: 'Polis',
+      question: 'Bagaimana cara memperpanjang polis asuransi?',
+      answer:
+          'Polis akan diperpanjang otomatis jika Anda mengaktifkan fitur auto-renewal. Jika tidak, Anda akan menerima notifikasi 30 hari sebelum masa berlaku habis. Anda dapat memperpanjang melalui menu "Polis Saya" di aplikasi.',
+    ),
+    FAQItem(
+      category: 'Polis',
+      question: 'Apakah saya bisa membatalkan polis dan mendapat refund?',
+      answer:
+          'Ya, Anda dapat membatalkan polis dalam masa cooling-off period (14 hari sejak pembelian) dan mendapat refund penuh. Setelah periode tersebut, pembatalan akan dikenakan biaya administrasi sesuai ketentuan yang berlaku.',
+    ),
+    FAQItem(
+      category: 'Polis',
+      question: 'Apa saja manfaat yang didapat dari polis asuransi Learra?',
+      answer:
+          'Manfaat bervariasi tergantung jenis polis. Asuransi Jiwa memberikan santunan meninggal dunia, Asuransi Kesehatan menanggung biaya rawat inap dan rawat jalan, sedangkan Asuransi Mobil menanggung kerusakan dan kehilangan kendaraan.',
+    ),
+    FAQItem(
       category: 'Akun',
       question: 'Bagaimana cara membuat akun di Learra?',
       answer:
@@ -201,6 +221,12 @@ class _FAQPageState extends State<FAQPage> {
       question: 'Apakah data pribadi saya aman di aplikasi Learra?',
       answer:
           'Ya, kami menggunakan enkripsi tingkat bank dan protokol keamanan standar internasional untuk melindungi data Anda. Semua informasi pribadi tidak akan dibagikan kepada pihak ketiga tanpa persetujuan.',
+    ),
+    FAQItem(
+      category: 'Akun',
+      question: 'Bagaimana cara mengubah informasi profil saya?',
+      answer:
+          'Buka menu "Profil" di aplikasi, pilih "Edit Profil", lalu ubah informasi yang diperlukan seperti nama, alamat, atau nomor telepon. Jangan lupa klik "Simpan" setelah selesai melakukan perubahan.',
     ),
     FAQItem(
       category: 'Klaim',
@@ -222,48 +248,6 @@ class _FAQPageState extends State<FAQPage> {
           'Proses verifikasi klaim memakan waktu 1-3 hari kerja. Setelah disetujui, dana akan ditransfer ke rekening Anda dalam 5-7 hari kerja. Anda dapat memantau status klaim di menu "Riwayat Klaim" di aplikasi.',
     ),
     FAQItem(
-      category: 'Pembayaran',
-      question: 'Metode pembayaran apa saja yang tersedia?',
-      answer:
-          'Learra menerima pembayaran melalui transfer bank, kartu kredit, e-wallet (GCash, Dana, OVO), dan cicilan. Pilih metode yang paling sesuai saat checkout.',
-    ),
-    FAQItem(
-      category: 'Pembayaran',
-      question: 'Bisakah saya mengatur pembayaran otomatis untuk premi?',
-      answer:
-          'Ya, Anda dapat mengaktifkan fitur auto-debit untuk pembayaran premi bulanan atau tahunan. Ini memastikan polis tetap aktif tanpa khawatir ketinggalan tanggal jatuh tempo.',
-    ),
-    FAQItem(
-      category: 'Lainnya',
-      question: 'Bagaimana cara menghubungi customer service Learra?',
-      answer:
-          'Anda dapat menghubungi kami melalui: Live Chat di aplikasi (24/7), email support@learra.com, atau telepon hotline 1500-LEARRA (1500-532772) tersedia Senin-Jumat 08:00-17:00 WIB.',
-    ),
-    FAQItem(
-      category: 'Lainnya',
-      question: 'Apakah ada biaya tersembunyi dalam produk asuransi Learra?',
-      answer:
-          'Tidak ada biaya tersembunyi. Semua biaya akan dijelaskan dengan transparan sebelum Anda membeli polis, termasuk premi bulanan, biaya admin (jika ada), dan benefit yang Anda dapatkan.',
-    ),
-    FAQItem(
-      category: 'Polis',
-      question: 'Bagaimana cara memperpanjang polis asuransi?',
-      answer:
-          'Polis akan diperpanjang otomatis jika Anda mengaktifkan fitur auto-renewal. Jika tidak, Anda akan menerima notifikasi 30 hari sebelum masa berlaku habis. Anda dapat memperpanjang melalui menu "Polis Saya" di aplikasi.',
-    ),
-    FAQItem(
-      category: 'Polis',
-      question: 'Apakah saya bisa membatalkan polis dan mendapat refund?',
-      answer:
-          'Ya, Anda dapat membatalkan polis dalam masa cooling-off period (14 hari sejak pembelian) dan mendapat refund penuh. Setelah periode tersebut, pembatalan akan dikenakan biaya administrasi sesuai ketentuan yang berlaku.',
-    ),
-    FAQItem(
-      category: 'Polis',
-      question: 'Apa saja manfaat yang didapat dari polis asuransi Learra?',
-      answer:
-          'Manfaat bervariasi tergantung jenis polis. Asuransi Jiwa memberikan santunan meninggal dunia, Asuransi Kesehatan menanggung biaya rawat inap dan rawat jalan, sedangkan Asuransi Mobil menanggung kerusakan dan kehilangan kendaraan.',
-    ),
-    FAQItem(
       category: 'Klaim',
       question: 'Apa yang harus dilakukan jika klaim saya ditolak?',
       answer:
@@ -283,6 +267,18 @@ class _FAQPageState extends State<FAQPage> {
     ),
     FAQItem(
       category: 'Pembayaran',
+      question: 'Metode pembayaran apa saja yang tersedia?',
+      answer:
+          'Learra menerima pembayaran melalui transfer bank, kartu kredit, e-wallet (GCash, Dana, OVO), dan cicilan. Pilih metode yang paling sesuai saat checkout.',
+    ),
+    FAQItem(
+      category: 'Pembayaran',
+      question: 'Bisakah saya mengatur pembayaran otomatis untuk premi?',
+      answer:
+          'Ya, Anda dapat mengaktifkan fitur auto-debit untuk pembayaran premi bulanan atau tahunan. Ini memastikan polis tetap aktif tanpa khawatir ketinggalan tanggal jatuh tempo.',
+    ),
+    FAQItem(
+      category: 'Pembayaran',
       question: 'Apa yang harus dilakukan jika pembayaran gagal?',
       answer:
           'Jika pembayaran gagal, pastikan saldo atau limit kartu kredit Anda mencukupi. Anda dapat mencoba metode pembayaran lain atau menghubungi customer service jika masalah berlanjut. Pembayaran dapat diulang dalam 24 jam tanpa kehilangan data.',
@@ -294,10 +290,16 @@ class _FAQPageState extends State<FAQPage> {
           'Proses refund memakan waktu 7-14 hari kerja setelah pembatalan disetujui. Dana akan dikembalikan ke rekening atau metode pembayaran yang sama dengan saat pembelian polis.',
     ),
     FAQItem(
-      category: 'Akun',
-      question: 'Bagaimana cara mengubah informasi profil saya?',
+      category: 'Lainnya',
+      question: 'Bagaimana cara menghubungi customer service Learra?',
       answer:
-          'Buka menu "Profil" di aplikasi, pilih "Edit Profil", lalu ubah informasi yang diperlukan seperti nama, alamat, atau nomor telepon. Jangan lupa klik "Simpan" setelah selesai melakukan perubahan.',
+          'Anda dapat menghubungi kami melalui: Live Chat di aplikasi (24/7), email support@learra.com, atau telepon hotline 1500-LEARRA (1500-532772) tersedia Senin-Jumat 08:00-17:00 WIB.',
+    ),
+    FAQItem(
+      category: 'Lainnya',
+      question: 'Apakah ada biaya tersembunyi dalam produk asuransi Learra?',
+      answer:
+          'Tidak ada biaya tersembunyi. Semua biaya akan dijelaskan dengan transparan sebelum Anda membeli polis, termasuk premi bulanan, biaya admin (jika ada), dan benefit yang Anda dapatkan.',
     ),
     FAQItem(
       category: 'Lainnya',
@@ -318,6 +320,24 @@ class _FAQPageState extends State<FAQPage> {
           'Ya, aplikasi Learra tersedia untuk perangkat iOS (App Store) dan Android (Google Play Store). Anda dapat mengunduh aplikasi secara gratis dan mengakses semua fitur di kedua platform.',
     ),
   ];
+
+  Future<void> _launchPhone() async {
+    const String phone = 'tel:+6283835360789';
+    final Uri url = Uri.parse(phone);
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tidak dapat membuka aplikasi telepon.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -376,41 +396,85 @@ class _FAQPageState extends State<FAQPage> {
           ...groupedFAQ.entries.map((entry) {
             final category = entry.key;
             final items = entry.value;
+            final isCategoryExpanded = expandedCategories.contains(category);
+
             return Padding(
-              padding: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      category,
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        letterSpacing: 0.5,
+                  // Category Header (Dropdown)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isCategoryExpanded) {
+                          expandedCategories.remove(category);
+                        } else {
+                          expandedCategories.add(category);
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(
+                          color: const Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            category,
+                            style: const TextStyle(
+                              color: Color(0xFF1F2937),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          AnimatedRotation(
+                            turns: isCategoryExpanded ? 0.5 : 0,
+                            duration: const Duration(milliseconds: 300),
+                            child: const Icon(
+                              Icons.expand_more,
+                              color: Color(0xFF9CA3AF),
+                              size: 24,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  ...List.generate(items.length, (index) {
-                    final item = items[index];
-                    final globalIndex = faqItems.indexOf(item);
-                    final isExpanded = expandedIndex == globalIndex;
+                  // FAQ Items (Show when category expanded)
+                  if (isCategoryExpanded)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Column(
+                        children: List.generate(items.length, (index) {
+                          final item = items[index];
+                          final uniqueKey = '${category}_$index';
+                          final isExpanded = expandedQuestionIndex == uniqueKey;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: FAQCard(
-                        item: item,
-                        isExpanded: isExpanded,
-                        onTap: () {
-                          setState(() {
-                            expandedIndex = isExpanded ? null : globalIndex;
-                          });
-                        },
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: FAQCard(
+                              item: item,
+                              isExpanded: isExpanded,
+                              onTap: () {
+                                setState(() {
+                                  expandedQuestionIndex = isExpanded
+                                      ? null
+                                      : uniqueKey;
+                                });
+                              },
+                            ),
+                          );
+                        }),
                       ),
-                    );
-                  }),
+                    ),
                 ],
               ),
             );
@@ -445,7 +509,7 @@ class _FAQPageState extends State<FAQPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Hubungi tim customer service kami yang siap membantu 24/7 melalui live chat aplikasi atau panggilan langsung.',
+                  'Jika butuh bantuan lebih lanjut, Silahkan hubungi nomor telepon ini. Kami siap membantu 24/7',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF9CA3AF),
                     height: 1.5,
@@ -465,7 +529,7 @@ class _FAQPageState extends State<FAQPage> {
                       ),
                       minimumSize: const Size(double.infinity, 40),
                     ),
-                    onPressed: () {},
+                    onPressed: _launchPhone,
                     child: const Text(
                       'Hubungi Kami',
                       style: TextStyle(
@@ -480,7 +544,6 @@ class _FAQPageState extends State<FAQPage> {
             ),
           ),
           const SizedBox(height: 24),
-
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: Column(
@@ -497,15 +560,17 @@ class _FAQPageState extends State<FAQPage> {
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(child: AuthorCard(author: authors[0])),
-                    const SizedBox(width: 16),
-                    Expanded(child: AuthorCard(author: authors[1])),
-                    const SizedBox(width: 16),
-                    Expanded(child: AuthorCard(author: authors[2])),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      AuthorCard(author: authors[0]),
+                      const SizedBox(width: 16),
+                      AuthorCard(author: authors[1]),
+                      const SizedBox(width: 16),
+                      AuthorCard(author: authors[2]),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 30),
                 Row(

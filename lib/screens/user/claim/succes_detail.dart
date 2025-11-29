@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:math';
 
 class DetailKlaimScreen extends StatelessWidget {
   final Map<String, dynamic> klaimData;
@@ -11,19 +12,16 @@ class DetailKlaimScreen extends StatelessWidget {
   }
 
   String _getBannerAsset() {
-    final polis = klaimData['polisId'] ?? {};
-    final productName = polis['productId']?['name']?.toString() ?? '';
+    const List<String> availableAssets = [
+      'assets/PayKlaim/AsuransiKesehatan.png',
+      'assets/PayKlaim/AsuransiJiwa.png',
+      'assets/PayKlaim/AsuransiMobil.png',
+    ];
 
-    if (productName.toLowerCase().contains('kesehatan')) {
-      return 'assets/PayKlaim/AsuransiKesehatan.png';
-    } else if (productName.toLowerCase().contains('jiwa')) {
-      return 'assets/PayKlaim/AsuransiJiwa.png';
-    } else if (productName.toLowerCase().contains('kendaraan') ||
-        productName.toLowerCase().contains('mobil')) {
-      return 'assets/PayKlaim/AsuransiMobil.png';
-    }
+    final random = Random();
+    final int randomIndex = random.nextInt(availableAssets.length);
 
-    return 'assets/PayKlaim/AsuransiMobil.png';
+    return availableAssets[randomIndex];
   }
 
   String _getStatusText(String rawStatus) {
@@ -107,6 +105,7 @@ class DetailKlaimScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Detail Klaim',
           style: TextStyle(

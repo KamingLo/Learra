@@ -19,8 +19,7 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
   late DateFormat dateFmt;
   bool _isInitialized = false;
 
-  String?
-  _selectedStatus;
+  String? _selectedStatus;
 
   List<dynamic> _allPaymentData = [];
   List<dynamic> _filteredPaymentData = [];
@@ -45,6 +44,42 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
     setState(() {
       futurePayments = api.get('/payment?limit=100').then((res) {
         _allPaymentData = res as List<dynamic>;
+
+        _allPaymentData.sort((a, b) {
+          final statusA = val(a['status'], 'menunggu_konfirmasi').toLowerCase();
+          final statusB = val(b['status'], 'menunggu_konfirmasi').toLowerCase();
+
+          int getStatusPriority(String status) {
+            switch (status) {
+              case 'menunggu_konfirmasi':
+                return 1;
+              case 'berhasil':
+                return 2;
+              case 'gagal':
+                return 3;
+              default:
+                return 4;
+            }
+          }
+
+          final priorityA = getStatusPriority(statusA);
+          final priorityB = getStatusPriority(statusB);
+
+          final priorityComparison = priorityA.compareTo(priorityB);
+
+          if (priorityComparison == 0) {
+            final dateA =
+                DateTime.tryParse(val(a['createdAt'])) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            final dateB =
+                DateTime.tryParse(val(b['createdAt'])) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            return dateB.compareTo(dateA);
+          }
+
+          return priorityComparison;
+        });
+
         _applyFilters();
         return _filteredPaymentData;
       });
@@ -365,12 +400,14 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
 
                       final isPending =
                           status.toLowerCase() == 'menunggu_konfirmasi';
+                      final statusLowerCase = status.toLowerCase();
                       final isCompleted =
-                          status.toLowerCase() == 'berhasil' ||
-                          status.toLowerCase() == 'gagal';
+                          statusLowerCase == 'berhasil' ||
+                          statusLowerCase == 'gagal';
+
                       final statusLabel = isPending
                           ? 'MENUNGGU'
-                          : status.toLowerCase() == 'berhasil'
+                          : statusLowerCase == 'berhasil'
                           ? 'BERHASIL'
                           : 'DITOLAK';
 
@@ -429,6 +466,7 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: approve ? Colors.green : Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(approve ? 'Konfirmasi' : 'Tolak'),
@@ -506,7 +544,8 @@ class PaymentCardAdmin extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            // ignore: deprecated_member_use
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -571,28 +610,110 @@ class PaymentCardAdmin extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+
+            if (isPending)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getStatusTextColor(),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailPembayaranScreen(
+                                paymentData: paymentData,
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Row(
+                          children: [
+                            Text('Detail'),
+                            SizedBox(width: 4),
+                            Icon(Icons.arrow_forward, size: 16),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(),
-                    borderRadius: BorderRadius.circular(6),
+
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: onReject,
+                        child: const Text(
+                          'Tolak',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: onConfirm,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Konfirmasi',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getStatusTextColor(),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _getStatusTextColor(),
+                      ),
                     ),
                   ),
-                ),
-                const Spacer(),
-                if (isCompleted)
+
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -605,47 +726,14 @@ class PaymentCardAdmin extends StatelessWidget {
                     },
                     child: const Row(
                       children: [
-                        Text(
-                          'Detail',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        Text('Detail'),
                         SizedBox(width: 4),
                         Icon(Icons.arrow_forward, size: 16),
                       ],
                     ),
                   ),
-                if (isPending) ...[
-                  TextButton(
-                    onPressed: onReject,
-                    child: const Text(
-                      'Tolak',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: onConfirm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Konfirmasi',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
                 ],
-              ],
-            ),
+              ),
           ],
         ),
       ),
