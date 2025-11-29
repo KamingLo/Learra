@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import '../../../models/polis_model.dart';
 import '../../../models/product_model.dart';
 import '../../../widgets/admin/polis/admin_polis_card.dart';
@@ -15,7 +14,6 @@ class AdminPolicyScreen extends StatefulWidget {
 class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce;
 
   List<PolicyModel> _policies = [];
   List<PolicyModel> _filteredPolicies = [];
@@ -36,23 +34,16 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text;
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 450), () {
-      if (!mounted) return;
-      _fetchPolicies(query: query.trim());
-    });
     _applyFilters();
   }
 
-  Future<void> _fetchPolicies({String query = ''}) async {
+  Future<void> _fetchPolicies() async {
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -60,8 +51,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     });
 
     try {
-      final String endpoint = query.isEmpty ? '/polis' : '/polis?search=$query';
-      final response = await _apiService.get(endpoint);
+      final response = await _apiService.get('/polis');
 
       if (!mounted) return;
 
@@ -83,6 +73,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
       setState(() {
         _policies = enrichedPolicies;
         _isLoading = false;
+
         _applyFilters();
       });
     } catch (e) {
@@ -93,6 +84,35 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
             "Gagal memuat polis. ${e.toString().replaceAll('Exception: ', '')}";
       });
     }
+  }
+
+  void _applyFilters() {
+    final searchQuery = _searchController.text.toLowerCase();
+    final selectedStatus = _filterStatus.toLowerCase();
+    final selectedCategory = _filterCategory.toLowerCase();
+
+    setState(() {
+      _filteredPolicies = _policies.where((policy) {
+        final matchesSearch =
+            searchQuery.isEmpty ||
+            (policy.ownerName ?? '').toLowerCase().contains(searchQuery) ||
+            (policy.ownerEmail ?? '').toLowerCase().contains(searchQuery) ||
+            policy.policyNumber.toLowerCase().contains(searchQuery) ||
+            policy.productName.toLowerCase().contains(searchQuery);
+
+        final matchesStatus =
+            selectedStatus == 'semua' ||
+            _normalizeStatus(policy.status) == selectedStatus;
+
+        final matchesCategory =
+            selectedCategory == 'semua' ||
+            policy.category.toLowerCase() == selectedCategory;
+
+        return matchesSearch && matchesStatus && matchesCategory;
+      }).toList();
+
+      _sortPolicyList(_filteredPolicies);
+    });
   }
 
   Future<List<PolicyModel>> _hydrateProductNames(
@@ -140,37 +160,8 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
     }).toList();
   }
 
-  void _applyFilters() {
-    final searchQuery = _searchController.text.toLowerCase();
-    final selectedStatus = _filterStatus.toLowerCase();
-    final selectedCategory = _filterCategory.toLowerCase();
-
-    setState(() {
-      _filteredPolicies = _policies.where((policy) {
-        final matchesSearch =
-            searchQuery.isEmpty ||
-            (policy.ownerName ?? '').toLowerCase().contains(searchQuery) ||
-            policy.policyNumber.toLowerCase().contains(searchQuery) ||
-            policy.productName.toLowerCase().contains(searchQuery) ||
-            (policy.ownerEmail ?? '').toLowerCase().contains(searchQuery);
-
-        final matchesStatus =
-            selectedStatus == 'semua' ||
-            _normalizeStatus(policy.status) == selectedStatus;
-
-        final matchesCategory =
-            selectedCategory == 'semua' ||
-            policy.category.toLowerCase() == selectedCategory;
-
-        return matchesSearch && matchesStatus && matchesCategory;
-      }).toList();
-
-      _sortPolicyList(_filteredPolicies);
-    });
-  }
-
   Future<void> _refreshPolicies() async {
-    await _fetchPolicies(query: _searchController.text.trim());
+    await _fetchPolicies();
   }
 
   void _sortPolicyList(List<PolicyModel> list) {
@@ -499,7 +490,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                           Expanded(
                             child: _buildQuickStatCard(
                               "Total Polis",
-                              "${_policies.length}",
+                              "${_filteredPolicies.length}",
                               Icons.description_outlined,
                               Colors.blue,
                             ),
@@ -508,7 +499,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
                           Expanded(
                             child: _buildQuickStatCard(
                               "Polis Aktif",
-                              "${_policies.where((p) => p.status.toLowerCase() == 'aktif').length}",
+                              "${_filteredPolicies.where((p) => p.status.toLowerCase() == 'aktif').length}",
                               Icons.verified_outlined,
                               Colors.green,
                             ),
@@ -655,7 +646,7 @@ class _AdminPolicyScreenState extends State<AdminPolicyScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Cari nama user, polis...',
+                hintText: 'Cari user, polis, produk...',
                 hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
                 prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
                 suffixIcon: _searchController.text.isNotEmpty
