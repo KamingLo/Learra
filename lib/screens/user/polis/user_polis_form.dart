@@ -4,7 +4,8 @@ import '../../../../services/api_service.dart';
 import '../../../../services/session_service.dart';
 import '../../../widgets/user/polis/user_polis_form_cards.dart';
 import '../../../widgets/user/polis/user_polis_form_fields.dart';
-import 'user_polis_screen.dart';
+
+import '../../../widgets/main_navbar.dart';
 
 abstract class BasePolisForm extends StatefulWidget {
   final String productId;
@@ -112,6 +113,8 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
         throw Exception(response['message'] ?? 'Gagal membuat polis');
       }
 
+      String role = await SessionService.getCurrentRole();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -123,9 +126,13 @@ abstract class BasePolisFormState<T extends BasePolisForm> extends State<T> {
             ),
           ),
         );
-        Navigator.pushReplacement(
+
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const PolicyScreen()),
+          MaterialPageRoute(
+            builder: (context) => MainNavbar(role: role, initialIndex: 2),
+          ),
+          (route) => false,
         );
       }
     } catch (e) {
