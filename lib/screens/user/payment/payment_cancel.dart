@@ -88,7 +88,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Batalkan pembayaran ke API
       await _apiService.delete('/payment/${widget.paymentId}');
 
       if (!mounted) return;
@@ -145,7 +144,7 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
     return PopScope(
       canPop: !_isLoading,
       child: Scaffold(
-        backgroundColor: Colors.grey[50], // Background Abu-abu
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
@@ -160,7 +159,7 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
             ),
           ),
           centerTitle: true,
-          backgroundColor: Colors.white, // AppBar Putih
+          backgroundColor: Colors.white,
           elevation: 0,
         ),
         body: Stack(
@@ -170,7 +169,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner Image Container (Biarkan warnanya sama)
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
@@ -199,11 +197,10 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Detail Row Card Container
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white, // Card Putih
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -248,7 +245,6 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Warning Card Container (Biarkan tetap merah/abu)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -284,14 +280,13 @@ class _BatalkanPembayaranScreenState extends State<BatalkanPembayaranScreen> {
               ),
             ),
 
-            // Bottom Bar Container (Putih)
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white, // Bottom Bar Putih
+                  color: Colors.white,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.08),
