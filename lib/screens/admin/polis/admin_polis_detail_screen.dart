@@ -263,9 +263,17 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
       await _apiService.delete('/polis/${_policy!.id}');
       if (!mounted) return;
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Polis berhasil dihapus')));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Polis berhasil dihapus',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);

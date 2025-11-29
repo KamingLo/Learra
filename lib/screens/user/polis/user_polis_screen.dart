@@ -601,14 +601,19 @@ class _PolicyScreenState extends State<PolicyScreen> {
                       final policy = _filteredPolicies[index];
                       return PolicyCard(
                         policy: policy,
-                        onTap: () {
-                          Navigator.push(
+
+                        onTap: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
                                   PolicyDetailScreen(policy: policy),
                             ),
                           );
+
+                          if (mounted) {
+                            _fetchPolicies();
+                          }
                         },
                       );
                     }, childCount: _filteredPolicies.length),
