@@ -16,7 +16,6 @@ Aplikasi ini dirancang untuk memberikan pengalaman yang sederhana namun lengkap 
 * **Frontend:** Flutter
 * **Backend:** [Learra Backend](https://github.com/kaminglo/learra-backend) (Express.js + MongoDB)
 * **Database:** MongoDB
-* **State Management:** Provider / Riverpod (sesuaikan jika menggunakan)
 
 ## Instalasi & Jalankan
 
