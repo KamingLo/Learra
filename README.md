@@ -23,13 +23,13 @@ Aplikasi ini dirancang untuk memberikan pengalaman yang sederhana namun lengkap 
 1. Clone repository ini:
 
 ```bash
-git clone https://github.com/kaminglo/learra-flutter.git
+git clone https://github.com/kaminglo/learra.git
 ```
 
 2. Masuk ke direktori proyek:
 
 ```bash
-cd learra-flutter
+cd learra
 ```
 
 3. Install dependencies:
