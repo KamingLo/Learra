@@ -15,6 +15,8 @@ class AdminProductScreen extends StatefulWidget {
 
 class _AdminProductScreenState extends State<AdminProductScreen> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchCtrl = TextEditingController();
+
   List<ProductModel> _products = [];
   bool _isLoading = true;
   String _searchQuery = "";
@@ -31,12 +33,12 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
 
   Future<void> _fetchProducts({String query = ""}) async {
     if (mounted) setState(() => _isLoading = true);
-    
+
     try {
       final endpoint = query.isEmpty ? '/produk' : '/produk?search=$query';
       final response = await _apiService.get(endpoint);
 
-      if (!mounted) return; 
+      if (!mounted) return;
 
       List<dynamic> data = (response is Map && response.containsKey('data')) 
           ? response['data'] 
@@ -48,7 +50,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      
       setState(() => _isLoading = false);
     }
   }
@@ -57,10 +58,15 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      
       setState(() => _searchQuery = query);
       _fetchProducts(query: query);
     });
+  }
+
+  void _clearSearch() {
+    _searchCtrl.clear();
+    _fetchProducts(query: "");
+    setState(() => _searchQuery = "");
   }
 
   Future<void> _deleteProduct(String id) async {
@@ -92,7 +98,6 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
     if (confirm) {
       try {
         await _apiService.delete('/produk/$id');
-        
         if (!mounted) return;
 
         _fetchProducts(query: _searchQuery);
@@ -129,6 +134,7 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -148,19 +154,24 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
       
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(0, 0, 20, 10),
             child: Row(
               children: [
                 Expanded(
-                  child: ProductSearchBar(onChanged: _onSearchChanged),
+                  child: ProductSearchBar(
+                    controller: _searchCtrl,
+                    onChanged: _onSearchChanged,
+                    onClear: _clearSearch,
+                  ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Material(
-                  color: _accentGreen,
-                  borderRadius: BorderRadius.circular(30),
+                  color: Colors.green.shade600,
+                  borderRadius: BorderRadius.circular(12),
                   elevation: 4,
-                  shadowColor: _accentGreen.withValues(alpha: 0.4),
+                  shadowColor: Colors.green.shade800.withValues(alpha:0.3),
                   child: InkWell(
                     onTap: () => _openForm(),
                     borderRadius: BorderRadius.circular(30),
@@ -168,13 +179,17 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
                       height: 50,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       alignment: Alignment.center,
-                      child: const Row(
-                        children: [
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
                           Icon(Icons.add_rounded, color: Colors.white),
                           SizedBox(width: 8),
                           Text(
-                            "Tambah", 
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)
+                            "Tambah",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -216,10 +231,10 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
           Container(
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: Colors.green.shade100,
               shape: BoxShape.circle
             ),
-            child: Icon(Icons.inventory_2_outlined, size: 80, color: _accentGreen.withValues(alpha: 0.7)),
+            child: Icon(Icons.inventory_2_outlined, size: 80, color: Colors.green.shade700),
           ),
           const SizedBox(height: 24),
           Text(
