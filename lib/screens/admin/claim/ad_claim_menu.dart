@@ -44,6 +44,48 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
     setState(() {
       futureKlaim = api.get('/klaim?limit=100').then((res) {
         _allKlaimData = res as List<dynamic>;
+
+        // --- LOGIKA PENGURUTAN BARU DIMULAI DI SINI ---
+        _allKlaimData.sort((a, b) {
+          final statusA = val(a['status'], 'menunggu').toLowerCase();
+          final statusB = val(b['status'], 'menunggu').toLowerCase();
+
+          // Fungsi pembantu untuk mendapatkan nilai prioritas
+          int getStatusPriority(String status) {
+            switch (status) {
+              case 'menunggu':
+                return 1; // Prioritas tertinggi
+              case 'diterima':
+                return 2;
+              case 'ditolak':
+                return 3; // Prioritas terendah
+              default:
+                return 4; // Status lain di paling bawah
+            }
+          }
+
+          final priorityA = getStatusPriority(statusA);
+          final priorityB = getStatusPriority(statusB);
+
+          // 1. Urutkan berdasarkan prioritas status (1, 2, 3)
+          final priorityComparison = priorityA.compareTo(priorityB);
+
+          // 2. Jika prioritas sama, urutkan berdasarkan tanggal (terbaru ke terlama)
+          if (priorityComparison == 0) {
+            final dateA =
+                DateTime.tryParse(val(a['tanggalKlaim'] ?? a['createdAt'])) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            final dateB =
+                DateTime.tryParse(val(b['tanggalKlaim'] ?? b['createdAt'])) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+            // Urutan DESC (terbaru dulu): Bandingkan B dengan A
+            return dateB.compareTo(dateA);
+          }
+
+          return priorityComparison;
+        });
+        // --- LOGIKA PENGURUTAN BARU SELESAI DI SINI ---
+
         _applyFilters();
         return _filteredKlaimData;
       });
@@ -402,6 +444,7 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
               backgroundColor: newStatus == 'diterima'
                   ? Colors.green
                   : Colors.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(newStatus == 'diterima' ? 'Terima' : 'Tolak'),
@@ -476,7 +519,8 @@ class KlaimCardAdmin extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            // ignore: deprecated_member_use
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -539,29 +583,62 @@ class KlaimCardAdmin extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getStatusTextColor(),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                if (isPending)
+
+            // LOGIKA AKSI DIPERBARUI DI SINI
+            if (isPending)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // ROW 1: Status (Kiri) dan Tombol Detail (Kanan)
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Status Container
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _getStatusText(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getStatusTextColor(),
+                          ),
+                        ),
+                      ),
+
+                      // Tombol Detail (Pindah ke baris atas, di kanan)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  DetailKlaimScreen(klaimData: klaimData),
+                            ),
+                          );
+                        },
+                        child: const Row(
+                          children: [
+                            Text('Detail'),
+                            SizedBox(width: 4),
+                            Icon(Icons.arrow_forward, size: 16),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8), // Spasi pemisah
+                  // ROW 2: Tombol Konfirmasi (Tolak dan Terima) - di baris bawah
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: onReject,
@@ -575,6 +652,10 @@ class KlaimCardAdmin extends StatelessWidget {
                         onPressed: onConfirm,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -585,8 +666,34 @@ class KlaimCardAdmin extends StatelessWidget {
                         ),
                       ),
                     ],
-                  )
-                else
+                  ),
+                ],
+              )
+            else // DITERIMA atau DITOLAK: Status dan Detail sebaris
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Status Container
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      _getStatusText(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _getStatusTextColor(),
+                      ),
+                    ),
+                  ),
+
+                  // Tombol Detail
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -605,12 +712,25 @@ class KlaimCardAdmin extends StatelessWidget {
                       ],
                     ),
                   ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
     );
+  }
+
+  String _getStatusText() {
+    switch (status) {
+      case 'DITERIMA':
+        return 'DITERIMA';
+      case 'MENUNGGU':
+        return 'MENUNGGU';
+      case 'DITOLAK':
+        return 'DITOLAK';
+      default:
+        return status;
+    }
   }
 
   Color _getStatusColor() {

@@ -20,9 +20,6 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
   final ApiService _apiService = ApiService();
 
   late TextEditingController _premiController;
-  late TextEditingController _statusReasonController;
-
-  String _selectedStatus = 'inaktif';
   DateTime _selectedDate = DateTime.now();
 
   final _merkController = TextEditingController();
@@ -57,24 +54,10 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
   void _initializeControllers() {
     if (_policy == null) return;
 
-    final normalizedStatus = _policy!.status.toLowerCase();
-    if (normalizedStatus.contains('batal')) {
-      _selectedStatus = 'dibatalkan';
-    } else if (normalizedStatus.contains('inaktif') ||
-        normalizedStatus.contains('tidak aktif') ||
-        normalizedStatus.contains('nonaktif')) {
-      _selectedStatus = 'inaktif';
-    } else {
-      _selectedStatus = 'aktif';
-    }
-
     _selectedDate = _policy!.expiredDate;
 
     _premiController = TextEditingController(
       text: _policy!.premiumAmount.toStringAsFixed(0),
-    );
-    _statusReasonController = TextEditingController(
-      text: _policy!.statusReason ?? '',
     );
 
     if (_policy!.category == 'kendaraan') {

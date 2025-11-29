@@ -31,8 +31,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
   bool _isChecked = false;
   bool _isLoading = false;
   String _selectedPaymentMethod = 'bca';
-  final TextEditingController _policyNumberController = TextEditingController();
-  final FocusNode _policyNumberFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -42,13 +40,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
 
   Future<void> _initializeDateFormatting() async {
     await initializeDateFormatting('id_ID', null);
-  }
-
-  @override
-  void dispose() {
-    _policyNumberController.dispose();
-    _policyNumberFocusNode.dispose();
-    super.dispose();
   }
 
   final ApiService _apiService = ApiService();
@@ -80,12 +71,72 @@ class _PaymentDetailState extends State<PaymentDetail> {
       return;
     }
 
-    final policyNumber = _policyNumberController.text.trim();
-    if (policyNumber.isEmpty) {
-      _showWarningDialog();
-      return;
-    }
+    _showPolicyNumberConfirmation();
+  }
 
+  void _showPolicyNumberConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Harap Perhatian!',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pastikan anda memasukan nomor polis anda saat melakukan transfer',
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Batal',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _processPembayaran();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Paham',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processPembayaran() async {
     if (widget.policyId == null || widget.policyId!.isEmpty) {
       _showSnackBar('Data polis tidak lengkap', Colors.red);
       return;
@@ -97,6 +148,8 @@ class _PaymentDetailState extends State<PaymentDetail> {
       final String endpoint = widget.isPerpanjangan
           ? '/payment/perpanjangan'
           : '/payment';
+
+      final policyNumber = widget.policyNumber ?? widget.policyId ?? 'Unknown';
 
       final response = await _apiService.post(
         endpoint,
@@ -149,58 +202,6 @@ class _PaymentDetailState extends State<PaymentDetail> {
 
       _showSnackBar(errorMessage, Colors.red);
     }
-  }
-
-  void _showWarningDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text('Nomor Polis Wajib', style: TextStyle(fontSize: 18)),
-            ),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Nomor Polis harus diisi, jika tidak maka pembayaran akan ditolak atau pengembalian dana akan tertahan.',
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _policyNumberFocusNode.requestFocus();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Mengerti',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   String _getPaymentMethodName(String id) {
@@ -263,9 +264,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          widget.isPerpanjangan
-              ? 'Perpanjangan ${widget.product.namaProduk}'
-              : 'Pembayaran ${widget.product.namaProduk}',
+          widget.isPerpanjangan ? 'Perpanjangan' : 'Pembayaran',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -344,10 +343,8 @@ class _PaymentDetailState extends State<PaymentDetail> {
                 _buildTransferDetail(),
                 const SizedBox(height: 24.0),
 
-                _buildSectionTitle("Masukkan Nomor Polis"),
-                _buildPolicyNumberInput(),
-                const SizedBox(height: 24.0),
-
+                _buildSectionTitle("Perhatian Penting"),
+                _buildPolicyNumberWarning(),
                 const SizedBox(height: 32.0),
               ],
             ),
@@ -558,7 +555,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
     );
   }
 
-  Widget _buildPolicyNumberInput() {
+  Widget _buildPolicyNumberWarning() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -579,7 +576,7 @@ class _PaymentDetailState extends State<PaymentDetail> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Nomor polis wajib diisi',
+                  'Harap Perhatian!',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -591,55 +588,12 @@ class _PaymentDetailState extends State<PaymentDetail> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Nomor Polis harus diisi, jika tidak maka pembayaran akan ditolak atau pengembalian dana akan tertahan.',
+            'Pastikan pada saat melakukan transfer untuk pembayaran, mohon untuk diberikan berita berisikan nomor polis anda! tanpa nomor polis maka pembayaran akan ditolak atau pengembalian dana akan tertahan!',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: Colors.orange.shade800,
-              height: 1.4,
+              height: 1.5,
             ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _policyNumberController,
-            focusNode: _policyNumberFocusNode,
-            keyboardType: TextInputType.text,
-            textCapitalization: TextCapitalization.characters,
-            inputFormatters: [UpperCaseTextFormatter()],
-            decoration: InputDecoration(
-              hintText: 'Contoh: 4ED3207ACD',
-              hintStyle: TextStyle(color: Colors.grey.shade400),
-              prefixIcon: Icon(
-                Icons.description_outlined,
-                color: Colors.orange.shade700,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.orange.shade300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.orange.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.orange.shade700, width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  'Pastikan nomor polis yang Anda masukkan sesuai',
-                  style: TextStyle(fontSize: 11, color: Colors.orange.shade700),
-                ),
-              ),
-            ],
           ),
         ],
       ),

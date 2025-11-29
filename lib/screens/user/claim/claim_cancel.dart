@@ -14,14 +14,7 @@ class ClaimCancelScreen extends StatefulWidget {
 class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
   final ApiService api = ApiService();
   final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ');
-  final TextEditingController _reasonController = TextEditingController();
   bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _reasonController.dispose();
-    super.dispose();
-  }
 
   String _getBannerAsset() {
     const List<String> availableAssets = [
@@ -37,18 +30,6 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
   }
 
   Future<void> _handleCancelClaim() async {
-    final reason = _reasonController.text.trim();
-
-    if (reason.isEmpty) {
-      _showSnackBar('Mohon isi alasan pembatalan', Colors.orange);
-      return;
-    }
-
-    if (reason.length < 10) {
-      _showSnackBar('Alasan minimal 10 karakter', Colors.orange);
-      return;
-    }
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -150,6 +131,31 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
     );
   }
 
+  Widget _buildDetailRow(String label, String value, {bool isAmount = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        const SizedBox(width: 16),
+        Flexible(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              color: isAmount ? Colors.green.shade700 : Colors.black87,
+              fontWeight: isAmount ? FontWeight.bold : FontWeight.w600,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final polis = widget.klaimData['polisId'];
@@ -171,7 +177,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
     return PopScope(
       canPop: !_isLoading,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[50], // <-- UBAH: Background menjadi abu
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
@@ -186,7 +192,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
             ),
           ),
           centerTitle: true,
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.white, // <-- AppBar tetap putih
           elevation: 0,
         ),
         body: Stack(
@@ -196,6 +202,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Banner Image Container
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
@@ -224,10 +231,11 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Detail Row Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FA),
+                      color: Colors.white, // <-- UBAH: Card menjadi putih
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -272,11 +280,12 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  // Deskripsi Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8F9FA),
+                      color: Colors.white, // <-- UBAH: Card menjadi putih
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -292,53 +301,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
 
                   const SizedBox(height: 24),
 
-                  const Text(
-                    'Alasan Membatalkan Klaim',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _reasonController,
-                    enabled: !_isLoading,
-                    maxLines: 4,
-                    maxLength: 200,
-                    decoration: InputDecoration(
-                      hintText: 'Contoh: Salah input jumlah klaim...',
-                      hintStyle: const TextStyle(
-                        color: Colors.black38,
-                        fontSize: 14,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.red,
-                          width: 2,
-                        ),
-                      ),
-                      counterStyle: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
+                  // Warning Card (Biarkan warnanya tetap merah/abu)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -374,6 +337,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
               ),
             ),
 
+            // Bottom Bar Container (Jaga tetap putih untuk kontras dengan tombol)
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
@@ -383,7 +347,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: Colors.black.withAlpha((0.08 * 255).toInt()),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -433,31 +397,6 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, {bool isAmount = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        const SizedBox(width: 16),
-        Flexible(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              color: isAmount ? Colors.green.shade700 : Colors.black87,
-              fontWeight: isAmount ? FontWeight.bold : FontWeight.w600,
-            ),
-            textAlign: TextAlign.right,
-          ),
-        ),
-      ],
     );
   }
 }
