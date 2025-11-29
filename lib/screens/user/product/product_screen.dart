@@ -29,6 +29,13 @@ class UserProductScreenState extends State<UserProductScreen> {
     _fetchProducts();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   void performSearch(String keyword) {
     if (!mounted) return;
     
@@ -67,8 +74,7 @@ class UserProductScreenState extends State<UserProductScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      setState(() => _searchQuery = query);
-      _fetchProducts(query: query);
+      performSearch(query); 
     });
   }
 
@@ -81,11 +87,61 @@ class UserProductScreenState extends State<UserProductScreen> {
     performSearch("");
   }
 
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _searchCtrl.dispose();
-    super.dispose();
+  Widget _buildSearchInfo() {
+    if (_searchQuery.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              "Menampilkan hasil \"$_searchQuery\"",
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          InkWell(
+            onTap: _clearSearch,
+            child: Column(
+              children: [
+                const Text(
+                  "X",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text("Produk \"$_searchQuery\" tidak ditemukan", style: TextStyle(color: Colors.grey.shade500)),
+          if (_searchQuery.isNotEmpty)
+            TextButton(
+              onPressed: _clearSearch, 
+              child: const Text("Tampilkan Semua Produk")
+            )
+        ],
+      ),
+    );
   }
 
   @override
@@ -113,6 +169,8 @@ class UserProductScreenState extends State<UserProductScreen> {
               onClear: _clearSearch,
             ),
           ),
+          _buildSearchInfo(), // Widget baru untuk informasi pencarian
+
           Expanded(
             child: _isLoading
                 ? const ProductSkeleton() 
@@ -139,24 +197,6 @@ class UserProductScreenState extends State<UserProductScreen> {
                         ),
                       ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text("Produk \"$_searchQuery\" tidak ditemukan", style: TextStyle(color: Colors.grey.shade500)),
-          if (_searchQuery.isNotEmpty)
-            TextButton(
-              onPressed: _clearSearch, 
-              child: const Text("Tampilkan Semua Produk")
-            )
         ],
       ),
     );
