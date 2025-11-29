@@ -255,12 +255,57 @@ class _RegisterFormState extends State<RegisterForm> {
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       builder: (context, child) {
-        final colorScheme = Theme.of(context).colorScheme.copyWith(
-              primary: const Color(0xFF1ABC75),
-              onSurface: Colors.black87,
-            );
         return Theme(
-          data: Theme.of(context).copyWith(colorScheme: colorScheme),
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: const Color(0xFF1ABC75),
+                  onPrimary: Colors.white,
+                  onSurface: Colors.black87,
+                  surface: Colors.white,
+                ),
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.white,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF1ABC75),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            datePickerTheme: DatePickerThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              headerBackgroundColor: const Color(0xFF1ABC75),
+              headerForegroundColor: Colors.white,
+              headerHeadlineStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+              headerHelpStyle: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+              weekdayStyle: const TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+              dayStyle: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+              ),
+            ),
+          ),
           child: child ?? const SizedBox.shrink(),
         );
       },
@@ -446,7 +491,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     onTap: _selectBirthDate,
                     decoration: _inputDecoration(
                       'Tanggal Lahir',
-                      suffixIcon: const Icon(Icons.calendar_today_outlined),
+                      suffixIcon: const Icon(Icons.calendar_month, color: Color(0xFF6B6B6B)),
                     ),
                   ),
                   const SizedBox(height: 16),

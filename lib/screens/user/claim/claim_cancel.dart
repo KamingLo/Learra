@@ -177,7 +177,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
     return PopScope(
       canPop: !_isLoading,
       child: Scaffold(
-        backgroundColor: Colors.grey[50], // <-- UBAH: Background menjadi abu
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
@@ -192,7 +192,7 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
             ),
           ),
           centerTitle: true,
-          backgroundColor: Colors.white, // <-- AppBar tetap putih
+          backgroundColor: Colors.white,
           elevation: 0,
         ),
         body: Stack(
@@ -202,7 +202,6 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner Image Container
                   Container(
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F5E9),
@@ -231,11 +230,10 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Detail Row Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white, // <-- UBAH: Card menjadi putih
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -280,12 +278,11 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Deskripsi Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white, // <-- UBAH: Card menjadi putih
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -301,7 +298,6 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Warning Card (Biarkan warnanya tetap merah/abu)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -337,7 +333,6 @@ class _ClaimCancelScreenState extends State<ClaimCancelScreen> {
               ),
             ),
 
-            // Bottom Bar Container (Jaga tetap putih untuk kontras dengan tombol)
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(

@@ -42,7 +42,6 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
     _loadData();
   }
 
-  // Fungsi untuk mendapatkan nilai bersarang dengan aman
   dynamic _getNestedValue(Map<String, dynamic> map, List<String> keys) {
     dynamic value = map;
     for (String key in keys) {
@@ -55,21 +54,19 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
     return value;
   }
 
-  // --- LOGIKA PENGURUTAN STATUS ---
   int _getStatusPriority(String status) {
     switch (status.toLowerCase()) {
       case 'menunggu':
-        return 1; // Prioritas tertinggi
+        return 1;
       case 'diterima':
         return 2;
       case 'ditolak':
-        return 3; // Prioritas terendah
+        return 3;
       default:
-        return 4; // Status lain di paling bawah
+        return 4;
     }
   }
 
-  // Fungsi pemuat data dan pengurutan
   Future<void> _loadData() async {
     if (!_isInitialized || !mounted) return;
     setState(() => _isLoading = true);
@@ -84,7 +81,6 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
         klaimList = res;
       }
 
-      // --- PENGURUTAN DATA KLAIM ---
       klaimList.sort((a, b) {
         final statusA = (a['status']?.toString() ?? 'menunggu').toLowerCase();
         final statusB = (b['status']?.toString() ?? 'menunggu').toLowerCase();
@@ -92,10 +88,8 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
         final priorityA = _getStatusPriority(statusA);
         final priorityB = _getStatusPriority(statusB);
 
-        // 1. Urutkan berdasarkan prioritas status
         final priorityComparison = priorityA.compareTo(priorityB);
 
-        // 2. Jika prioritas sama, urutkan berdasarkan tanggal (terbaru ke terlama)
         if (priorityComparison == 0) {
           final dateA =
               DateTime.tryParse(a['tanggalKlaim'] ?? a['createdAt'] ?? '') ??
@@ -103,13 +97,11 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
           final dateB =
               DateTime.tryParse(b['tanggalKlaim'] ?? b['createdAt'] ?? '') ??
               DateTime.fromMillisecondsSinceEpoch(0);
-          // Urutan DESC (terbaru dulu)
           return dateB.compareTo(dateA);
         }
 
         return priorityComparison;
       });
-      // --- AKHIR PENGURUTAN DATA KLAIM ---
 
       setState(() {
         _allKlaim = klaimList;
@@ -337,7 +329,7 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
 
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _loadData, // Fungsi ini dipanggil saat swipe down
+              onRefresh: _loadData,
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _hasError
@@ -428,7 +420,6 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),

@@ -45,32 +45,28 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
       futureKlaim = api.get('/klaim?limit=100').then((res) {
         _allKlaimData = res as List<dynamic>;
 
-        // --- LOGIKA PENGURUTAN BARU DIMULAI DI SINI ---
         _allKlaimData.sort((a, b) {
           final statusA = val(a['status'], 'menunggu').toLowerCase();
           final statusB = val(b['status'], 'menunggu').toLowerCase();
 
-          // Fungsi pembantu untuk mendapatkan nilai prioritas
           int getStatusPriority(String status) {
             switch (status) {
               case 'menunggu':
-                return 1; // Prioritas tertinggi
+                return 1;
               case 'diterima':
                 return 2;
               case 'ditolak':
-                return 3; // Prioritas terendah
+                return 3;
               default:
-                return 4; // Status lain di paling bawah
+                return 4;
             }
           }
 
           final priorityA = getStatusPriority(statusA);
           final priorityB = getStatusPriority(statusB);
 
-          // 1. Urutkan berdasarkan prioritas status (1, 2, 3)
           final priorityComparison = priorityA.compareTo(priorityB);
 
-          // 2. Jika prioritas sama, urutkan berdasarkan tanggal (terbaru ke terlama)
           if (priorityComparison == 0) {
             final dateA =
                 DateTime.tryParse(val(a['tanggalKlaim'] ?? a['createdAt'])) ??
@@ -78,13 +74,11 @@ class _AdminKlaimScreenState extends State<AdminKlaimScreen> {
             final dateB =
                 DateTime.tryParse(val(b['tanggalKlaim'] ?? b['createdAt'])) ??
                 DateTime.fromMillisecondsSinceEpoch(0);
-            // Urutan DESC (terbaru dulu): Bandingkan B dengan A
             return dateB.compareTo(dateA);
           }
 
           return priorityComparison;
         });
-        // --- LOGIKA PENGURUTAN BARU SELESAI DI SINI ---
 
         _applyFilters();
         return _filteredKlaimData;
@@ -584,16 +578,13 @@ class KlaimCardAdmin extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // LOGIKA AKSI DIPERBARUI DI SINI
             if (isPending)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // ROW 1: Status (Kiri) dan Tombol Detail (Kanan)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Status Container
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -613,7 +604,6 @@ class KlaimCardAdmin extends StatelessWidget {
                         ),
                       ),
 
-                      // Tombol Detail (Pindah ke baris atas, di kanan)
                       TextButton(
                         onPressed: () {
                           Navigator.push(
@@ -635,8 +625,7 @@ class KlaimCardAdmin extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 8), // Spasi pemisah
-                  // ROW 2: Tombol Konfirmasi (Tolak dan Terima) - di baris bawah
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -669,11 +658,10 @@ class KlaimCardAdmin extends StatelessWidget {
                   ),
                 ],
               )
-            else // DITERIMA atau DITOLAK: Status dan Detail sebaris
+            else
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Status Container
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -693,7 +681,6 @@ class KlaimCardAdmin extends StatelessWidget {
                     ),
                   ),
 
-                  // Tombol Detail
                   TextButton(
                     onPressed: () {
                       Navigator.push(

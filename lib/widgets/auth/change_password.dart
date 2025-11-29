@@ -60,6 +60,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return cleaned;
   }
 
+  Widget _buildBackButton(ThemeData theme) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha:0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.arrow_back, color: Colors.black87),
+      ),
+    );
+  }
+
   Widget _buildPrimaryButton({
     required String label,
     required VoidCallback? onPressed,
@@ -104,29 +127,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBackButton(ThemeData theme) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => Navigator.of(context).maybePop(),
-      child: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha:0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: const Icon(Icons.arrow_back, color: Colors.black87),
       ),
     );
   }
@@ -243,6 +243,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFEFF1F5),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: SizedBox(
+          height: 48,
+          child: Image.asset(
+            'assets/IconApp/LearraFull.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Text("Learra",
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold));
+            },
+          ),
+        ),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
