@@ -130,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: 200,
                   height: 200,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha:0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -142,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: 140,
                   height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha:0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -217,15 +217,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
-                Text(
-                  "Versi Aplikasi 1.0.0",
-                  style: TextStyle(
-                    color: _secondaryText.withValues(alpha:0.5),
-                    fontSize: 12,
-                  ),
+                const SizedBox(height: 24),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Opacity(
+                      opacity: 0.8, // Agar tidak terlalu mencolok
+                      child: SizedBox(
+                        height: 48, // Ukuran logo proporsional
+                        child: Image.asset(
+                          'assets/IconApp/LearraFull.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (ctx, err, stack) => const Icon(
+                            Icons.verified_user,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "© 2025 Learra. Hak Cipta Dilindungi.",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Terdaftar dan diawasi oleh OJK",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 20), // Bottom safe area padding
+                    const SizedBox(height: 32),
+                    Text(
+                      "Versi Aplikasi 1.0.0",
+                      style: TextStyle(
+                        color: _secondaryText.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -243,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 14),
           ),
@@ -290,7 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Icon(
                             Icons.email_outlined,
                             size: 14,
-                            color: _secondaryText.withValues(alpha:0.6),
+                            color: _secondaryText.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -298,7 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _email,
                               style: TextStyle(
                                 fontSize: 13.5,
-                                color: _secondaryText.withValues(alpha:0.8),
+                                color: _secondaryText.withValues(alpha: 0.8),
                                 fontWeight: FontWeight.w500,
                               ),
                               maxLines: 1,
@@ -315,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Icon(
                             Icons.work_outline,
                             size: 14,
-                            color: _secondaryText.withValues(alpha:0.6),
+                            color: _secondaryText.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -323,7 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _pekerjaan,
                               style: TextStyle(
                                 fontSize: 13.5,
-                                color: _secondaryText.withValues(alpha:0.8),
+                                color: _secondaryText.withValues(alpha: 0.8),
                                 fontWeight: FontWeight.w500,
                               ),
                               maxLines: 1,
@@ -342,9 +379,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha:0.1),
+                        color: accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: accentColor.withValues(alpha:0.2)),
+                        border: Border.all(
+                          color: accentColor.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         widget.role.toUpperCase(),
@@ -379,7 +418,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -400,7 +439,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             subtitle,
             style: TextStyle(
-              color: _secondaryText.withValues(alpha:0.7),
+              color: _secondaryText.withValues(alpha: 0.7),
               fontSize: 13,
             ),
           ),
@@ -427,8 +466,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         splashColor: isDestructive
-            ? Colors.redAccent.withValues(alpha:0.1)
-            : _primaryGreen.withValues(alpha:0.12),
+            ? Colors.redAccent.withValues(alpha: 0.1)
+            : _primaryGreen.withValues(alpha: 0.12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
@@ -436,7 +475,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isDestructive
-                  ? Colors.redAccent.withValues(alpha:0.2)
+                  ? Colors.redAccent.withValues(alpha: 0.2)
                   : _surfaceLight,
             ),
           ),
@@ -468,7 +507,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: _secondaryText.withValues(alpha:0.7),
+                          color: _secondaryText.withValues(alpha: 0.7),
                           fontSize: 12.5,
                         ),
                       ),
@@ -478,7 +517,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               Icon(
                 Icons.chevron_right,
-                color: _secondaryText.withValues(alpha:0.6),
+                color: _secondaryText.withValues(alpha: 0.6),
                 size: 20,
               ),
             ],
