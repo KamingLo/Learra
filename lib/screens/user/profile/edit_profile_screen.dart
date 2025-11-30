@@ -61,7 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (sessionId != null) {
         setState(() => _userId = sessionId);
       }
-      
+
       final response = await _apiService.get('/user/profile');
 
       if (response['user'] != null) {
@@ -110,7 +110,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Error: ID User tidak ditemukan, silakan refresh."),
+          content: const Text(
+            "Error: ID User tidak ditemukan, silakan refresh.",
+          ),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -177,7 +179,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           : GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -223,7 +228,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(height: 20),
                       _buildSectionCard(
                         title: "Data Tambahan",
-                        subtitle: "Lengkapi informasi pendukung untuk layanan optimal",
+                        subtitle:
+                            "Lengkapi informasi pendukung untuk layanan optimal",
                         children: [
                           ProfileInputField(
                             label: "Alamat Lengkap",
@@ -236,10 +242,98 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             controller: _jobController,
                             icon: Icons.work,
                           ),
-                          ProfileInputField(
-                            label: "Rentang Gaji",
-                            controller: _salaryController,
-                            icon: Icons.attach_money,
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Rentang Gaji",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF616161),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value:
+                                      [
+                                        '1.000.000 - 9.999.999',
+                                        '10.000.000 - 49.999.999',
+                                        '50.000.000 - 99.999.999',
+                                        '100.000.000 +',
+                                      ].contains(_salaryController.text)
+                                      ? _salaryController.text
+                                      : null,
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: '1.000.000 - 9.999.999',
+                                      child: Text('1.000.000 - 9.999.999'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: '10.000.000 - 49.999.999',
+                                      child: Text('10.000.000 - 49.999.999'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: '50.000.000 - 99.999.999',
+                                      child: Text('50.000.000 - 99.999.999'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: '100.000.000 +',
+                                      child: Text('≥ 100.000.000'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _salaryController.text = value ?? '';
+                                    });
+                                  },
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                      ? "Rentang Gaji tidak boleh kosong"
+                                      : null,
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(
+                                      Icons.attach_money,
+                                      color: _primaryGreen,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: const BorderSide(
+                                        color: _deepGreen,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: const BorderSide(
+                                        color: Colors.redAccent,
+                                      ),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: const BorderSide(
+                                        color: Colors.redAccent,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -267,7 +361,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: _deepGreen.withValues(alpha:0.18),
+            color: _deepGreen.withValues(alpha: 0.18),
             blurRadius: 26,
             offset: const Offset(0, 12),
           ),
@@ -279,9 +373,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             height: 72,
             width: 72,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha:0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha:0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: const Icon(Icons.person, color: Colors.white, size: 36),
           ),
@@ -308,7 +402,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   builder: (_, value, __) => Text(
                     value.text.isEmpty ? "Email belum tersedia" : value.text,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha:0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       fontSize: 14,
                     ),
                   ),
@@ -327,10 +421,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -350,7 +444,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         border: Border.all(color: _backgroundColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
             offset: const Offset(0, 12),
           ),
@@ -394,7 +488,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         style: FilledButton.styleFrom(
           backgroundColor: _primaryGreen,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           elevation: 3,
         ),
