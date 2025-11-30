@@ -162,7 +162,7 @@ class _KendaraanPolisFormState extends BasePolisFormState<KendaraanPolisForm> {
 
       CustomTextField(
         controller: _merkController,
-        label: "Merek Kendaraan",
+        label: "Merk Kendaraan",
         hint: "Contoh: Toyota, Honda",
         icon: Icons.branding_watermark,
         textCapitalization: TextCapitalization.words,
@@ -228,7 +228,7 @@ class _KendaraanPolisFormState extends BasePolisFormState<KendaraanPolisForm> {
 
       CustomDateField(
         controller: _tglBeliController,
-        label: "Tanggal Pembelian/Pembuatan",
+        label: "Tanggal pembelian mobil",
         hint: "Pilih tanggal",
         onTap: _selectPurchaseDate,
         validator: (value) =>

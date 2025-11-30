@@ -11,7 +11,6 @@ import '../../../widgets/admin/client/client_empty_state.dart';
 const Color _kBackground = Color(0xFFF4F7F6);
 const Color _kPrimary = Color(0xFF06A900);
 const Color _kTextPrimary = Color(0xFF111111);
-const Color _kTextSecondary = Color(0xFF3F3F3F);
 
 class ClientScreen extends StatefulWidget {
   const ClientScreen({super.key});
@@ -23,6 +22,7 @@ class ClientScreen extends StatefulWidget {
 class _ClientScreenState extends State<ClientScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _searchController = TextEditingController();
+  static const Color _secondaryText = Color(0xFF3F3F3F);
 
   List<AdminUser> _users = [];
   bool _isLoading = true;
@@ -100,7 +100,6 @@ class _ClientScreenState extends State<ClientScreen> {
       ),
     );
   }
-
 
   void _onSearchChanged(String query) {
     _searchQuery = query;
@@ -223,24 +222,40 @@ class _ClientScreenState extends State<ClientScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: "Cari nama, email, atau nomor telepon...",
-                prefixIcon: const Icon(Icons.search, color: _kTextSecondary),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Cari nama, email, atau tanggal...',
+                  hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  prefixIcon: const Icon(Icons.search, color: _kPrimary),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: Colors.grey[600]),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 0,
-                ),
+                onChanged: (value) {
+                  _onSearchChanged(value);
+                  setState(() {});
+                },
               ),
             ),
           ),
@@ -259,8 +274,69 @@ class _ClientScreenState extends State<ClientScreen> {
                               horizontal: 20,
                               vertical: 8,
                             ),
-                            itemCount: _users.length,
+                            itemCount: _users.length + 1,
                             itemBuilder: (context, index) {
+                              if (index == _users.length) {
+                                return Column(
+                                  children: [
+                                    const SizedBox(height: 24),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Opacity(
+                                          opacity:
+                                              0.8, // Agar tidak terlalu mencolok
+                                          child: SizedBox(
+                                            height:
+                                                48, // Ukuran logo proporsional
+                                            child: Image.asset(
+                                              'assets/IconApp/LearraFull.png',
+                                              fit: BoxFit.contain,
+                                              errorBuilder: (ctx, err, stack) =>
+                                                  const Icon(
+                                                    Icons.verified_user,
+                                                    color: Colors.grey,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          "© 2025 Learra. Hak Cipta Dilindungi.",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Terdaftar dan diawasi oleh OJK",
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 20,
+                                        ), // Bottom safe area padding
+                                        const SizedBox(height: 32),
+                                        Text(
+                                          "Versi Aplikasi 1.0.0",
+                                          style: TextStyle(
+                                            color: _secondaryText.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                );
+                              }
                               final user = _users[index];
                               return ClientCard(
                                 user: user,

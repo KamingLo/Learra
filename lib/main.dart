@@ -21,7 +21,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definisi Warna Modern
     const Color modernGreen = Color(0xFF00C853);
     const Color offWhite = Color(0xFFF4F7F6);
 
@@ -32,7 +31,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         textTheme: GoogleFonts.openSansTextTheme(Theme.of(context).textTheme),
 
-        // Skema Warna
         colorScheme: ColorScheme.fromSeed(
           seedColor: modernGreen,
           primary: modernGreen,
@@ -50,7 +48,7 @@ class MyApp extends StatelessWidget {
 
           titleTextStyle: GoogleFonts.openSans(
             color: Colors.black87,
-            fontWeight: FontWeight.w700, // Bold agar tegas
+            fontWeight: FontWeight.w700,
             fontSize: 22,
           ),
         ),
@@ -77,7 +75,6 @@ class _AuthCheckState extends State<AuthCheck> {
     _initialize();
   }
 
-  // --- LOGIC UTAMA DIPERBARUI DI SINI ---
   void _initialize() async {
     await SessionService.isSessionValid();
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class FAQItem {
   final String category;
@@ -13,58 +12,170 @@ class FAQItem {
   });
 }
 
-class AuthorItem {
+class DeveloperItem {
   final String name;
+  final String role;
+  final String github;
   final String assetPath;
 
-  AuthorItem({required this.name, required this.assetPath});
+  DeveloperItem({
+    required this.name,
+    required this.role,
+    required this.github,
+    required this.assetPath,
+  });
 }
 
-class AuthorCard extends StatelessWidget {
-  final AuthorItem author;
+class DeveloperCard extends StatelessWidget {
+  final DeveloperItem developer;
 
-  const AuthorCard({super.key, required this.author});
+  const DeveloperCard({super.key, required this.developer});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.rectangle,
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey[200],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              author.assetPath,
-              fit: BoxFit.cover,
-              errorBuilder:
-                  (BuildContext context, Object error, StackTrace? stackTrace) {
-                    return Center(
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.grey[600],
-                      ),
-                    );
-                  },
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey[200],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                developer.assetPath,
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (
+                      BuildContext context,
+                      Object error,
+                      StackTrace? stackTrace,
+                    ) {
+                      return Center(
+                        child: Icon(
+                          Icons.person,
+                          size: 30,
+                          color: Colors.grey[600],
+                        ),
+                      );
+                    },
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          author.name,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1F2937),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  developer.name,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1F2937),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  developer.role,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'GitHub: ${developer.github}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.blue[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ContactBox extends StatelessWidget {
+  const ContactBox({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const String phoneNumber = '+6283835360789';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 184, 185, 185),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            // ignore: deprecated_member_use
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Butuh Bantuan Lebih Lanjut?',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Jika butuh bantuan lebih lanjut, Silahkan hubungi nomor telepon ini. Kami siap membantu 24/7',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.phone_in_talk,
+                    color: Color.fromARGB(255, 255, 255, 255),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    phoneNumber,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -159,12 +270,37 @@ class _FAQPageState extends State<FAQPage> {
   String? expandedQuestionIndex;
   Set<String> expandedCategories = {};
 
-  final List<AuthorItem> authors = [
-    AuthorItem(name: 'Charless', assetPath: 'assets/Author/charless.png'),
-    AuthorItem(name: 'Fabio Fransisco', assetPath: 'assets/Author/fabio.png'),
-    AuthorItem(name: 'Joe Nickson Lie', assetPath: 'assets/Author/joe.png'),
-    AuthorItem(name: 'Kaming Lo', assetPath: 'assets/Author/kaming.png'),
-    AuthorItem(name: 'Michael Andre', assetPath: 'assets/Author/michael.png'),
+  final List<DeveloperItem> developers = [
+    DeveloperItem(
+      name: 'Charless',
+      role: '535240068',
+      github: 'LessThanNone',
+      assetPath: 'assets/Author/charless.png',
+    ),
+    DeveloperItem(
+      name: 'Fabio Fransisco',
+      role: '535240077',
+      github: 'FabioCoco',
+      assetPath: 'assets/Author/fabio.png',
+    ),
+    DeveloperItem(
+      name: 'Joe Nickson Lie',
+      role: '535240079',
+      github: 'Tuknwm',
+      assetPath: 'assets/Author/joe.png',
+    ),
+    DeveloperItem(
+      name: 'Kaming Lo',
+      role: '535240175',
+      github: 'KamingLo',
+      assetPath: 'assets/Author/kaming.png',
+    ),
+    DeveloperItem(
+      name: 'Michael Andre',
+      role: '535240080',
+      github: 'Mikeee636',
+      assetPath: 'assets/Author/michael.png',
+    ),
   ];
 
   final List<FAQItem> faqItems = [
@@ -321,22 +457,94 @@ class _FAQPageState extends State<FAQPage> {
     ),
   ];
 
-  Future<void> _launchPhone() async {
-    const String phone = 'tel:+6283835360789';
-    final Uri url = Uri.parse(phone);
+  Widget _buildFAQCategory(String category, List<FAQItem> items) {
+    final isCategoryExpanded = expandedCategories.contains(category);
 
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tidak dapat membuka aplikasi telepon.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (expandedCategories.contains(category)) {
+                    expandedCategories.remove(category);
+                  } else {
+                    expandedCategories.add(category);
+                  }
+                });
+              },
+              child: Container(
+                width: double.infinity,
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        category,
+                        style: const TextStyle(
+                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: isCategoryExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: const Icon(
+                        Icons.expand_more,
+                        color: Color(0xFF9CA3AF),
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (isCategoryExpanded) ...[
+              Container(height: 1, color: const Color(0xFFE5E7EB)),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: List.generate(items.length, (index) {
+                    final item = items[index];
+                    final uniqueKey = '${category}_$index';
+                    final isExpanded = expandedQuestionIndex == uniqueKey;
+
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == items.length - 1 ? 0 : 8,
+                      ),
+                      child: FAQCard(
+                        item: item,
+                        isExpanded: isExpanded,
+                        onTap: () {
+                          setState(() {
+                            expandedQuestionIndex = isExpanded
+                                ? null
+                                : uniqueKey;
+                          });
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -362,11 +570,7 @@ class _FAQPageState extends State<FAQPage> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -393,199 +597,29 @@ class _FAQPageState extends State<FAQPage> {
               ],
             ),
           ),
-          ...groupedFAQ.entries.map((entry) {
-            final category = entry.key;
-            final items = entry.value;
-            final isCategoryExpanded = expandedCategories.contains(category);
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category Header (Dropdown)
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (isCategoryExpanded) {
-                          expandedCategories.remove(category);
-                        } else {
-                          expandedCategories.add(category);
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          color: const Color(0xFFE5E7EB),
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            category,
-                            style: const TextStyle(
-                              color: Color(0xFF1F2937),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                          AnimatedRotation(
-                            turns: isCategoryExpanded ? 0.5 : 0,
-                            duration: const Duration(milliseconds: 300),
-                            child: const Icon(
-                              Icons.expand_more,
-                              color: Color(0xFF9CA3AF),
-                              size: 24,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // FAQ Items (Show when category expanded)
-                  if (isCategoryExpanded)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Column(
-                        children: List.generate(items.length, (index) {
-                          final item = items[index];
-                          final uniqueKey = '${category}_$index';
-                          final isExpanded = expandedQuestionIndex == uniqueKey;
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: FAQCard(
-                              item: item,
-                              isExpanded: isExpanded,
-                              onTap: () {
-                                setState(() {
-                                  expandedQuestionIndex = isExpanded
-                                      ? null
-                                      : uniqueKey;
-                                });
-                              },
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                ],
-              ),
-            );
-          }),
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.headset_mic_outlined,
-                      color: Color(0xFF6B7280),
-                      size: 20,
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'Butuh bantuan lebih lanjut?',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Jika butuh bantuan lebih lanjut, Silahkan hubungi nomor telepon ini. Kami siap membantu 24/7',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF9CA3AF),
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFFD1D5DB),
-                        width: 1,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      minimumSize: const Size(double.infinity, 40),
-                    ),
-                    onPressed: _launchPhone,
-                    child: const Text(
-                      'Hubungi Kami',
-                      style: TextStyle(
-                        color: Color(0xFF374151),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ...groupedFAQ.entries
+              .map((entry) => _buildFAQCategory(entry.key, entry.value))
+              // ignore: unnecessary_to_list_in_spreads
+              .toList(),
           const SizedBox(height: 24),
           Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'TIM PENGEMBANG',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF6B7280),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      AuthorCard(author: authors[0]),
-                      const SizedBox(width: 16),
-                      AuthorCard(author: authors[1]),
-                      const SizedBox(width: 16),
-                      AuthorCard(author: authors[2]),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Expanded(flex: 1, child: Container()),
-                    Expanded(flex: 2, child: AuthorCard(author: authors[3])),
-                    const SizedBox(width: 16),
-                    Expanded(flex: 2, child: AuthorCard(author: authors[4])),
-                    Expanded(flex: 1, child: Container()),
-                  ],
-                ),
-              ],
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              'TIM PENGEMBANG',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF6B7280),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
+          Column(
+            children: developers
+                .map((dev) => DeveloperCard(developer: dev))
+                .toList(),
+          ),
+          const SizedBox(height: 24),
+          const ContactBox(),
           const SizedBox(height: 24),
         ],
       ),

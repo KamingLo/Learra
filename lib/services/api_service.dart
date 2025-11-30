@@ -7,13 +7,8 @@ class ApiService {
   final String _baseUrl = dotenv.env['BASE_URL'] ?? '';
   final String _apiKey = dotenv.env['API_KEY'] ?? '';
 
-  // --- HELPER: MENYIAPKAN HEADERS ---
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
-
-    // --- PERBAIKAN DI SINI ---
-    // Gunakan key 'token' (sesuai isi variabel _keyToken di SessionService), 
-    // JANGAN gunakan string '_keyToken' secara literal.
     String? token = prefs.getString('token'); 
 
     Map<String, String> headers = {
@@ -22,7 +17,6 @@ class ApiService {
       'api-key': _apiKey,
     };
 
-    // Jika token ada, otomatis pasang Bearer Token
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
@@ -30,10 +24,9 @@ class ApiService {
     return headers;
   }
 
-  // --- METHOD GET ---
   Future<dynamic> get(String endpoint) async {
     final url = Uri.parse('$_baseUrl$endpoint');
-    final headers = await _getHeaders(); // Header (auth) otomatis masuk sini
+    final headers = await _getHeaders();
 
     try {
       final response = await http.get(url, headers: headers);
@@ -43,7 +36,6 @@ class ApiService {
     }
   }
 
-  // --- METHOD POST ---
   Future<dynamic> post(String endpoint, {Map<String, dynamic>? body}) async {
     final url = Uri.parse('$_baseUrl$endpoint');
     final headers = await _getHeaders();
@@ -60,10 +52,9 @@ class ApiService {
     }
   }
 
-  // --- METHOD PUT (EDIT) ---
   Future<dynamic> put(String endpoint, {Map<String, dynamic>? body}) async {
     final url = Uri.parse('$_baseUrl$endpoint');
-    final headers = await _getHeaders(); // Token otomatis masuk
+    final headers = await _getHeaders();
 
     try {
       final response = await http.put(
@@ -77,10 +68,9 @@ class ApiService {
     }
   }
 
-  // --- METHOD DELETE (HAPUS) ---
   Future<dynamic> delete(String endpoint) async {
     final url = Uri.parse('$_baseUrl$endpoint');
-    final headers = await _getHeaders(); // Token otomatis masuk
+    final headers = await _getHeaders();
 
     try {
       final response = await http.delete(url, headers: headers);
@@ -90,7 +80,6 @@ class ApiService {
     }
   }
 
-  // --- HELPER: HANDLE RESPONSE ---
   dynamic _processResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return {};

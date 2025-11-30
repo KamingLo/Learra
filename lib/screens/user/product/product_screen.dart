@@ -3,31 +3,25 @@ import 'dart:async';
 import '../../../services/api_service.dart';
 import '../../../models/product_model.dart';
 import '../../../widgets/admin/product/product_search_bar.dart';
-import '../../../utils/product_helper.dart'; 
 import '../../../widgets/user/product/product_card.dart';
 import '../../../widgets/user/product/product_skeleton.dart';
 import 'product_detail_screen.dart';
 
 class UserProductScreen extends StatefulWidget {
-  // Tambahkan key di constructor agar bisa dikontrol Navbar
   const UserProductScreen({super.key});
 
   @override
-  // Perhatikan: Return type adalah UserProductScreenState (Tanpa underscore)
   UserProductScreenState createState() => UserProductScreenState();
 }
 
-// HAPUS underscore (_) pada nama class agar PUBLIC
 class UserProductScreenState extends State<UserProductScreen> {
   final ApiService _apiService = ApiService();
+  final TextEditingController _searchCtrl = TextEditingController();
+
   List<ProductModel> _products = [];
   bool _isLoading = true;
   String _searchQuery = "";
   Timer? _debounce;
-
-  // Controller text untuk mengisi Search Bar secara otomatis
-  // (Pastikan ProductSearchBar-mu support controller, jika tidak, field ini opsional)
-  // Tapi untuk logika search, _searchQuery sudah cukup.
 
   @override
   void initState() {
@@ -35,24 +29,26 @@ class UserProductScreenState extends State<UserProductScreen> {
     _fetchProducts();
   }
 
-  /// METHOD BARU: Bisa dipanggil dari Navbar
-  /// Menerima keyword (bisa nama produk ATAU kategori/tipe)
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   void performSearch(String keyword) {
     if (!mounted) return;
     
     setState(() {
-      _searchQuery = keyword; // Set keyword
-      _isLoading = true;      // Mulai loading
+      _searchQuery = keyword;
+      _isLoading = true;
     });
 
-    // Panggil fetch langsung (tanpa debounce karena ini aksi klik)
     _fetchProducts(query: keyword);
   }
 
   Future<void> _fetchProducts({String query = ""}) async {
     if (!mounted) return;
-    // Logika aman: Jika query kosong -> Default list
-    // Jika ada query -> Search endpoint
     final endpoint = query.isEmpty 
         ? '/produk?limit=8' 
         : '/produk?search=$query&limit=6';
@@ -78,8 +74,7 @@ class UserProductScreenState extends State<UserProductScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
-      setState(() => _searchQuery = query);
-      _fetchProducts(query: query);
+      performSearch(query); 
     });
   }
 
@@ -87,80 +82,44 @@ class UserProductScreenState extends State<UserProductScreen> {
     Navigator.push(context, MaterialPageRoute(builder: (_) => UserProductDetailScreen(productId: productId)));
   }
 
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
+  void _clearSearch() {
+    _searchCtrl.clear();
+    performSearch("");
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F6),
-      appBar: AppBar(
-        title: const Text(
-          "Belanja Produk", 
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 22)
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-      ),
-      body: Column(
+  Widget _buildSearchInfo() {
+    if (_searchQuery.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
         children: [
-          // SEARCH BAR
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Tampilkan info jika sedang memfilter berdasarkan kategori
-                if (_searchQuery.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, left: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text("Hasil pencarian: \"$_searchQuery\"", style: TextStyle(color: ProductHelper.primaryGreen, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () => performSearch(""), // Reset search
-                          child: const Icon(Icons.close, size: 16, color: Colors.grey),
-                        )
-                      ],
-                    ),
-                  ),
-                ProductSearchBar(onChanged: _onSearchChanged),
-              ],
+          Expanded(
+            child: Text(
+              "Menampilkan hasil \"$_searchQuery\"",
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-
-          // GRID PRODUCTS
-          Expanded(
-            child: _isLoading
-                ? const ProductSkeleton() 
-                : _products.isEmpty
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        onRefresh: () => _fetchProducts(query: _searchQuery),
-                        color: ProductHelper.primaryGreen,
-                        child: GridView.builder(
-                          padding: const EdgeInsets.all(20),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.75,
-                          ),
-                          itemCount: _products.length,
-                          itemBuilder: (context, index) {
-                            return ProductCard(
-                              product: _products[index],
-                              onTap: () => _goToDetail(_products[index].id),
-                            );
-                          },
-                        ),
-                      ),
+          InkWell(
+            onTap: _clearSearch,
+            child: Column(
+              children: [
+                const Text(
+                  "X",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -177,9 +136,67 @@ class UserProductScreenState extends State<UserProductScreen> {
           Text("Produk \"$_searchQuery\" tidak ditemukan", style: TextStyle(color: Colors.grey.shade500)),
           if (_searchQuery.isNotEmpty)
             TextButton(
-              onPressed: () => performSearch(""), 
+              onPressed: _clearSearch, 
               child: const Text("Tampilkan Semua Produk")
             )
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F6),
+      appBar: AppBar(
+        title: const Text(
+          "Belanja Produk", 
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 22)
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+            child: ProductSearchBar(
+              controller: _searchCtrl,
+              onChanged: _onSearchChanged,
+              onClear: _clearSearch,
+            ),
+          ),
+          _buildSearchInfo(), // Widget baru untuk informasi pencarian
+
+          Expanded(
+            child: _isLoading
+                ? const ProductSkeleton() 
+                : _products.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: () => _fetchProducts(query: _searchQuery),
+                        color: Colors.green,
+                        child: GridView.builder(
+                          padding: const EdgeInsets.all(20),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: _products.length,
+                          itemBuilder: (context, index) {
+                            return ProductCardGrid(
+                              product: _products[index],
+                              onTap: () => _goToDetail(_products[index].id),
+                            );
+                          },
+                        ),
+                      ),
+          ),
         ],
       ),
     );

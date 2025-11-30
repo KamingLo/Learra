@@ -12,7 +12,6 @@ class ProductCoverCard extends StatelessWidget {
     required this.onTap,
   });
 
-  // Helper Format Rupiah
   String _formatRupiah(int price) {
     String priceStr = price.toString();
     String result = '';
@@ -30,19 +29,17 @@ class ProductCoverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ambil gambar dari ProductHelper yang kamu kirim
     final imageUrl = ProductHelper.getImageUrl(product.tipe);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        // ClipRRect untuk membulatkan sudut gambar dan konten
         clipBehavior: Clip.antiAlias, 
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha:0.1), // Shadow agak gelap
+              color: Colors.black.withValues(alpha:0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -50,11 +47,10 @@ class ProductCoverCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // --- LAYER 1: GAMBAR COVER ---
             Positioned.fill(
               child: Image.network(
                 imageUrl,
-                fit: BoxFit.cover, // Gambar memenuhi area
+                fit: BoxFit.cover,
                 errorBuilder: (ctx, err, stack) => Container(
                   color: Colors.grey.shade300,
                   child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
@@ -62,7 +58,6 @@ class ProductCoverCard extends StatelessWidget {
               ),
             ),
 
-            // --- LAYER 2: GRADIENT HITAM (Agar teks terbaca) ---
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -72,7 +67,7 @@ class ProductCoverCard extends StatelessWidget {
                     colors: [
                       Colors.transparent,
                       Colors.transparent,
-                      Colors.black.withValues(alpha:0.7), // Gelap di bawah
+                      Colors.black.withValues(alpha:0.7),
                       Colors.black.withValues(alpha:0.9),
                     ],
                     stops: const [0.0, 0.4, 0.8, 1.0],
@@ -81,7 +76,6 @@ class ProductCoverCard extends StatelessWidget {
               ),
             ),
 
-            // --- LAYER 3: KONTEN TEKS ---
             Positioned(
               bottom: 0,
               left: 0,
@@ -91,26 +85,23 @@ class ProductCoverCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Badge Tipe Produk
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: ProductHelper.primaryGreen, // Warna ijo sesuai request
+                        color: Colors.green.shade800,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         product.tipe.toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),
                       ),
                     ),
-
-                    // Nama Produk
                     Text(
                       product.namaProduk,
                       maxLines: 2,
@@ -122,14 +113,11 @@ class ProductCoverCard extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
-                    // Harga
                     Text(
                       "Rp ${_formatRupiah(product.premiDasar)}",
                       style: const TextStyle(
-                        color: Color(0xFF81C784), // Hijau muda cerah agar kontras di hitam
+                        color: Color(0xFF81C784),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -138,8 +126,6 @@ class ProductCoverCard extends StatelessWidget {
                 ),
               ),
             ),
-
-            // --- LAYER 4: RIPPLE EFFECT (Feedback Klik) ---
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,

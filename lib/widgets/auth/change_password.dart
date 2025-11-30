@@ -12,7 +12,7 @@ class ChangePasswordScreen extends StatefulWidget {
     required this.email,
     required this.resetToken,
   });
-
+ 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }

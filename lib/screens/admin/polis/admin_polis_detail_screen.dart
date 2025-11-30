@@ -66,8 +66,17 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
       _platController.text = _policy!.plateNumber ?? '';
       _rangkaController.text = _policy!.frameNumber ?? '';
       _mesinController.text = _policy!.engineNumber ?? '';
-      _pemilikController.text = _policy!.ownerName ?? '';
-      _tahunController.text = _policy!.yearBought ?? '';
+      _pemilikController.text = _policy!.vehicleOwnerName ?? '';
+
+      String yearValue = _policy!.yearBought ?? '';
+      if (yearValue.isNotEmpty) {
+        try {
+          final date = DateTime.parse(yearValue);
+          yearValue = date.year.toString();
+        } catch (_) {}
+      }
+      _tahunController.text = yearValue;
+
       if (_policy!.vehiclePrice != null) {
         _hargaKendaraanController.text = _formatCurrencyRaw(
           _policy!.vehiclePrice!,
@@ -254,9 +263,17 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
       await _apiService.delete('/polis/${_policy!.id}');
       if (!mounted) return;
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Polis berhasil dihapus')));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Polis berhasil dihapus',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -560,7 +577,8 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
                       _buildDetailRow(
                         Icons.person_outline,
                         "Nama",
-                        policy.ownerName ?? '-',
+
+                        policy.userName ?? '-',
                         isFirst: true,
                       ),
                       _buildDetailRow(
@@ -790,17 +808,31 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
           CustomTextField(
             controller: _tahunController,
             label: "Tahun Pembelian Mobil",
-            hint: "YYYY-MM-DD",
+            hint: "YYYY",
             icon: Icons.calendar_today,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(4),
+            ],
           ),
         ];
+      }
+
+      String formattedYear = p.yearBought ?? '-';
+      if (p.yearBought != null && p.yearBought!.isNotEmpty) {
+        try {
+          final date = DateTime.parse(p.yearBought!);
+          formattedYear = date.year.toString();
+        } catch (_) {}
       }
 
       return [
         _buildDetailRow(
           Icons.person_outline,
           "Nama Pemilik",
-          p.ownerName ?? '-',
+
+          p.vehicleOwnerName ?? '-',
         ),
         _buildDetailRow(
           Icons.directions_car_outlined,
@@ -832,7 +864,7 @@ class _AdminPolicyDetailScreenState extends State<AdminPolicyDetailScreen> {
         _buildDetailRow(
           Icons.calendar_today_outlined,
           "Tahun Pembelian Mobil",
-          p.yearBought ?? '-',
+          formattedYear,
           isLast: true,
         ),
       ];

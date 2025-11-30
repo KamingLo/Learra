@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/polis_model.dart';
-import 'user_policy_card.dart'; // Pastikan import ini mengarah ke file PolicyCard
+import 'user_policy_card.dart';
 
 class HomePolicyCard extends StatelessWidget {
   final bool isLoggedIn;
@@ -22,7 +22,6 @@ class HomePolicyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. KONDISI: Belum Login
     if (!isLoggedIn) {
       return Container(
         width: double.infinity,
@@ -79,14 +78,13 @@ class HomePolicyCard extends StatelessWidget {
       );
     }
 
-    // 2. KONDISI: Loading
     if (isLoading) {
       return SizedBox(
-        height: 240, // Tinggi disesuaikan dengan tinggi kartu
+        height: 240,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: 2,
-          padding: const EdgeInsets.only(bottom: 10), // Ruang untuk shadow
+          padding: const EdgeInsets.only(bottom: 10),
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
             return Container(
@@ -102,7 +100,6 @@ class HomePolicyCard extends StatelessWidget {
       );
     }
 
-    // 3. KONDISI: Data Kosong (Ini yang muncul "Belum ada polis aktif")
     if (policies.isEmpty) {
       return Container(
         width: double.infinity,
@@ -128,19 +125,17 @@ class HomePolicyCard extends StatelessWidget {
       );
     }
 
-    // 4. KONDISI: Carousel Polis (Data Ada)
     return SizedBox(
-      height: 280, // PERBAIKAN: Tinggi diperbesar agar kartu muat
+      height: 280,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none, // Agar bayangan (shadow) tidak terpotong
+        clipBehavior: Clip.none,
         itemCount: policies.length,
         separatorBuilder: (context, index) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-          // PERBAIKAN: Bungkus dengan SizedBox width tetap agar jadi carousel
           return SizedBox(
-            width: 320, // Lebar kartu dalam carousel
-            child: PolicyCard( // Pastikan nama class sesuai file user_policy_card.dart
+            width: 320,
+            child: PolicyCard(
               policy: policies[index],
               onTap: () => onPolicyTap?.call(policies[index]),
             ),

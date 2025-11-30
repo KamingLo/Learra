@@ -46,11 +46,22 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
+
           labelStyle: TextStyle(
             color: Colors.grey.shade700,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
+
+          floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+            final isFocused = states.contains(WidgetState.focused);
+            return TextStyle(
+              color: isFocused ? Colors.green.shade700 : Colors.grey.shade600,
+              fontSize: 16,
+              fontWeight: isFocused ? FontWeight.bold : FontWeight.w500,
+            );
+          }),
+
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           prefixIcon: Container(
@@ -151,6 +162,16 @@ class CustomDateField extends StatelessWidget {
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
+
+          floatingLabelStyle: WidgetStateTextStyle.resolveWith((states) {
+            final isFocused = states.contains(WidgetState.focused);
+            return TextStyle(
+              color: isFocused ? Colors.green.shade700 : Colors.grey.shade600,
+              fontSize: 16,
+              fontWeight: isFocused ? FontWeight.bold : FontWeight.w500,
+            );
+          }),
+
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           prefixIcon: Container(
@@ -467,38 +488,49 @@ class MaritalStatusSelector extends StatelessWidget {
 class SubmitButton extends StatelessWidget {
   final String label;
   final bool isLoading;
+  final bool enabled;
   final VoidCallback onPressed;
 
   const SubmitButton({
     super.key,
     required this.label,
     required this.isLoading,
+    this.enabled = true,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDisabled = !enabled || isLoading;
+
     return Container(
       height: 56,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade600, Colors.green.shade700],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isDisabled
+            ? LinearGradient(
+                colors: [Colors.grey.shade300, Colors.grey.shade400],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : LinearGradient(
+                colors: [Colors.green.shade600, Colors.green.shade700],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.green.withValues(alpha: 0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
+          if (!isDisabled)
+            BoxShadow(
+              color: Colors.green.withValues(alpha: 0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isLoading ? null : onPressed,
+          onTap: isDisabled ? null : onPressed,
           borderRadius: BorderRadius.circular(16),
           child: Center(
             child: isLoading
@@ -510,14 +542,23 @@ class SubmitButton extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!enabled)
+                        Padding(padding: const EdgeInsets.only(right: 8)),
+                      Text(
+                        enabled ? label : 'Buat Polis',
+                        style: TextStyle(
+                          color: isDisabled
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ),

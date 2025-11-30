@@ -23,6 +23,9 @@ class PolicyModel {
   final String? engineNumber;
   final String? yearBought;
   final double? vehiclePrice;
+
+  final String? vehicleOwnerName;
+  final String? userName;
   final String? ownerName;
   final String? ownerEmail;
 
@@ -54,6 +57,8 @@ class PolicyModel {
     this.engineNumber,
     this.yearBought,
     this.vehiclePrice,
+    this.vehicleOwnerName,
+    this.userName,
     this.ownerName,
     this.ownerEmail,
     this.hasDiabetes,
@@ -64,7 +69,12 @@ class PolicyModel {
     this.statusReason,
   });
 
-  PolicyModel copyWith({String? productName, String? productType}) {
+  PolicyModel copyWith({
+    String? productName,
+    String? productType,
+    String? userName,
+    String? vehicleOwnerName,
+  }) {
     return PolicyModel(
       id: id,
       policyNumber: policyNumber,
@@ -85,7 +95,11 @@ class PolicyModel {
       engineNumber: engineNumber,
       yearBought: yearBought,
       vehiclePrice: vehiclePrice,
-      ownerName: ownerName,
+
+      userName: userName ?? this.userName,
+      vehicleOwnerName: vehicleOwnerName ?? this.vehicleOwnerName,
+      ownerName: userName ?? ownerName,
+
       ownerEmail: ownerEmail,
       hasDiabetes: hasDiabetes,
       isSmoker: isSmoker,
@@ -169,6 +183,11 @@ class PolicyModel {
         ? rawDependents
         : int.tryParse(rawDependents?.toString() ?? '0');
 
+    final String? parsedUserName =
+        userMap?['name']?.toString() ?? json['userName']?.toString();
+
+    final String? parsedVehicleOwner = kendaraan?['namaPemilik']?.toString();
+
     return PolicyModel(
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       policyNumber: json['policyNumber'] ?? json['nomorPolis'] ?? '',
@@ -218,10 +237,11 @@ class PolicyModel {
         return double.tryParse(rawPrice.toString());
       }(),
 
-      ownerName:
-          kendaraan?['namaPemilik']?.toString() ??
-          userMap?['name']?.toString() ??
-          json['userName']?.toString(),
+      userName: parsedUserName,
+      vehicleOwnerName: parsedVehicleOwner,
+
+      ownerName: parsedUserName,
+
       ownerEmail:
           userMap?['email']?.toString() ??
           json['userEmail']?.toString() ??
