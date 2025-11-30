@@ -28,6 +28,7 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
   void initState() {
     super.initState();
     _initializeDateFormatting();
+    searchCtrl.addListener(() => setState(() {}));
   }
 
   Future<void> _initializeDateFormatting() async {
@@ -142,43 +143,83 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
     return value.toString();
   }
 
-  void _showFilterDialog() {
-    showDialog(
+  void _showFilterSheet() {
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Filter Status Pembayaran'),
-        content: Column(
+      backgroundColor: Colors.grey[100],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _filterOption('Semua', null),
-            _filterOption('Menunggu', 'menunggu_konfirmasi'),
-            _filterOption('Berhasil', 'berhasil'),
-            _filterOption('Ditolak', 'gagal'),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Filter Status',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildFilterOption('Semua Status', null),
+            const SizedBox(height: 8),
+            _buildFilterOption('Menunggu', 'menunggu_konfirmasi'),
+            const SizedBox(height: 8),
+            _buildFilterOption('Berhasil', 'berhasil'),
+            const SizedBox(height: 8),
+            _buildFilterOption('Ditolak', 'gagal'),
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _filterOption(String label, String? value) {
+  Widget _buildFilterOption(String label, String? value) {
     final isSelected = _selectedStatus == value;
-    return ListTile(
-      title: Text(
-        label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.green[50] : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? Colors.green[300]! : Colors.grey[200]!,
+          width: isSelected ? 2 : 1,
         ),
       ),
-      trailing: isSelected
-          ? const Icon(Icons.check, color: Colors.green)
-          : null,
-      onTap: () {
-        Navigator.pop(context);
-        setState(() {
-          _selectedStatus = value;
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? Colors.green[700] : Colors.black87,
+          ),
+        ),
+        trailing: isSelected
+            ? Icon(Icons.check_circle, color: Colors.green[600], size: 22)
+            : Icon(Icons.circle_outlined, color: Colors.grey[300], size: 22),
+        onTap: () {
+          setState(() => _selectedStatus = value);
+          Navigator.pop(context);
           _applyFilters();
-        });
-      },
+        },
+      ),
     );
   }
 
@@ -193,12 +234,12 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         title: const Text(
           'Riwayat Pembayaran',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -226,20 +267,6 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                           fontSize: 13,
                         ),
                         prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                        suffixIcon: searchCtrl.text.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.clear,
-                                  color: Colors.grey[600],
-                                ),
-                                onPressed: () {
-                                  searchCtrl.clear();
-                                  setState(() {
-                                    _applyFilters();
-                                  });
-                                },
-                              )
-                            : null,
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -258,66 +285,23 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
                 Container(
                   decoration: BoxDecoration(
                     color: _selectedStatus != null
-                        ? Colors.indigo[50]
+                        ? Colors.green[50]
                         : Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
-                    border: _selectedStatus != null
-                        ? Border.all(color: Colors.indigo, width: 2)
-                        : null,
                   ),
                   child: IconButton(
                     icon: Icon(
                       Icons.tune,
                       color: _selectedStatus != null
-                          ? Colors.indigo
+                          ? Colors.green
                           : Colors.grey[700],
                     ),
-                    onPressed: _showFilterDialog,
+                    onPressed: _showFilterSheet,
                   ),
                 ),
               ],
             ),
           ),
-
-          if (_selectedStatus != null)
-            Container(
-              width: double.infinity,
-              color: Colors.indigo[50],
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Row(
-                children: [
-                  Icon(Icons.filter_alt, size: 16, color: Colors.indigo[700]),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Filter: ${_getStatusLabel(_selectedStatus!)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.indigo[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedStatus = null;
-                        _applyFilters();
-                      });
-                    },
-                    child: Text(
-                      'Hapus Filter',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.indigo[700],
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => loadData(),
@@ -435,6 +419,7 @@ class _AdminPembayaranScreenState extends State<AdminPembayaranScreen> {
     );
   }
 
+  // ignore: unused_element
   String _getStatusLabel(String status) {
     switch (status) {
       case 'menunggu_konfirmasi':
@@ -610,7 +595,6 @@ class PaymentCardAdmin extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-
             if (isPending)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -657,7 +641,6 @@ class PaymentCardAdmin extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -713,7 +696,6 @@ class PaymentCardAdmin extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.push(

@@ -156,7 +156,7 @@ class _AdminProductScreenState extends State<AdminProductScreen> {
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(0, 0, 20, 10),
+            padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
             child: Row(
               children: [
                 Expanded(

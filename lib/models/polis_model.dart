@@ -98,7 +98,7 @@ class PolicyModel {
 
       userName: userName ?? this.userName,
       vehicleOwnerName: vehicleOwnerName ?? this.vehicleOwnerName,
-      ownerName: userName ?? this.ownerName,
+      ownerName: userName ?? ownerName,
 
       ownerEmail: ownerEmail,
       hasDiabetes: hasDiabetes,
