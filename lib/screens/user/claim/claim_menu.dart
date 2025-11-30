@@ -116,35 +116,82 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
     }
   }
 
-  void _showFilterDialog() {
-    showDialog(
+  void _showFilterSheet() {
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Filter Status Klaim'),
-        content: Column(
+      backgroundColor: Colors.grey[100],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _filterOption('Semua', null),
-            _filterOption('Menunggu', 'menunggu'),
-            _filterOption('Berhasil', 'diterima'),
-            _filterOption('Ditolak', 'ditolak'),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Filter Status',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildFilterOption('Semua Status', null),
+            const SizedBox(height: 8),
+            _buildFilterOption('Menunggu', 'menunggu'),
+            const SizedBox(height: 8),
+            _buildFilterOption('Berhasil', 'diterima'),
+            const SizedBox(height: 8),
+            _buildFilterOption('Ditolak', 'ditolak'),
+            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _filterOption(String label, String? value) {
+  Widget _buildFilterOption(String label, String? value) {
     final isSelected = _selectedStatus == value;
-    return ListTile(
-      title: Text(label),
-      trailing: isSelected
-          ? const Icon(Icons.check, color: Colors.green)
-          : null,
-      onTap: () {
-        setState(() => _selectedStatus = value);
-        Navigator.pop(context);
-      },
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.green[50] : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? Colors.green[300]! : Colors.grey[200]!,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? Colors.green[700] : Colors.black87,
+          ),
+        ),
+        trailing: isSelected
+            ? Icon(Icons.check_circle, color: Colors.green[600], size: 22)
+            : Icon(Icons.circle_outlined, color: Colors.grey[300], size: 22),
+        onTap: () {
+          setState(() => _selectedStatus = value);
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 
@@ -266,12 +313,12 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         title: const Text(
-          'Klaim Saya',
+          'Klaim Polis',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -320,13 +367,12 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
                           ? Colors.green
                           : Colors.grey[700],
                     ),
-                    onPressed: _showFilterDialog,
+                    onPressed: _showFilterSheet,
                   ),
                 ),
               ],
             ),
           ),
-
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadData,
@@ -420,6 +466,7 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -454,7 +501,7 @@ class _KlaimSayaScreenState extends State<KlaimSayaScreen> {
                       Text(
                         policyNumber,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),

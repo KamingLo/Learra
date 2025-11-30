@@ -6,7 +6,7 @@ import '../../../services/session_service.dart';
 import '../product/product_detail_screen.dart';
 import '../../auth/auth_screen.dart';
 import '../polis/user_polis_detail_screen.dart';
-import '../../user/bantuan/helpfaq.dart'; 
+import '../../user/bantuan/helpfaq.dart';
 import '../../../widgets/user/home/product_carousel.dart';
 import '../../../widgets/user/home/home_category_selector.dart';
 import '../../../widgets/user/home/home_header.dart';
@@ -186,7 +186,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => UserProductDetailScreen(productId: product.id)),
+        builder: (_) => UserProductDetailScreen(productId: product.id),
+      ),
     );
   }
 
@@ -214,9 +215,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             'assets/IconApp/LearraFull.png',
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              return const Text("Learra",
-                  style: TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.bold));
+              return const Text(
+                "Learra",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
             },
           ),
         ),
@@ -271,13 +276,17 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       const Text(
                         "Rekomendasi Terbaik",
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       TextButton(
                         onPressed: () =>
                             widget.onSwitchTab?.call(tabIndexProduct),
-                        child: Text("Lihat Semua",
-                            style: TextStyle(color: _primaryColor)),
+                        child: Text(
+                          "Lihat Semua",
+                          style: TextStyle(color: _primaryColor),
+                        ),
                       ),
                     ],
                   ),
@@ -326,9 +335,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           onPressed: () {
                             widget.onSwitchTab?.call(tabIndexPolis);
                           },
-                          child: Text("Lihat Detail",
-                              style: TextStyle(color: _primaryColor)),
-                        )
+                          child: Text(
+                            "Lihat Detail",
+                            style: TextStyle(color: _primaryColor),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -360,20 +371,18 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             // EDUCATION / FAQ CARD
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: HomeFaqCard(), 
+              child: HomeFaqCard(),
             ),
 
             // QUOTE CARD (With Back To Top)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-              child: HomeQuoteCard(
-                onBackToTop: _scrollToTop,
-              ),
+              child: HomeQuoteCard(onBackToTop: _scrollToTop),
             ),
 
             // --- BAGIAN BARU: FOOTER COPYRIGHT ---
             const SizedBox(height: 20), // Spacing dari quote card
-            
+
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -384,7 +393,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     child: Image.asset(
                       'assets/IconApp/LearraFull.png',
                       fit: BoxFit.contain,
-                      errorBuilder: (ctx, err, stack) => const Icon(Icons.verified_user, color: Colors.grey),
+                      errorBuilder: (ctx, err, stack) =>
+                          const Icon(Icons.verified_user, color: Colors.grey),
                     ),
                   ),
                 ),
@@ -400,10 +410,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   "Terdaftar dan diawasi oleh OJK",
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade400,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
                 ),
                 const SizedBox(height: 20), // Bottom safe area padding
               ],
